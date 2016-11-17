@@ -1,0 +1,6 @@
+[package]
+name = "ricochet_board"
+version = "0.1.0"
+authors = ["carl"]
+
+[dependencies]
