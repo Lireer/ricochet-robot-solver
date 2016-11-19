@@ -44,6 +44,16 @@ pub enum Symbol {
 }
 
 impl Board {
+    pub fn wall_enclosure(&mut self) {
+        for i in 0..BOARDSIZE {
+            self.fields[i][BOARDSIZE - 1].bottom = true;
+        }
+
+        for i in 0..BOARDSIZE {
+            self.fields[BOARDSIZE - 1][i].right = true;
+        }
+    }
+
     pub fn wall_right(&self, x: usize, y: usize) -> bool {
         self.fields[x][y].right
     }
