@@ -28,10 +28,7 @@ fn main() {
 
     let mut save = File::create("Test.json").expect("Schreiben der json-Datei");
 
-    write!(save,
-           "{0} \n {1}",
-           as_pretty_json(&positions),
-           as_pretty_json(&board))
+    write!(save, "{}", as_pretty_json(&(&positions, &board)))
         .expect("Die json-Datei beschreiben");
 }
 

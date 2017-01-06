@@ -1,0 +1,1418 @@
+[
+  {
+    "rob_position": [
+      [
+        14,
+        6
+      ],
+      [
+        0,
+        5
+      ],
+      [
+        5,
+        4
+      ],
+      [
+        7,
+        15
+      ]
+    ]
+  },
+  {
+    "fields": [
+      [
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": true,
+          "target": null
+        },
+        {
+          "bottom": true,
+          "right": false,
+          "target": {
+            "variant": "Blue",
+            "fields": [
+              "Hexagon"
+            ]
+          }
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": true,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": true,
+          "right": false,
+          "target": null
+        }
+      ],
+      [
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": true,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": true,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": true,
+          "right": true,
+          "target": {
+            "variant": "Yellow",
+            "fields": [
+              "Circle"
+            ]
+          }
+        },
+        {
+          "bottom": true,
+          "right": false,
+          "target": null
+        }
+      ],
+      [
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": true,
+          "right": true,
+          "target": {
+            "variant": "Red",
+            "fields": [
+              "Circle"
+            ]
+          }
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": true,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": {
+            "variant": "Red",
+            "fields": [
+              "Square"
+            ]
+          }
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": true,
+          "right": false,
+          "target": null
+        }
+      ],
+      [
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": true,
+          "right": true,
+          "target": {
+            "variant": "Green",
+            "fields": [
+              "Circle"
+            ]
+          }
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": {
+            "variant": "Blue",
+            "fields": [
+              "Circle"
+            ]
+          }
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": true,
+          "right": false,
+          "target": null
+        }
+      ],
+      [
+        {
+          "bottom": false,
+          "right": true,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": true,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": true,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": true,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": true,
+          "right": false,
+          "target": null
+        }
+      ],
+      [
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": true,
+          "target": null
+        },
+        {
+          "bottom": true,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": true,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": true,
+          "right": false,
+          "target": {
+            "variant": "Green",
+            "fields": [
+              "Hexagon"
+            ]
+          }
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": {
+            "variant": "Green",
+            "fields": [
+              "Triangle"
+            ]
+          }
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": true,
+          "right": true,
+          "target": null
+        }
+      ],
+      [
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": true,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": "Spiral"
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": true,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": true,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": true,
+          "right": false,
+          "target": null
+        }
+      ],
+      [
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": true,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": true,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": true,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": true,
+          "right": false,
+          "target": null
+        }
+      ],
+      [
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": true,
+          "right": false,
+          "target": {
+            "variant": "Red",
+            "fields": [
+              "Triangle"
+            ]
+          }
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": true,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": true,
+          "target": null
+        },
+        {
+          "bottom": true,
+          "right": true,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": {
+            "variant": "Blue",
+            "fields": [
+              "Square"
+            ]
+          }
+        },
+        {
+          "bottom": true,
+          "right": true,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": true,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": true,
+          "right": false,
+          "target": null
+        }
+      ],
+      [
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": true,
+          "right": true,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": true,
+          "right": false,
+          "target": {
+            "variant": "Red",
+            "fields": [
+              "Hexagon"
+            ]
+          }
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": true,
+          "right": false,
+          "target": null
+        }
+      ],
+      [
+        {
+          "bottom": false,
+          "right": true,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": true,
+          "right": false,
+          "target": null
+        }
+      ],
+      [
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": true,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": true,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": true,
+          "target": {
+            "variant": "Yellow",
+            "fields": [
+              "Hexagon"
+            ]
+          }
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": true,
+          "right": true,
+          "target": null
+        }
+      ],
+      [
+        {
+          "bottom": true,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": true,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": {
+            "variant": "Blue",
+            "fields": [
+              "Triangle"
+            ]
+          }
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": true,
+          "right": false,
+          "target": null
+        }
+      ],
+      [
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": true,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": true,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": true,
+          "right": false,
+          "target": null
+        }
+      ],
+      [
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": true,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": {
+            "variant": "Yellow",
+            "fields": [
+              "Square"
+            ]
+          }
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": {
+            "variant": "Green",
+            "fields": [
+              "Square"
+            ]
+          }
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": true,
+          "right": false,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": true,
+          "target": {
+            "variant": "Yellow",
+            "fields": [
+              "Triangle"
+            ]
+          }
+        },
+        {
+          "bottom": true,
+          "right": false,
+          "target": null
+        }
+      ],
+      [
+        {
+          "bottom": false,
+          "right": true,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": true,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": true,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": true,
+          "target": null
+        },
+        {
+          "bottom": true,
+          "right": true,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": true,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": true,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": true,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": true,
+          "target": null
+        },
+        {
+          "bottom": true,
+          "right": true,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": true,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": true,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": true,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": true,
+          "target": null
+        },
+        {
+          "bottom": false,
+          "right": true,
+          "target": null
+        },
+        {
+          "bottom": true,
+          "right": true,
+          "target": null
+        }
+      ]
+    ]
+  }
+]
