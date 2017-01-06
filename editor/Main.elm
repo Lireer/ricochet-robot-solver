@@ -5,7 +5,7 @@
 module Main exposing (..)
 
 import Html exposing (beginnerProgram, div, button)
-import Graphics.Render exposing (Point, centered, text, Form, group, solid, circle, ellipse, polygon, filledAndBordered, position, svg, rectangle, filled, angle, fontColor, segment, solidLine)
+import Graphics.Render exposing (Point, centered, text, Form, group, solid, circle, ellipse, polygon, filledAndBordered, position, svg, rectangle, filled, angle, fontColor, segment, solidLine, onClick)
 import Color exposing (rgb)
 
 
@@ -29,7 +29,7 @@ boardSize =
     fieldSize * toFloat boardSizeInFields
 
 
-viewRow : Int -> List Field -> List (Form msg)
+viewRow : Int -> List Field -> List (Form Msg)
 viewRow y row =
     List.concat (List.indexedMap (viewField y) row)
 
@@ -44,63 +44,73 @@ indexToPosition i =
     (toFloat i) * fieldSize + boardOffset
 
 
-viewField : Int -> Int -> Field -> List (Form msg)
-viewField y_i x_i field =
+viewWall : Bool -> Wall -> Int -> Int -> Form Msg
+viewWall fill wall x y =
     let
-        x =
-            indexToPosition x_i
+        ( posx, posy ) =
+            ( indexToPosition x, indexToPosition y )
 
-        y =
-            indexToPosition y_i
+        longer =
+            if fill then
+                -boardOffset / 2
+            else
+                boardOffset / 2
 
-        draw =
-            \fill x y x1 y1 ->
-                drawLine ( x, y )
-                    ( x1, y1 )
-                    (if fill then
-                        Color.black
-                     else
-                        Color.lightGray
-                    )
-                    boardOffset
+        ( x1, y1, x2, y2 ) =
+            case wall of
+                Right ->
+                    ( (posx + fieldSize), (posy - longer), (posx + fieldSize), (posy + fieldSize + longer) )
+
+                Bottom ->
+                    ( (posx - longer), (posy + fieldSize), (posx + fieldSize + longer), (posy + fieldSize) )
     in
-        List.concat
-            [ [ (draw field.right
-                    (x + fieldSize)
-                    (y - boardOffset / 2)
-                    (x + fieldSize)
-                    (y + fieldSize + boardOffset / 2)
+        onClick (ToggleWall x y wall)
+            (drawLine ( x1, y1 )
+                ( x2, y2 )
+                (if fill then
+                    Color.black
+                 else
+                    Color.lightGray
                 )
-              , (draw field.bottom
-                    (x - boardOffset / 2)
-                    (y + fieldSize)
-                    (x + fieldSize + boardOffset / 2)
-                    (y + fieldSize)
-                )
-              ]
-            , (if x_i == boardSizeInFields - 1 then
-                [ (draw field.right
-                    (indexToPosition 0)
-                    (y - boardOffset / 2)
-                    (indexToPosition 0)
-                    (y + fieldSize + boardOffset / 2)
-                  )
-                ]
-               else
-                []
-              )
-            , (if y_i == boardSizeInFields - 1 then
-                [ (draw field.bottom
-                    (x - boardOffset / 2)
-                    (indexToPosition 0)
-                    (x + fieldSize + boardOffset / 2)
-                    (indexToPosition 0)
-                  )
-                ]
-               else
-                []
+                boardOffset
+            )
+
+
+viewField : Int -> Int -> Field -> List (Form Msg)
+viewField y x field =
+    List.concat
+        [ [ (viewWall field.right
+                Right
+                x
+                y
+            )
+          , (viewWall field.bottom
+                Bottom
+                x
+                y
+            )
+          ]
+        , (if x == boardSizeInFields - 1 then
+            [ (viewWall field.right
+                Right
+                -1
+                y
               )
             ]
+           else
+            []
+          )
+        , (if y == boardSizeInFields - 1 then
+            [ (viewWall field.bottom
+                Bottom
+                x
+                -1
+              )
+            ]
+           else
+            []
+          )
+        ]
 
 
 view : Model -> Html.Html Msg
@@ -240,16 +250,48 @@ model =
 
 
 type Msg
-    = ToggleWall Int Int
+    = ToggleWall Int Int Wall
+
+
+type Wall
+    = Right
+    | Bottom
 
 
 update : Msg -> Model -> Model
 update msg model =
     case msg of
-        ToggleWall x y ->
-            { model | board = toggleBoardWall model.board x y }
+        ToggleWall x y wall ->
+            { model | board = toggleBoardWall model.board x y wall }
 
 
-toggleBoardWall : Board -> Int -> Int -> Board
-toggleBoardWall board x y =
-    board
+toggleBoardWall : Board -> Int -> Int -> Wall -> Board
+toggleBoardWall board x y wall =
+    List.indexedMap
+        (\y_i row ->
+            (if y_i == y then
+                (List.indexedMap
+                    (\x_i field ->
+                        (if x_i == x then
+                            (toggleFieldWall field wall)
+                         else
+                            field
+                        )
+                    )
+                    row
+                )
+             else
+                row
+            )
+        )
+        board
+
+
+toggleFieldWall : Field -> Wall -> Field
+toggleFieldWall field wall =
+    case wall of
+        Right ->
+            { field | right = not field.right }
+
+        Bottom ->
+            { field | bottom = not field.bottom }
