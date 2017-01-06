@@ -226,11 +226,23 @@ type alias RobotPositions =
     List ( Int, Int )
 
 
+field : Field
+field =
+    { bottom = False, right = False }
+
+
 model : Model
 model =
-    { board = List.repeat 16 (List.repeat 16 { bottom = False, right = False })
-    , positions = [ ( 1, 1 ), ( 15, 12 ), ( 13, 8 ), ( 6, 6 ) ]
-    }
+    let
+        most =
+            List.repeat 15 (List.append (List.repeat 15 { bottom = False, right = False }) [ { bottom = False, right = True } ])
+
+        last =
+            List.append (List.repeat 15 { bottom = True, right = False }) [ { bottom = True, right = True } ]
+    in
+        { board = List.append most [ last ]
+        , positions = [ ( 1, 1 ), ( 15, 12 ), ( 13, 8 ), ( 6, 6 ) ]
+        }
 
 
 type Msg
