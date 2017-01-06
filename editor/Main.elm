@@ -54,12 +54,7 @@ viewField y_i x_i field =
             indexToPosition y_i
     in
         List.concat
-            [ [ (drawText "x"
-                    20
-                    ( x + fieldSize / 2, y + fieldSize / 2 )
-                    Color.black
-                )
-              , (drawLine ( x + fieldSize, y - boardOffset / 2 )
+            [ [ (drawLine ( x + fieldSize, y - boardOffset / 2 )
                     ( x + fieldSize, y + fieldSize + boardOffset / 2 )
                     (if field.right then
                         Color.black
