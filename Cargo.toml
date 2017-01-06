@@ -6,5 +6,3 @@ authors = ["carl"]
 [dependencies]
 rustc-serialize = "0.3"
 ricochet_board = {path="ricochet_board"}
-
-[workspace]

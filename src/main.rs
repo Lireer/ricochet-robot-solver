@@ -28,8 +28,7 @@ fn main() {
 
     let mut save = File::create("Test.json").expect("Schreiben der json-Datei");
 
-    write!(save, "{}", as_pretty_json(&(&positions, &board)))
-        .expect("Die json-Datei beschreiben");
+    write!(save, "{}", as_pretty_json(&(&positions, &board))).expect("Die json-Datei beschreiben");
 }
 
 fn fill_board_with_walls(board: &mut Board) {

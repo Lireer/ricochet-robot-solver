@@ -1,0 +1,18 @@
+{
+    "version": "1.0.0",
+    "summary": "editor for ricochet robot maps",
+    "repository": "https://github.com/Lireer/ricochet-robot-solver.git",
+    "license": "BSD3",
+    "source-directories": [
+        "editor"
+    ],
+    "exposed-modules": [],
+    "dependencies": {
+        "Kwarrtz/render": "2.0.0 <= v < 3.0.0",
+        "elm-lang/core": "5.0.0 <= v < 6.0.0",
+        "elm-lang/html": "2.0.0 <= v < 3.0.0",
+        "elm-lang/mouse": "1.0.1 <= v < 2.0.0",
+        "elm-lang/svg": "2.0.0 <= v < 3.0.0"
+    },
+    "elm-version": "0.18.0 <= v < 0.19.0"
+}
