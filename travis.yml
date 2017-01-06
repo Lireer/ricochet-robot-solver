@@ -1,0 +1,19 @@
+language: rust
+sudo: false
+
+cache:
+  cargo: true
+
+install:
+  # || true, because we cache rustfmt and don't want to crash on the next travis run
+  # due to rustfmt already being installed
+  - (cargo install rustfmt || true)
+
+script:
+ - set -e
+ - PATH=$PATH:~/.cargo/bin cargo fmt -- --write-mode=diff
+ - cd ricochet_board && PATH=$PATH:~/.cargo/bin cargo fmt -- --write-mode=diff && cd ..
+ - cd ricochet_solver && PATH=$PATH:~/.cargo/bin cargo fmt -- --write-mode=diff && cd ..
+ - cargo build
+ - cd ricochet_board && cargo test && cd ..
+ - cd ricochet_solver && cargo test && cd ..
