@@ -52,50 +52,49 @@ viewField y_i x_i field =
 
         y =
             indexToPosition y_i
+
+        draw =
+            \fill x y x1 y1 ->
+                drawLine ( x, y )
+                    ( x1, y1 )
+                    (if fill then
+                        Color.black
+                     else
+                        Color.lightGray
+                    )
+                    boardOffset
     in
         List.concat
-            [ [ (drawLine ( x + fieldSize, y - boardOffset / 2 )
-                    ( x + fieldSize, y + fieldSize + boardOffset / 2 )
-                    (if field.right then
-                        Color.black
-                     else
-                        Color.lightGray
-                    )
-                    boardOffset
+            [ [ (draw field.right
+                    (x + fieldSize)
+                    (y - boardOffset / 2)
+                    (x + fieldSize)
+                    (y + fieldSize + boardOffset / 2)
                 )
-              , (drawLine ( x - boardOffset / 2, y + fieldSize )
-                    ( x + fieldSize + boardOffset / 2, y + fieldSize )
-                    (if field.bottom then
-                        Color.black
-                     else
-                        Color.lightGray
-                    )
-                    boardOffset
+              , (draw field.bottom
+                    (x - boardOffset / 2)
+                    (y + fieldSize)
+                    (x + fieldSize + boardOffset / 2)
+                    (y + fieldSize)
                 )
               ]
             , (if x_i == boardSizeInFields - 1 then
-                [ (drawLine ( indexToPosition 0, y - boardOffset / 2 )
-                    ( indexToPosition 0, y + fieldSize + boardOffset / 2 )
-                    (if field.right then
-                        Color.black
-                     else
-                        Color.lightGray
-                    )
-                    boardOffset
+                [ (draw field.right
+                    (indexToPosition 0)
+                    (y - boardOffset / 2)
+                    (indexToPosition 0)
+                    (y + fieldSize + boardOffset / 2)
                   )
                 ]
                else
                 []
               )
             , (if y_i == boardSizeInFields - 1 then
-                [ (drawLine ( x - boardOffset / 2, indexToPosition 0 )
-                    ( x + fieldSize + boardOffset / 2, indexToPosition 0 )
-                    (if field.bottom then
-                        Color.black
-                     else
-                        Color.lightGray
-                    )
-                    boardOffset
+                [ (draw field.bottom
+                    (x - boardOffset / 2)
+                    (indexToPosition 0)
+                    (x + fieldSize + boardOffset / 2)
+                    (indexToPosition 0)
                   )
                 ]
                else
