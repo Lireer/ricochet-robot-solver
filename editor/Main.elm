@@ -45,7 +45,7 @@ indexToPosition i =
 
 
 viewField : Int -> Int -> Field -> List (Form msg)
-viewField x_i y_i field =
+viewField y_i x_i field =
     let
         x =
             indexToPosition x_i
