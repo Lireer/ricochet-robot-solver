@@ -93,7 +93,7 @@ impl RobotPositions {
         !board.wall_right(x, y) && !self.contains_robot((x + 1) % BOARDSIZE, y)
     }
 
-    fn can_move_bottom(&self, board: &Board, x: usize, y: usize) -> bool {
+    fn can_move_down(&self, board: &Board, x: usize, y: usize) -> bool {
         !board.wall_bottom(x, y) && !self.contains_robot(x, (y + 1) % BOARDSIZE)
     }
 
@@ -101,7 +101,7 @@ impl RobotPositions {
         !board.wall_left(x, y) && !self.contains_robot((x + BOARDSIZE - 1) % BOARDSIZE, y)
     }
 
-    fn can_move_top(&self, board: &Board, x: usize, y: usize) -> bool {
+    fn can_move_up(&self, board: &Board, x: usize, y: usize) -> bool {
         !board.wall_top(x, y) && !self.contains_robot(x, (y + BOARDSIZE - 1) % BOARDSIZE)
     }
 }
@@ -121,11 +121,11 @@ impl RobotPositions {
         }
     }
 
-    pub fn move_bottom(&mut self, robot: Robot, board: &Board) {
+    pub fn move_down(&mut self, robot: Robot, board: &Board) {
         let (x, y) = self.rob_position[robot as usize];
         for y_tmp in y.. {
             let y_tmp = y_tmp % BOARDSIZE;
-            if !self.can_move_bottom(board, x, y_tmp) {
+            if !self.can_move_down(board, x, y_tmp) {
                 if y != y_tmp {
                     self.rob_position[robot as usize] = (x, y_tmp);
                 }
@@ -149,11 +149,11 @@ impl RobotPositions {
         }
     }
 
-    pub fn move_top(&mut self, robot: Robot, board: &Board) {
+    pub fn move_up(&mut self, robot: Robot, board: &Board) {
         let (x, y) = self.rob_position[robot as usize];
         for i in 0.. {
             let y = (y + BOARDSIZE - i) % BOARDSIZE;
-            if !self.can_move_top(board, x, y) {
+            if !self.can_move_up(board, x, y) {
                 if i != 0 {
                     self.rob_position[robot as usize] = (x, y);
                 }
