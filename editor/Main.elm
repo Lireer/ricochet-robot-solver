@@ -363,9 +363,17 @@ updatePosition pos drag =
 
 xy2pos : Drag -> ( Int, Int ) -> ( Int, Int )
 xy2pos drag ( x, y ) =
-    ( x + (round (((toFloat drag.current.x - toFloat drag.start.x) / fieldSize)))
-    , y + (round (((toFloat drag.current.y - toFloat drag.start.y) / fieldSize)))
-    )
+    let
+        newx =
+            x + (round (((toFloat drag.current.x - toFloat drag.start.x) / fieldSize)))
+
+        newy =
+            y + (round (((toFloat drag.current.y - toFloat drag.start.y) / fieldSize)))
+    in
+        if newx < 0 || newy < 0 || newx >= boardSizeInFields || newy >= boardSizeInFields then
+            ( x, y )
+        else
+            ( newx, newy )
 
 
 toggleBoardWall : Board -> Int -> Int -> Wall -> Board
