@@ -3,14 +3,20 @@
 
 module Main exposing (..)
 
-import Html exposing (beginnerProgram, div, button)
-import Graphics.Render exposing (Point, centered, text, Form, group, solid, circle, ellipse, polygon, filledAndBordered, position, svg, rectangle, filled, angle, fontColor, segment, solidLine, onClick)
+import Html exposing (program, div, button)
+import Graphics.Render exposing (Point, centered, text, Form, group, solid, circle, ellipse, polygon, filledAndBordered, position, svg, rectangle, filled, angle, fontColor, segment, solidLine, onClick, onMouseDown)
 import Color exposing (rgb)
+import Mouse exposing (Position)
 
 
 main : Program Never Model Msg
 main =
-    beginnerProgram { model = model, view = view, update = update }
+    program
+        { init = ( model, Cmd.none )
+        , view = view
+        , update = update
+        , subscriptions = subscriptions
+        }
 
 
 fieldSize : Float
@@ -112,6 +118,57 @@ viewField y x field =
         ]
 
 
+viewRobots : Maybe Drag -> Int -> ( Int, Int ) -> Form Msg
+viewRobots drag i ( x, y ) =
+    onMouseDown (\( x, y ) -> DragStart { x = round x, y = round y } i)
+        (drawCircle
+            ( (indexToPosition x)
+                + fieldSize
+                / 2
+                + Maybe.withDefault 0
+                    (Maybe.map
+                        (\drag ->
+                            if drag.object == i then
+                                (toFloat (drag.current.x - drag.start.x))
+                            else
+                                0
+                        )
+                        drag
+                    )
+            , (indexToPosition y)
+                + fieldSize
+                / 2
+                + Maybe.withDefault 0
+                    (Maybe.map
+                        (\drag ->
+                            if drag.object == i then
+                                (toFloat (drag.current.y - drag.start.y))
+                            else
+                                0
+                        )
+                        drag
+                    )
+            )
+            (case i of
+                0 ->
+                    Color.red
+
+                1 ->
+                    Color.green
+
+                2 ->
+                    Color.blue
+
+                3 ->
+                    Color.yellow
+
+                x ->
+                    Color.black
+            )
+            (fieldSize / 3)
+        )
+
+
 view : Model -> Html.Html Msg
 view model =
     svg 0
@@ -123,10 +180,16 @@ view model =
             + 10
         )
         (group
-            (List.concat
+            (List.append
+                (List.concat
+                    (List.indexedMap
+                        viewRow
+                        model.board
+                    )
+                )
                 (List.indexedMap
-                    viewRow
-                    model.board
+                    (viewRobots model.drag)
+                    model.positions
                 )
             )
          --[
@@ -141,17 +204,6 @@ view model =
          --, drawText "Demo text" 60 ( boardSize / 2, boardSize / 2 ) Color.black
          --]
         )
-
-
-drawForm : Point -> Float -> Form msg
-drawForm pos rotation =
-    group
-        [ drawRectangle 300 150 ( 0, 0 ) Color.blue
-        , drawText "A separate form" 20 ( 0, 0 ) Color.yellow
-        , drawCircle ( 0, 40 )
-        ]
-        |> angle rotation
-        |> position pos
 
 
 drawPolygon : Point -> Float -> Color.Color -> Form msg
@@ -184,12 +236,10 @@ drawEllipse pos =
         |> position pos
 
 
-drawCircle : Point -> Form msg
-drawCircle pos =
-    circle 20
-        |> filledAndBordered (solid <| rgb 255 0 0)
-            5
-            (solid <| rgb 0 0 0)
+drawCircle : Point -> Color.Color -> Float -> Form msg
+drawCircle pos color size =
+    circle size
+        |> filled (solid <| color)
         |> position pos
 
 
@@ -208,6 +258,17 @@ drawText textContent textSize pos color =
 type alias Model =
     { board : Board
     , positions : RobotPositions
+    , drag : Maybe Drag
+    }
+
+
+type alias Drag =
+    { -- start is needed to make sure that the robot isn't jumped to the mouse position but instead is smoothly dragged
+      start :
+        Position
+        -- current - start is the offset that needs to be applied to the dragged robot
+    , current : Position
+    , object : Int
     }
 
 
@@ -245,11 +306,15 @@ model =
     in
         { board = List.append most [ last ]
         , positions = [ ( 1, 1 ), ( 15, 12 ), ( 13, 8 ), ( 6, 6 ) ]
+        , drag = Nothing
         }
 
 
 type Msg
     = ToggleWall Int Int Wall
+    | DragStart Position Int
+    | DragAt Position
+    | DragEnd Position
 
 
 type Wall
@@ -257,11 +322,50 @@ type Wall
     | Bottom
 
 
-update : Msg -> Model -> Model
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         ToggleWall x y wall ->
-            { model | board = toggleBoardWall model.board x y wall }
+            ( { model | board = toggleBoardWall model.board x y wall }, Cmd.none )
+
+        -- initialize a drag with the current mouse position
+        DragStart pos idx ->
+            ( { model | drag = Just { start = pos, current = pos, object = idx } }, Cmd.none )
+
+        -- update the visual position of the robot while being dragged
+        DragAt pos ->
+            ( { model | drag = Maybe.map (\drag -> { drag | current = pos }) model.drag }, Cmd.none )
+
+        -- when the robot is dropped, move it to the target
+        DragEnd pos ->
+            ( { model | drag = Nothing, positions = Maybe.withDefault model.positions (Maybe.map (updatePosition model.positions) model.drag) }, Cmd.none )
+
+
+updatePosition : RobotPositions -> Drag -> RobotPositions
+updatePosition pos drag =
+    List.indexedMap
+        (\i val ->
+            if i == drag.object then
+                -- don't move two robots on the same field
+                let
+                    newpos =
+                        xy2pos drag val
+                in
+                    if List.any (\pos -> pos == newpos) pos then
+                        val
+                    else
+                        newpos
+            else
+                val
+        )
+        pos
+
+
+xy2pos : Drag -> ( Int, Int ) -> ( Int, Int )
+xy2pos drag ( x, y ) =
+    ( x + (round (((toFloat drag.current.x - toFloat drag.start.x) / fieldSize)))
+    , y + (round (((toFloat drag.current.y - toFloat drag.start.y) / fieldSize)))
+    )
 
 
 toggleBoardWall : Board -> Int -> Int -> Wall -> Board
@@ -294,3 +398,17 @@ toggleFieldWall field wall =
 
         Bottom ->
             { field | bottom = not field.bottom }
+
+
+
+-- SUBSCRIPTIONS
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    case model.drag of
+        Nothing ->
+            Sub.none
+
+        Just _ ->
+            Sub.batch [ Mouse.moves DragAt, Mouse.ups DragEnd ]
