@@ -1,5 +1,4 @@
--- Read more about this program in the official Elm guide:
--- https://guide.elm-lang.org/architecture/user_input/buttons.html
+-- A ricochet robots visualizer and map editor
 
 
 module Main exposing (..)
@@ -239,10 +238,10 @@ model : Model
 model =
     let
         most =
-            List.repeat 15 (List.append (List.repeat 15 { bottom = False, right = False }) [ { bottom = False, right = True } ])
+            List.repeat 15 (List.append (List.repeat 15 field) [ { field | right = True } ])
 
         last =
-            List.append (List.repeat 15 { bottom = True, right = False }) [ { bottom = True, right = True } ]
+            List.append (List.repeat 15 { field | bottom = True }) [ { field | bottom = True, right = True } ]
     in
         { board = List.append most [ last ]
         , positions = [ ( 1, 1 ), ( 15, 12 ), ( 13, 8 ), ( 6, 6 ) ]
