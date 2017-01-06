@@ -361,6 +361,9 @@ updatePosition pos drag =
         pos
 
 
+{-| Calculate the new grid position from the drag position and the old position.
+In case the new grid position is outside the grid, snap back to the old position
+-}
 xy2pos : Drag -> ( Int, Int ) -> ( Int, Int )
 xy2pos drag ( x, y ) =
     let
