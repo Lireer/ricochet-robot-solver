@@ -241,10 +241,16 @@ model =
 
 
 type Msg
-    = Increment
-    | Decrement
+    = ToggleWall Int Int
 
 
 update : Msg -> Model -> Model
 update msg model =
-    model
+    case msg of
+        ToggleWall x y ->
+            { model | board = toggleBoardWall model.board x y }
+
+
+toggleBoardWall : Board -> Int -> Int -> Board
+toggleBoardWall board x y =
+    board
