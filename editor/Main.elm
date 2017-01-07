@@ -25,7 +25,7 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         ToggleWall x y wall ->
-            ( { model | board = toggleBoardWall model.board x y wall }, Cmd.none )
+            ( { model | board = toggleBoardWall x y wall model.board }, Cmd.none )
 
         -- initialize a drag with the current mouse position
         DragStart pos obj ->
@@ -88,38 +88,6 @@ xy2pos drag ( x, y ) =
             ( x, y )
         else
             ( newx, newy )
-
-
-toggleBoardWall : Board -> Int -> Int -> Wall -> Board
-toggleBoardWall board x y wall =
-    List.indexedMap
-        (\y_i row ->
-            (if y_i == y then
-                (List.indexedMap
-                    (\x_i field ->
-                        (if x_i == x then
-                            (toggleFieldWall field wall)
-                         else
-                            field
-                        )
-                    )
-                    row
-                )
-             else
-                row
-            )
-        )
-        board
-
-
-toggleFieldWall : Field -> Wall -> Field
-toggleFieldWall field wall =
-    case wall of
-        Right ->
-            { field | right = not field.right }
-
-        Bottom ->
-            { field | bottom = not field.bottom }
 
 
 

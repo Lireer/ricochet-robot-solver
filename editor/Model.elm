@@ -136,7 +136,16 @@ model =
         robots =
             [ ( Robot Red, ( 1, 3 ) ), ( Robot Green, ( 15, 12 ) ), ( Robot Blue, ( 13, 8 ) ), ( Robot Yellow, ( 6, 6 ) ) ]
     in
-        { board = List.append most [ last ]
+        { board =
+            List.append most [ last ]
+                |> toggleBoardWall 7 6 Bottom
+                |> toggleBoardWall 8 6 Bottom
+                |> toggleBoardWall 7 8 Bottom
+                |> toggleBoardWall 8 8 Bottom
+                |> toggleBoardWall 6 7 Right
+                |> toggleBoardWall 6 8 Right
+                |> toggleBoardWall 8 7 Right
+                |> toggleBoardWall 8 8 Right
         , drag = Nothing
         , objects = AllDict.fromList objOrd (List.append targets robots)
         }
@@ -152,3 +161,35 @@ type Msg
 type Wall
     = Right
     | Bottom
+
+
+toggleBoardWall : Int -> Int -> Wall -> Board -> Board
+toggleBoardWall x y wall board =
+    List.indexedMap
+        (\y_i row ->
+            (if y_i == y then
+                (List.indexedMap
+                    (\x_i field ->
+                        (if x_i == x then
+                            (toggleFieldWall field wall)
+                         else
+                            field
+                        )
+                    )
+                    row
+                )
+             else
+                row
+            )
+        )
+        board
+
+
+toggleFieldWall : Field -> Wall -> Field
+toggleFieldWall field wall =
+    case wall of
+        Right ->
+            { field | right = not field.right }
+
+        Bottom ->
+            { field | bottom = not field.bottom }
