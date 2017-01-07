@@ -2,12 +2,14 @@ language: rust
 sudo: false
 
 cache:
-  cargo: true
+- cargo
+- yarn
 
 install:
   # || true, because we cache rustfmt and don't want to crash on the next travis run
   # due to rustfmt already being installed
   - (cargo install rustfmt || true)
+  - npm install -g elm
 
 script:
  - set -e
@@ -17,3 +19,12 @@ script:
  - cargo build
  - cd ricochet_board && cargo test && cd ..
  - cd ricochet_solver && cargo test && cd ..
+ - elm-make editor/Main.elm
+ - set +e
+
+after-success:
+  - sh upload_editor.sh
+
+env:
+  global:
+    secure: GzN+OdWzuhHuFWrrxRJhs9OCqbzqgf+SgKF4FRmms65bty7DM84Xph3+4ZW+cCYyuVrqjRJpCGbr1Ser7A9I1C/Pd4eFPZ5gpMecheWqRMbcrqico3DiPvun79/ql8Rj/+Mz5BmVq2QnGz4WT5ose2e80WLdBspM9sY61A3solxMP2Ldn8g9Ioh+eOErZrZsj2/QNXCcoylYlW78Llx3Hu5+6+izt2I/vB0k7GQRT3X3o4zckFd2vto17l/ruEBw1rGUoj5dc43yioa88GHbXnZX4xUxkoHXScu2kAGF4t3QimsiYIwgOoricFeKtDksoHXEIGUYRgxk+yRVAeaHVrlX9Wl316bCUqTd8zadHo9IWBI4I9mjIkVQzjBBQhdx00dcZsMf/C/25OCTZfpNtDHLNWvwJAOUCerDDWF0JSrSXdfZfDxidtI8Nkz1hdP1Jq7pTAovuHdr8K5Gxwin9wC3p2Q52BnSGvSu19b3deLCoS3+kYeLpC46QpuhUN8Ta6rlE4FxBzqvMIl0YpdvJ5YEq7UNyp5NxBYPw2XM7eWpE/vlTHiLybgzywuI+4JNKPJTIxmYZ8OxdhF9Qx419Z8RnQolsYKh/+i0tV38nd7CmM2resIwais+uvgMVSisTfEoEz++YWuiuEQrvP3RSC1YzhmWN2ulNNfZztK5MX4=
