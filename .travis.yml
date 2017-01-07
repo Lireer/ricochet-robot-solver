@@ -22,7 +22,7 @@ script:
  - elm-make editor/Main.elm --yes
  - set +e
 
-after-success:
+after_success:
   - sh upload_editor.sh
 
 env:
