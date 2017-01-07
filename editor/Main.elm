@@ -36,7 +36,9 @@ boardSize =
 
 viewRow : Int -> List Field -> List (Form Msg)
 viewRow y row =
-    List.concat (List.indexedMap (viewField y) row)
+    row
+        |> List.indexedMap (viewField y)
+        |> List.concat
 
 
 boardOffset : Float
@@ -68,17 +70,15 @@ viewWall fill wall x y =
 
                 Bottom ->
                     ( (posx - longer), (posy + fieldSize), (posx + fieldSize + longer), (posy + fieldSize) )
+
+        color =
+            if fill then
+                Color.black
+            else
+                Color.lightGray
     in
-        onClick (ToggleWall x y wall)
-            (drawLine ( x1, y1 )
-                ( x2, y2 )
-                (if fill then
-                    Color.black
-                 else
-                    Color.lightGray
-                )
-                boardOffset
-            )
+        drawLine ( x1, y1 ) ( x2, y2 ) color boardOffset
+            |> onClick (ToggleWall x y wall)
 
 
 viewField : Int -> Int -> Field -> List (Form Msg)
@@ -120,36 +120,9 @@ viewField y x field =
 
 viewRobots : Maybe Drag -> Int -> ( Int, Int ) -> Form Msg
 viewRobots drag i ( x, y ) =
-    onMouseDown (\( x, y ) -> DragStart { x = round x, y = round y } i)
-        (drawCircle
-            ( (indexToPosition x)
-                + fieldSize
-                / 2
-                + Maybe.withDefault 0
-                    (Maybe.map
-                        (\drag ->
-                            if drag.object == i then
-                                (toFloat (drag.current.x - drag.start.x))
-                            else
-                                0
-                        )
-                        drag
-                    )
-            , (indexToPosition y)
-                + fieldSize
-                / 2
-                + Maybe.withDefault 0
-                    (Maybe.map
-                        (\drag ->
-                            if drag.object == i then
-                                (toFloat (drag.current.y - drag.start.y))
-                            else
-                                0
-                        )
-                        drag
-                    )
-            )
-            (case i of
+    let
+        color =
+            case i of
                 0 ->
                     Color.red
 
@@ -164,45 +137,47 @@ viewRobots drag i ( x, y ) =
 
                 x ->
                     Color.black
+
+        f =
+            \x current start drag ->
+                (indexToPosition x)
+                    + fieldSize
+                    / 2
+                    + Maybe.withDefault 0
+                        (Maybe.map
+                            (\drag ->
+                                if drag.object == i then
+                                    (toFloat (current drag - start drag))
+                                else
+                                    0
+                            )
+                            drag
+                        )
+    in
+        drawCircle
+            ( (f x (\drag -> drag.current.x) (\drag -> drag.start.x) drag)
+            , (f y (\drag -> drag.current.y) (\drag -> drag.start.y) drag)
             )
+            color
             (fieldSize / 3)
-        )
+            |> onMouseDown (\( x, y ) -> DragStart { x = round x, y = round y } i)
 
 
 view : Model -> Html.Html Msg
 view model =
     svg 0
         0
-        (boardSize
-            + 10
-        )
-        (boardSize
-            + 10
-        )
-        (group
-            (List.append
-                (List.concat
-                    (List.indexedMap
-                        viewRow
-                        model.board
-                    )
-                )
-                (List.indexedMap
-                    (viewRobots model.drag)
-                    model.positions
-                )
+        (boardSize + 10)
+        (boardSize + 10)
+        (List.append
+            (model.board
+                |> List.indexedMap viewRow
+                |> List.concat
             )
-         --[
-         -- drawRectangle boardSize boardSize ( boardSize / 2, boardSize / 2 ) Color.lightGray
-         --, drawEllipse ( 30, 30 )
-         --, drawCircle ( boardSize - 30, 30 )
-         --, drawEllipse ( boardSize - 30, boardSize - 30 )
-         --, drawCircle ( 30, boardSize - 30 )
-         --, drawPolygon ( 100, 100 ) (degrees 210) Color.green
-         --, drawPolygon ( 150, 100 ) (degrees 160) Color.yellow
-         --, drawForm ( 1000, 200 ) (degrees 10)
-         --, drawText "Demo text" 60 ( boardSize / 2, boardSize / 2 ) Color.black
-         --]
+            (model.positions
+                |> List.indexedMap (viewRobots model.drag)
+            )
+            |> group
         )
 
 
@@ -368,10 +343,10 @@ xy2pos : Drag -> ( Int, Int ) -> ( Int, Int )
 xy2pos drag ( x, y ) =
     let
         newx =
-            x + (round (((toFloat drag.current.x - toFloat drag.start.x) / fieldSize)))
+            (drag.current.x - drag.start.x |> toFloat) / fieldSize |> round |> (+) x
 
         newy =
-            y + (round (((toFloat drag.current.y - toFloat drag.start.y) / fieldSize)))
+            (drag.current.y - drag.start.y |> toFloat) / fieldSize |> round |> (+) y
     in
         if newx < 0 || newy < 0 || newx >= boardSizeInFields || newy >= boardSizeInFields then
             ( x, y )
