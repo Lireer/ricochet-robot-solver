@@ -4,14 +4,14 @@ sudo: false
 cache:
 - cargo
 - yarn
+  directories:
+    - elm-stuff
 
 install:
   # || true, because we cache rustfmt and don't want to crash on the next travis run
   # due to rustfmt already being installed
   - (cargo install rustfmt || true)
   - npm install -g elm
-  directories:
-    - elm-stuff
 
 script:
  - set -e
