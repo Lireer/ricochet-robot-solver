@@ -239,7 +239,7 @@ drawEllipse pos =
 drawCircle : Point -> Color.Color -> Float -> Form msg
 drawCircle pos color size =
     circle size
-        |> filled (solid <| color)
+        |> filled (solid color)
         |> position pos
 
 
