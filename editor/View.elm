@@ -88,22 +88,72 @@ viewField y x field =
         ]
 
 
-viewRobots : Maybe Drag -> ( RobotColor, ( Int, Int ) ) -> Form Msg
-viewRobots drag ( i, ( x, y ) ) =
+robotColorToColor : RobotColor -> Color.Color
+robotColorToColor col =
+    case col of
+        Red ->
+            Color.red
+
+        Green ->
+            Color.green
+
+        Blue ->
+            Color.blue
+
+        Yellow ->
+            Color.yellow
+
+
+viewObject : Maybe Drag -> ( Object, ( Int, Int ) ) -> Form Msg
+viewObject drag ( obj, ( x, y ) ) =
     let
-        color =
-            case i of
-                Red ->
-                    Color.red
+        drag_x =
+            (f x (\drag -> drag.current.x) (\drag -> drag.start.x) drag)
 
-                Green ->
-                    Color.green
+        drag_y =
+            (f y (\drag -> drag.current.y) (\drag -> drag.start.y) drag)
 
-                Blue ->
-                    Color.blue
+        drag_pos =
+            ( drag_x, drag_y )
 
-                Yellow ->
-                    Color.yellow
+        draw =
+            case obj of
+                Robot color ->
+                    drawCircle
+                        drag_pos
+                        (robotColorToColor color)
+                        (fieldSize / 4)
+
+                Target (Circle color) ->
+                    drawCircle
+                        drag_pos
+                        (robotColorToColor color)
+                        (fieldSize / 3)
+
+                Target (Square color) ->
+                    drawRectangle (fieldSize / 2) (fieldSize / 2) drag_pos (robotColorToColor color)
+
+                Target (Triangle color) ->
+                    drawPolygon
+                        [ ( drag_x - fieldSize / 3, drag_y + fieldSize / 3 )
+                        , ( drag_x + fieldSize / 3, drag_y + fieldSize / 3 )
+                        , ( drag_x, drag_y - fieldSize / 3 )
+                        ]
+                        (robotColorToColor color)
+
+                Target (Hexagon color) ->
+                    drawPolygon
+                        [ ( drag_x, drag_y - fieldSize / 3 )
+                        , ( drag_x + fieldSize / 3, drag_y - fieldSize / 6 )
+                        , ( drag_x + fieldSize / 3, drag_y + fieldSize / 6 )
+                        , ( drag_x, drag_y + fieldSize / 3 )
+                        , ( drag_x - fieldSize / 3, drag_y + fieldSize / 6 )
+                        , ( drag_x - fieldSize / 3, drag_y - fieldSize / 6 )
+                        ]
+                        (robotColorToColor color)
+
+                Target Spiral ->
+                    drawText "S" 20 drag_pos Color.purple
 
         f =
             \x current start drag ->
@@ -113,7 +163,7 @@ viewRobots drag ( i, ( x, y ) ) =
                     + Maybe.withDefault 0
                         (Maybe.map
                             (\drag ->
-                                if drag.object == i then
+                                if drag.object == obj then
                                     (toFloat (current drag - start drag))
                                 else
                                     0
@@ -121,13 +171,7 @@ viewRobots drag ( i, ( x, y ) ) =
                             drag
                         )
     in
-        drawCircle
-            ( (f x (\drag -> drag.current.x) (\drag -> drag.start.x) drag)
-            , (f y (\drag -> drag.current.y) (\drag -> drag.start.y) drag)
-            )
-            color
-            (fieldSize / 3)
-            |> onMouseDown (\( x, y ) -> DragStart { x = round x, y = round y } i)
+        onMouseDown (\( x, y ) -> DragStart { x = round x, y = round y } obj) draw
 
 
 view : Model -> Html.Html Msg
@@ -141,9 +185,9 @@ view model =
                 |> List.indexedMap viewRow
                 |> List.concat
             )
-            (model.positions
+            (model.objects
                 |> EveryDict.toList
-                |> List.map (viewRobots model.drag)
+                |> List.map (viewObject model.drag)
             )
             |> group
         )

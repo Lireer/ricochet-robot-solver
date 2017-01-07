@@ -28,8 +28,8 @@ update msg model =
             ( { model | board = toggleBoardWall model.board x y wall }, Cmd.none )
 
         -- initialize a drag with the current mouse position
-        DragStart pos idx ->
-            ( { model | drag = Just { start = pos, current = pos, object = idx } }, Cmd.none )
+        DragStart pos obj ->
+            ( { model | drag = Just { start = pos, current = pos, object = obj } }, Cmd.none )
 
         -- update the visual position of the robot while being dragged
         DragAt pos ->
@@ -37,11 +37,11 @@ update msg model =
 
         -- when the robot is dropped, move it to the target
         DragEnd pos ->
-            ( { model | drag = Nothing, positions = Maybe.withDefault model.positions (Maybe.map (updatePosition model.positions) model.drag) }, Cmd.none )
+            ( { model | drag = Nothing, objects = Maybe.withDefault model.objects (Maybe.map (updatePosition model.objects) model.drag) }, Cmd.none )
 
 
-updateRobotPosition : Drag -> List ( Int, Int ) -> ( Int, Int ) -> ( Int, Int )
-updateRobotPosition drag positions pos =
+updateObjectPosition : Drag -> List ( Int, Int ) -> ( Int, Int ) -> ( Int, Int )
+updateObjectPosition drag positions pos =
     let
         newpos =
             xy2pos drag pos
@@ -53,14 +53,10 @@ updateRobotPosition drag positions pos =
             newpos
 
 
-updatePosition : RobotPositions -> Drag -> RobotPositions
+updatePosition : Positions -> Drag -> Positions
 updatePosition positions drag =
     positions
-        |> (EveryDict.update drag.object)
-            (\val ->
-                val
-                    |> Maybe.map (updateRobotPosition drag (EveryDict.values positions))
-            )
+        |> EveryDict.update drag.object (Maybe.map (updateObjectPosition drag (EveryDict.values positions)))
 
 
 {-| Calculate the new grid position from the drag position and the old position.

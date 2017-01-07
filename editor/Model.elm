@@ -2,11 +2,12 @@ module Model exposing (..)
 
 import EveryDict exposing (EveryDict)
 import Mouse exposing (Position)
+import BoardConfig exposing (boardSizeInFields)
 
 
 type alias Model =
     { board : Board
-    , positions : RobotPositions
+    , objects : Positions
     , drag : Maybe Drag
     }
 
@@ -17,8 +18,21 @@ type alias Drag =
         Position
         -- current - start is the offset that needs to be applied to the dragged robot
     , current : Position
-    , object : RobotColor
+    , object : Object
     }
+
+
+type Object
+    = Robot RobotColor
+    | Target Target
+
+
+type Target
+    = Spiral
+    | Circle RobotColor
+    | Triangle RobotColor
+    | Square RobotColor
+    | Hexagon RobotColor
 
 
 type alias Board =
@@ -42,8 +56,8 @@ type RobotColor
     | Yellow
 
 
-type alias RobotPositions =
-    EveryDict RobotColor ( Int, Int )
+type alias Positions =
+    EveryDict Object ( Int, Int )
 
 
 field : Field
@@ -59,16 +73,40 @@ model =
 
         last =
             List.append (List.repeat 15 { field | bottom = True }) [ { field | bottom = True, right = True } ]
+
+        targets =
+            [ Spiral
+            , Circle Red
+            , Circle Green
+            , Circle Blue
+            , Circle Yellow
+            , Triangle Red
+            , Triangle Green
+            , Triangle Blue
+            , Triangle Yellow
+            , Square Red
+            , Square Green
+            , Square Blue
+            , Square Yellow
+            , Hexagon Red
+            , Hexagon Green
+            , Hexagon Blue
+            , Hexagon Yellow
+            ]
+                |> List.indexedMap (\i v -> ( Target v, ( i % boardSizeInFields, i // boardSizeInFields ) ))
+
+        robots =
+            [ ( Robot Red, ( 1, 3 ) ), ( Robot Green, ( 15, 12 ) ), ( Robot Blue, ( 13, 8 ) ), ( Robot Yellow, ( 6, 6 ) ) ]
     in
         { board = List.append most [ last ]
-        , positions = [ ( Red, ( 1, 1 ) ), ( Green, ( 15, 12 ) ), ( Blue, ( 13, 8 ) ), ( Yellow, ( 6, 6 ) ) ] |> EveryDict.fromList
         , drag = Nothing
+        , objects = EveryDict.fromList (List.append targets robots)
         }
 
 
 type Msg
     = ToggleWall Int Int Wall
-    | DragStart Position RobotColor
+    | DragStart Position Object
     | DragAt Position
     | DragEnd Position
 

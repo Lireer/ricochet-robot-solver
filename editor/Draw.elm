@@ -4,12 +4,10 @@ import Graphics.Render exposing (Point, centered, text, Form, group, solid, circ
 import Color exposing (rgb)
 
 
-drawPolygon : Point -> Float -> Color.Color -> Form msg
-drawPolygon pos rotation color =
-    polygon [ ( 0, 0 ), ( 10, -10 ), ( 10, -20 ), ( -10, -20 ), ( -10, -10 ) ]
+drawPolygon : List Point -> Color.Color -> Form msg
+drawPolygon nodes color =
+    polygon nodes
         |> filled (solid <| color)
-        |> angle rotation
-        |> position pos
 
 
 drawRectangle : Float -> Float -> Point -> Color.Color -> Form msg
