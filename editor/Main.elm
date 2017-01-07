@@ -40,13 +40,26 @@ update msg model =
             ( { model | drag = Nothing, objects = Maybe.withDefault model.objects (Maybe.map (updatePosition model.objects) model.drag) }, Cmd.none )
 
 
-updateObjectPosition : Drag -> List ( Int, Int ) -> ( Int, Int ) -> ( Int, Int )
+collides : ( Object, ( Int, Int ) ) -> ( Object, ( Int, Int ) ) -> Bool
+collides ( a, ap ) ( b, bp ) =
+    case ( a, b ) of
+        ( Robot _, Robot _ ) ->
+            ap == bp
+
+        ( Target _, Target _ ) ->
+            ap == bp
+
+        _ ->
+            False
+
+
+updateObjectPosition : Drag -> List ( Object, ( Int, Int ) ) -> ( Int, Int ) -> ( Int, Int )
 updateObjectPosition drag positions pos =
     let
         newpos =
             xy2pos drag pos
     in
-        if List.any (\pos -> pos == newpos) positions then
+        if List.any (collides ( drag.object, newpos )) positions then
             pos
         else
             -- don't move two robots on the same field
