@@ -10,6 +10,8 @@ install:
   # due to rustfmt already being installed
   - (cargo install rustfmt || true)
   - npm install -g elm
+  directories:
+    - elm-stuff
 
 script:
  - set -e
