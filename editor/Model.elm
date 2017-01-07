@@ -1,6 +1,6 @@
 module Model exposing (..)
 
-import EveryDict exposing (EveryDict)
+import AllDict exposing (AllDict)
 import Mouse exposing (Position)
 import BoardConfig exposing (boardSizeInFields)
 
@@ -25,6 +25,44 @@ type alias Drag =
 type Object
     = Robot RobotColor
     | Target Target
+
+
+colOrd : RobotColor -> number
+colOrd c =
+    case c of
+        Red ->
+            0
+
+        Green ->
+            1
+
+        Blue ->
+            2
+
+        Yellow ->
+            3
+
+
+objOrd : Object -> number
+objOrd obj =
+    case obj of
+        Robot c ->
+            100 + (colOrd c)
+
+        Target Spiral ->
+            0
+
+        Target (Circle c) ->
+            10 + (colOrd c)
+
+        Target (Square c) ->
+            20 + (colOrd c)
+
+        Target (Triangle c) ->
+            30 + (colOrd c)
+
+        Target (Hexagon c) ->
+            40 + (colOrd c)
 
 
 type Target
@@ -57,7 +95,7 @@ type RobotColor
 
 
 type alias Positions =
-    EveryDict Object ( Int, Int )
+    AllDict Object ( Int, Int ) Int
 
 
 field : Field
@@ -100,7 +138,7 @@ model =
     in
         { board = List.append most [ last ]
         , drag = Nothing
-        , objects = EveryDict.fromList (List.append targets robots)
+        , objects = AllDict.fromList objOrd (List.append targets robots)
         }
 
 

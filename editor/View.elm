@@ -5,7 +5,7 @@ import BoardConfig exposing (..)
 import Draw exposing (..)
 import Graphics.Render exposing (Point, centered, text, Form, group, solid, circle, ellipse, polygon, filledAndBordered, position, svg, rectangle, filled, angle, fontColor, segment, solidLine, onClick, onMouseDown)
 import Color exposing (rgb)
-import EveryDict exposing (EveryDict)
+import AllDict exposing (AllDict)
 import Html exposing (program, div, button)
 
 
@@ -186,7 +186,7 @@ view model =
                 |> List.concat
             )
             (model.objects
-                |> EveryDict.toList
+                |> AllDict.toList
                 |> List.map (viewObject model.drag)
             )
             |> group

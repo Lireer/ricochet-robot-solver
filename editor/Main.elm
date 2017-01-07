@@ -5,7 +5,7 @@ module Main exposing (..)
 
 import Html exposing (program, div, button)
 import Mouse exposing (Position)
-import EveryDict exposing (EveryDict)
+import AllDict exposing (AllDict)
 import Model exposing (..)
 import BoardConfig exposing (..)
 import View exposing (..)
@@ -56,7 +56,7 @@ updateObjectPosition drag positions pos =
 updatePosition : Positions -> Drag -> Positions
 updatePosition positions drag =
     positions
-        |> EveryDict.update drag.object (Maybe.map (updateObjectPosition drag (EveryDict.values positions)))
+        |> AllDict.update drag.object (Maybe.map (updateObjectPosition drag (AllDict.toList positions)))
 
 
 {-| Calculate the new grid position from the drag position and the old position.
