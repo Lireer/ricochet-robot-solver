@@ -7,6 +7,7 @@ import Html exposing (program, div, button)
 import Graphics.Render exposing (Point, centered, text, Form, group, solid, circle, ellipse, polygon, filledAndBordered, position, svg, rectangle, filled, angle, fontColor, segment, solidLine, onClick, onMouseDown)
 import Color exposing (rgb)
 import Mouse exposing (Position)
+import EveryDict exposing (EveryDict)
 
 
 main : Program Never Model Msg
@@ -118,25 +119,22 @@ viewField y x field =
         ]
 
 
-viewRobots : Maybe Drag -> Int -> ( Int, Int ) -> Form Msg
-viewRobots drag i ( x, y ) =
+viewRobots : Maybe Drag -> ( RobotColor, ( Int, Int ) ) -> Form Msg
+viewRobots drag ( i, ( x, y ) ) =
     let
         color =
             case i of
-                0 ->
+                Red ->
                     Color.red
 
-                1 ->
+                Green ->
                     Color.green
 
-                2 ->
+                Blue ->
                     Color.blue
 
-                3 ->
+                Yellow ->
                     Color.yellow
-
-                x ->
-                    Color.black
 
         f =
             \x current start drag ->
@@ -175,7 +173,8 @@ view model =
                 |> List.concat
             )
             (model.positions
-                |> List.indexedMap (viewRobots model.drag)
+                |> EveryDict.toList
+                |> List.map (viewRobots model.drag)
             )
             |> group
         )
@@ -243,7 +242,7 @@ type alias Drag =
         Position
         -- current - start is the offset that needs to be applied to the dragged robot
     , current : Position
-    , object : Int
+    , object : RobotColor
     }
 
 
@@ -261,8 +260,15 @@ type alias Field =
     }
 
 
+type RobotColor
+    = Red
+    | Green
+    | Blue
+    | Yellow
+
+
 type alias RobotPositions =
-    List ( Int, Int )
+    EveryDict RobotColor ( Int, Int )
 
 
 field : Field
@@ -280,14 +286,14 @@ model =
             List.append (List.repeat 15 { field | bottom = True }) [ { field | bottom = True, right = True } ]
     in
         { board = List.append most [ last ]
-        , positions = [ ( 1, 1 ), ( 15, 12 ), ( 13, 8 ), ( 6, 6 ) ]
+        , positions = [ ( Red, ( 1, 1 ) ), ( Green, ( 15, 12 ) ), ( Blue, ( 13, 8 ) ), ( Yellow, ( 6, 6 ) ) ] |> EveryDict.fromList
         , drag = Nothing
         }
 
 
 type Msg
     = ToggleWall Int Int Wall
-    | DragStart Position Int
+    | DragStart Position RobotColor
     | DragAt Position
     | DragEnd Position
 
@@ -316,24 +322,27 @@ update msg model =
             ( { model | drag = Nothing, positions = Maybe.withDefault model.positions (Maybe.map (updatePosition model.positions) model.drag) }, Cmd.none )
 
 
+updateRobotPosition : Drag -> List ( Int, Int ) -> ( Int, Int ) -> ( Int, Int )
+updateRobotPosition drag positions pos =
+    let
+        newpos =
+            xy2pos drag pos
+    in
+        if List.any (\pos -> pos == newpos) positions then
+            pos
+        else
+            -- don't move two robots on the same field
+            newpos
+
+
 updatePosition : RobotPositions -> Drag -> RobotPositions
-updatePosition pos drag =
-    List.indexedMap
-        (\i val ->
-            if i == drag.object then
-                -- don't move two robots on the same field
-                let
-                    newpos =
-                        xy2pos drag val
-                in
-                    if List.any (\pos -> pos == newpos) pos then
-                        val
-                    else
-                        newpos
-            else
+updatePosition positions drag =
+    positions
+        |> (EveryDict.update drag.object)
+            (\val ->
                 val
-        )
-        pos
+                    |> Maybe.map (updateRobotPosition drag (EveryDict.values positions))
+            )
 
 
 {-| Calculate the new grid position from the drag position and the old position.
