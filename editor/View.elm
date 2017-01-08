@@ -205,5 +205,18 @@ view model =
 viewJsonTextField : Model -> Html.Html Msg
 viewJsonTextField model =
     div []
-        [ Html.textarea [ placeholder "Paste Json here", onInput NewJson, rows 20, cols 50, wrap "off" ] []
+        [ Html.textarea [ placeholder "Paste Json here", onInput NewJson, rows 20, cols 50, wrap "off" ]
+            []
+        , div [] []
+        , Html.button
+            [ Html.Events.onClick LoadJson ]
+            [ Html.text "Load from Json" ]
+        , Html.text
+            (case model.json of
+                Ok _ ->
+                    "Json successfully read"
+
+                Err err ->
+                    err
+            )
         ]

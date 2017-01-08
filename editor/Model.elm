@@ -9,7 +9,28 @@ type alias Model =
     { board : Board
     , objects : Positions
     , drag : Maybe Drag
-    , json : String
+    , json : Result JsonError ( JsonPositions, JsonBoard )
+    }
+
+
+type alias JsonError =
+    String
+
+
+type alias JsonPositions =
+    { rob_position : List ( Int, Int )
+    }
+
+
+type alias JsonBoard =
+    { fields : List (List JsonField)
+    }
+
+
+type alias JsonField =
+    { bottom : Bool
+    , right : Bool
+    , target : Maybe Target
     }
 
 
@@ -149,7 +170,7 @@ model =
                 |> toggleBoardWall 8 8 Right
         , drag = Nothing
         , objects = AllDict.fromList objOrd (List.append targets robots)
-        , json = ""
+        , json = Err "Nothing Loaded"
         }
 
 
@@ -159,6 +180,7 @@ type Msg
     | DragAt Position
     | DragEnd Position
     | NewJson String
+    | LoadJson
 
 
 type Wall

@@ -40,7 +40,16 @@ update msg model =
             ( { model | drag = Nothing, objects = Maybe.withDefault model.objects (Maybe.map (updatePosition model.objects) model.drag) }, Cmd.none )
 
         NewJson text ->
-            ( { model | json = text }, Cmd.none )
+            ( { model | json = parseJson text }, Cmd.none )
+
+        -- do nothing for now
+        LoadJson ->
+            ( model, Cmd.none )
+
+
+parseJson : String -> Result JsonError ( JsonPositions, JsonBoard )
+parseJson text =
+    Err "foo"
 
 
 collides : ( Object, ( Int, Int ) ) -> ( Object, ( Int, Int ) ) -> Bool
