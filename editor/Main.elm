@@ -39,6 +39,9 @@ update msg model =
         DragEnd pos ->
             ( { model | drag = Nothing, objects = Maybe.withDefault model.objects (Maybe.map (updatePosition model.objects) model.drag) }, Cmd.none )
 
+        NewJson text ->
+            ( { model | json = text }, Cmd.none )
+
 
 collides : ( Object, ( Int, Int ) ) -> ( Object, ( Int, Int ) ) -> Bool
 collides ( a, ap ) ( b, bp ) =

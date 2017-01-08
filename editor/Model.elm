@@ -9,6 +9,7 @@ type alias Model =
     { board : Board
     , objects : Positions
     , drag : Maybe Drag
+    , json : String
     }
 
 
@@ -148,6 +149,7 @@ model =
                 |> toggleBoardWall 8 8 Right
         , drag = Nothing
         , objects = AllDict.fromList objOrd (List.append targets robots)
+        , json = ""
         }
 
 
@@ -156,6 +158,7 @@ type Msg
     | DragStart Position Object
     | DragAt Position
     | DragEnd Position
+    | NewJson String
 
 
 type Wall
