@@ -10,8 +10,8 @@
           "right": false
         },
         {
-          "bottom": false,
-          "right": false
+          "bottom": true,
+          "right": true
         },
         {
           "bottom": false,
@@ -72,8 +72,8 @@
       ],
       [
         {
-          "bottom": false,
-          "right": false
+          "bottom": true,
+          "right": true
         },
         {
           "bottom": false,

@@ -9,29 +9,12 @@ type alias Model =
     { board : Board
     , objects : Positions
     , drag : Maybe Drag
-    , json : Result JsonError ( JsonPositions, JsonBoard )
+    , json : Result JsonError ( Positions, Board )
     }
 
 
 type alias JsonError =
     String
-
-
-type alias JsonPositions =
-    { rob_position : List ( Int, Int )
-    }
-
-
-type alias JsonBoard =
-    { fields : List (List JsonField)
-    }
-
-
-type alias JsonField =
-    { bottom : Bool
-    , right : Bool
-    , target : Maybe Target
-    }
 
 
 type alias Drag =
