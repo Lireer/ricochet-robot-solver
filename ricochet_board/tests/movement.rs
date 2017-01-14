@@ -21,31 +21,31 @@ fn read_test_json() {
 #[test]
 fn move_right() {
     let (mut positions, board) = read();
-    assert_eq!(positions.rob_position[0], (14, 6));
-    positions.move_right(Robot::Red, &board);
-    assert_eq!(positions.rob_position[0], (15, 6));
+    assert_eq!(positions.green(), (0, 5));
+    positions.move_right(Robot::Green, &board);
+    assert_eq!(positions.green(), (9, 5));
 }
 
 #[test]
 fn move_left() {
     let (mut positions, board) = read();
-    assert_eq!(positions.rob_position[0], (14, 6));
-    positions.move_left(Robot::Red, &board);
-    assert_eq!(positions.rob_position[0], (12, 6));
+    assert_eq!(positions.green(), (0, 5));
+    positions.move_left(Robot::Green, &board);
+    assert_eq!(positions.green(), (0, 5));
 }
 
 #[test]
 fn move_up() {
     let (mut positions, board) = read();
-    assert_eq!(positions.rob_position[0], (14, 6));
-    positions.move_up(Robot::Red, &board);
-    assert_eq!(positions.rob_position[0], (14, 3));
+    assert_eq!(positions.green(), (0, 5));
+    positions.move_up(Robot::Green, &board);
+    assert_eq!(positions.green(), (0, 5));
 }
 
 #[test]
 fn move_down() {
     let (mut positions, board) = read();
-    assert_eq!(positions.rob_position[0], (14, 6));
-    positions.move_down(Robot::Red, &board);
-    assert_eq!(positions.rob_position[0], (14, 13));
+    assert_eq!(positions.green(), (0, 5));
+    positions.move_down(Robot::Green, &board);
+    assert_eq!(positions.green(), (0, 11));
 }
