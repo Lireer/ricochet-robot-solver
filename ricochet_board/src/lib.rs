@@ -82,10 +82,8 @@ impl Board {
 impl RobotPositions {
     pub fn contains_robot(&self, x: usize, y: usize) -> bool {
         let byte = ((x << 4) | y) as u32;
-        ((self.0 & 0xFF) == byte) ||
-        (((self.0 >> 8) & 0xFF) == byte) ||
-        (((self.0 >> 16) & 0xFF) == byte) ||
-        (((self.0 >> 24) & 0xFF) == byte)
+        ((self.0 & 0xFF) == byte) || (((self.0 >> 8) & 0xFF) == byte) ||
+        (((self.0 >> 16) & 0xFF) == byte) || (((self.0 >> 24) & 0xFF) == byte)
     }
 
     pub fn contains_red(&self, x: usize, y: usize) -> bool {
@@ -185,12 +183,12 @@ impl RobotPositions {
 
 impl RobotPositions {
     pub fn from_array(pos: [(u8, u8); 4]) -> Self {
-        RobotPositions(
-            ((pos[0].0 as u32) << 28) | ((pos[0].1 as u32) << 24) |
-            ((pos[1].0 as u32) << 20) | ((pos[1].1 as u32) << 16) |
-            ((pos[2].0 as u32) << 12) | ((pos[2].1 as u32) << 8) |
-            ((pos[3].0 as u32) << 4) | pos[3].1 as u32
-        )
+        RobotPositions(((pos[0].0 as u32) << 28) | ((pos[0].1 as u32) << 24) |
+                       ((pos[1].0 as u32) << 20) |
+                       ((pos[1].1 as u32) << 16) |
+                       ((pos[2].0 as u32) << 12) |
+                       ((pos[2].1 as u32) << 8) | ((pos[3].0 as u32) << 4) |
+                       pos[3].1 as u32)
     }
     pub fn set_robot(&mut self, rob: Robot, (x, y): (usize, usize)) {
         let pos = ((x as u32) << 4) | (y as u32);
@@ -200,31 +198,19 @@ impl RobotPositions {
     }
     pub fn robot(self, rob: Robot) -> (usize, usize) {
         let rob = rob as usize;
-        let pos = self.0 >> (8*(3-rob));
+        let pos = self.0 >> (8 * (3 - rob));
         (((pos >> 4) & 0xF) as usize, (pos & 0xF) as usize)
     }
     pub fn red(self) -> (usize, usize) {
-        (
-            (self.0 >> 28) as usize,
-            ((self.0 >> 24) & 0xF) as usize,
-        )
+        ((self.0 >> 28) as usize, ((self.0 >> 24) & 0xF) as usize)
     }
     pub fn green(self) -> (usize, usize) {
-        (
-            ((self.0 >> 20) & 0xF) as usize,
-            ((self.0 >> 16) & 0xF) as usize,
-        )
+        (((self.0 >> 20) & 0xF) as usize, ((self.0 >> 16) & 0xF) as usize)
     }
     pub fn blue(self) -> (usize, usize) {
-        (
-            ((self.0 >> 12) & 0xF) as usize,
-            ((self.0 >> 8) & 0xF) as usize,
-        )
+        (((self.0 >> 12) & 0xF) as usize, ((self.0 >> 8) & 0xF) as usize)
     }
     pub fn yellow(self) -> (usize, usize) {
-        (
-            ((self.0 >> 4) & 0xF) as usize,
-            (self.0 & 0xF) as usize,
-        )
+        (((self.0 >> 4) & 0xF) as usize, (self.0 & 0xF) as usize)
     }
 }

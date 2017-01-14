@@ -22,11 +22,7 @@ impl Entry {
     /// returns the number of steps required to reach this node
     fn steps(self) -> Option<u8> {
         let steps = self.0 & 0b111111;
-        if steps == 63 {
-            None
-        } else {
-            Some(steps)
-        }
+        if steps == 63 { None } else { Some(steps) }
     }
 
     fn reached(&mut self, steps: u8) {
@@ -51,7 +47,13 @@ pub fn solve(board: &Board, positions: RobotPositions, target: Target) -> u8 {
     for steps in 1.. {
         for j in 0..database.0.len() {
             if database.0[j].steps() == Some(steps) {
-                if eval(board, RobotPositions(j as u32), &mut database, x, y, steps, target) {
+                if eval(board,
+                        RobotPositions(j as u32),
+                        &mut database,
+                        x,
+                        y,
+                        steps,
+                        target) {
                     return steps + 1;
                 }
             }
@@ -61,27 +63,51 @@ pub fn solve(board: &Board, positions: RobotPositions, target: Target) -> u8 {
     unreachable!()
 }
 
-const DIRECTIONS: [fn(&mut RobotPositions, robot: Robot, board: &Board); 4] = [
-    RobotPositions::move_right,
-    RobotPositions::move_left,
-    RobotPositions::move_up,
-    RobotPositions::move_down,
-];
+const DIRECTIONS: [fn(&mut RobotPositions, robot: Robot, board: &Board); 4] =
+    [RobotPositions::move_right,
+     RobotPositions::move_left,
+     RobotPositions::move_up,
+     RobotPositions::move_down];
 
-fn eval(board: &Board, start: RobotPositions, database: &mut Database, target_x: usize, target_y: usize, steps: u8, target: Target) -> bool {
+fn eval(board: &Board,
+        start: RobotPositions,
+        database: &mut Database,
+        target_x: usize,
+        target_y: usize,
+        steps: u8,
+        target: Target)
+        -> bool {
     let mut new = [[start; 4]; 4];
     for (i, &robot) in [Robot::Red, Robot::Green, Robot::Blue, Robot::Yellow].iter().enumerate() {
         for (j, dir) in DIRECTIONS.iter().enumerate() {
             dir(&mut new[i][j], robot, board);
             database.0[new[i][j].0 as usize].reached(steps + 1);
             match target {
-                Target::Spiral => if new[i][j].contains_robot(target_x, target_y) {
-                    return true;
-                },
-                Target::Red(_) => if robot == Robot::Red && new[i][j].contains_red(target_x, target_y) { return true; },
-                Target::Green(_) => if robot == Robot::Green && new[i][j].contains_green(target_x, target_y) { return true; },
-                Target::Blue(_) => if robot == Robot::Blue && new[i][j].contains_blue(target_x, target_y) { return true; },
-                Target::Yellow(_) => if robot == Robot::Yellow && new[i][j].contains_yellow(target_x, target_y) { return true; },
+                Target::Spiral => {
+                    if new[i][j].contains_robot(target_x, target_y) {
+                        return true;
+                    }
+                }
+                Target::Red(_) => {
+                    if robot == Robot::Red && new[i][j].contains_red(target_x, target_y) {
+                        return true;
+                    }
+                }
+                Target::Green(_) => {
+                    if robot == Robot::Green && new[i][j].contains_green(target_x, target_y) {
+                        return true;
+                    }
+                }
+                Target::Blue(_) => {
+                    if robot == Robot::Blue && new[i][j].contains_blue(target_x, target_y) {
+                        return true;
+                    }
+                }
+                Target::Yellow(_) => {
+                    if robot == Robot::Yellow && new[i][j].contains_yellow(target_x, target_y) {
+                        return true;
+                    }
+                }
             }
         }
     }
