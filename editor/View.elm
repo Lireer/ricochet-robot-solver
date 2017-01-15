@@ -7,6 +7,8 @@ import Graphics.Render exposing (Point, centered, text, Form, group, solid, circ
 import Color exposing (rgb)
 import AllDict exposing (AllDict)
 import Html exposing (program, div, button)
+import Html.Attributes exposing (type_, placeholder, cols, rows, wrap)
+import Html.Events exposing (onInput)
 
 
 indexToPosition : Int -> Float
@@ -176,18 +178,45 @@ viewObject drag ( obj, ( x, y ) ) =
 
 view : Model -> Html.Html Msg
 view model =
-    svg 0
-        0
-        (boardSize + 10)
-        (boardSize + 10)
-        (List.append
-            (model.board
-                |> List.indexedMap viewRow
-                |> List.concat
+    Html.table []
+        [ Html.tr []
+            [ Html.td []
+                [ svg 0
+                    0
+                    (boardSize + 10)
+                    (boardSize + 10)
+                    (List.append
+                        (model.board
+                            |> List.indexedMap viewRow
+                            |> List.concat
+                        )
+                        (model.objects
+                            |> AllDict.toList
+                            |> List.map (viewObject model.drag)
+                        )
+                        |> group
+                    )
+                ]
+            , Html.td [] [ viewJsonTextField model ]
+            ]
+        ]
+
+
+viewJsonTextField : Model -> Html.Html Msg
+viewJsonTextField model =
+    div []
+        [ Html.textarea [ placeholder "Paste Json here", onInput NewJson, rows 20, cols 50, wrap "off" ]
+            []
+        , div [] []
+        , Html.button
+            [ Html.Events.onClick LoadJson ]
+            [ Html.text "Load from Json" ]
+        , Html.text
+            (case model.json of
+                Ok _ ->
+                    "Json successfully read"
+
+                Err err ->
+                    err
             )
-            (model.objects
-                |> AllDict.toList
-                |> List.map (viewObject model.drag)
-            )
-            |> group
-        )
+        ]

@@ -1,10 +1,11 @@
 extern crate rustc_serialize;
 
+use std::collections::BTreeSet;
+
 #[derive(RustcDecodable, RustcEncodable, Copy, Clone)]
 pub struct Field {
     pub bottom: bool,
     pub right: bool,
-    pub target: Option<Target>,
 }
 
 pub const BOARDSIZE: usize = 16;
@@ -12,12 +13,11 @@ pub const BOARDSIZE: usize = 16;
 #[derive(RustcDecodable, RustcEncodable)]
 pub struct Board {
     pub fields: [[Field; BOARDSIZE]; BOARDSIZE],
+    pub targets: BTreeSet<(Target, (usize, usize))>,
 }
 
-#[derive(RustcDecodable, RustcEncodable)]
-pub struct RobotPositions {
-    pub rob_position: [(usize, usize); 4],
-}
+#[derive(RustcDecodable, RustcEncodable, Copy, Clone)]
+pub struct RobotPositions(pub u32);
 
 #[derive(PartialEq,Copy, Clone)]
 pub enum Robot {
@@ -26,7 +26,7 @@ pub enum Robot {
     Blue = 2,
     Yellow = 3,
 }
-#[derive(RustcDecodable, RustcEncodable, Clone, Copy)]
+#[derive(RustcDecodable, RustcEncodable, Clone, Copy, Ord, PartialOrd, Eq, PartialEq)]
 pub enum Target {
     Red(Symbol),
     Green(Symbol),
@@ -35,7 +35,7 @@ pub enum Target {
     Spiral,
 }
 
-#[derive(RustcDecodable, RustcEncodable, Clone, Copy)]
+#[derive(RustcDecodable, RustcEncodable, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Symbol {
     Circle,
     Triangle,
@@ -80,13 +80,30 @@ impl Board {
 }
 
 impl RobotPositions {
-    fn contains_robot(&self, x: usize, y: usize) -> bool {
-        for &(k, m) in &self.rob_position {
-            if x == k && y == m {
-                return true;
-            }
-        }
-        false
+    pub fn contains_robot(&self, x: usize, y: usize) -> bool {
+        let byte = ((x << 4) | y) as u32;
+        ((self.0 & 0xFF) == byte) || (((self.0 >> 8) & 0xFF) == byte) ||
+        (((self.0 >> 16) & 0xFF) == byte) || (((self.0 >> 24) & 0xFF) == byte)
+    }
+
+    pub fn contains_red(&self, x: usize, y: usize) -> bool {
+        let byte = ((x << 4) | y) as u32;
+        (((self.0 >> 24) & 0xFF) == byte)
+    }
+
+    pub fn contains_green(&self, x: usize, y: usize) -> bool {
+        let byte = ((x << 4) | y) as u32;
+        (((self.0 >> 16) & 0xFF) == byte)
+    }
+
+    pub fn contains_blue(&self, x: usize, y: usize) -> bool {
+        let byte = ((x << 4) | y) as u32;
+        (((self.0 >> 8) & 0xFF) == byte)
+    }
+
+    pub fn contains_yellow(&self, x: usize, y: usize) -> bool {
+        let byte = ((x << 4) | y) as u32;
+        ((self.0 & 0xFF) == byte)
     }
 
     fn can_move_right(&self, board: &Board, x: usize, y: usize) -> bool {
@@ -108,12 +125,12 @@ impl RobotPositions {
 
 impl RobotPositions {
     pub fn move_right(&mut self, robot: Robot, board: &Board) {
-        let (x, y) = self.rob_position[robot as usize];
+        let (x, y) = self.robot(robot);
         for x_tmp in x.. {
             let x_tmp = x_tmp % BOARDSIZE;
             if !self.can_move_right(board, x_tmp, y) {
                 if x != x_tmp {
-                    self.rob_position[robot as usize] = (x_tmp, y);
+                    self.set_robot(robot, (x_tmp, y));
                 }
                 // TODO Zielabfrage
                 return;
@@ -122,12 +139,12 @@ impl RobotPositions {
     }
 
     pub fn move_down(&mut self, robot: Robot, board: &Board) {
-        let (x, y) = self.rob_position[robot as usize];
+        let (x, y) = self.robot(robot);
         for y_tmp in y.. {
             let y_tmp = y_tmp % BOARDSIZE;
             if !self.can_move_down(board, x, y_tmp) {
                 if y != y_tmp {
-                    self.rob_position[robot as usize] = (x, y_tmp);
+                    self.set_robot(robot, (x, y_tmp));
                 }
                 // TODO Zielabfrage
                 return;
@@ -136,12 +153,12 @@ impl RobotPositions {
     }
 
     pub fn move_left(&mut self, robot: Robot, board: &Board) {
-        let (x, y) = self.rob_position[robot as usize];
+        let (x, y) = self.robot(robot);
         for i in 0.. {
             let x = (x + BOARDSIZE - i) % BOARDSIZE;
             if !self.can_move_left(board, x, y) {
                 if i != 0 {
-                    self.rob_position[robot as usize] = (x, y);
+                    self.set_robot(robot, (x, y));
                 }
                 // TODO Zielabfrage
                 return;
@@ -150,16 +167,50 @@ impl RobotPositions {
     }
 
     pub fn move_up(&mut self, robot: Robot, board: &Board) {
-        let (x, y) = self.rob_position[robot as usize];
+        let (x, y) = self.robot(robot);
         for i in 0.. {
             let y = (y + BOARDSIZE - i) % BOARDSIZE;
             if !self.can_move_up(board, x, y) {
                 if i != 0 {
-                    self.rob_position[robot as usize] = (x, y);
+                    self.set_robot(robot, (x, y));
                 }
                 // TODO Zielabfrage
                 return;
             }
         }
+    }
+}
+
+impl RobotPositions {
+    pub fn from_array(pos: [(u8, u8); 4]) -> Self {
+        RobotPositions(((pos[0].0 as u32) << 28) | ((pos[0].1 as u32) << 24) |
+                       ((pos[1].0 as u32) << 20) |
+                       ((pos[1].1 as u32) << 16) |
+                       ((pos[2].0 as u32) << 12) |
+                       ((pos[2].1 as u32) << 8) | ((pos[3].0 as u32) << 4) |
+                       pos[3].1 as u32)
+    }
+    pub fn set_robot(&mut self, rob: Robot, (x, y): (usize, usize)) {
+        let pos = ((x as u32) << 4) | (y as u32);
+        let rob = rob as usize;
+        self.0 &= !(0xFF << 8 * (3 - rob));
+        self.0 |= pos << 8 * (3 - rob);
+    }
+    pub fn robot(self, rob: Robot) -> (usize, usize) {
+        let rob = rob as usize;
+        let pos = self.0 >> (8 * (3 - rob));
+        (((pos >> 4) & 0xF) as usize, (pos & 0xF) as usize)
+    }
+    pub fn red(self) -> (usize, usize) {
+        ((self.0 >> 28) as usize, ((self.0 >> 24) & 0xF) as usize)
+    }
+    pub fn green(self) -> (usize, usize) {
+        (((self.0 >> 20) & 0xF) as usize, ((self.0 >> 16) & 0xF) as usize)
+    }
+    pub fn blue(self) -> (usize, usize) {
+        (((self.0 >> 12) & 0xF) as usize, ((self.0 >> 8) & 0xF) as usize)
+    }
+    pub fn yellow(self) -> (usize, usize) {
+        (((self.0 >> 4) & 0xF) as usize, (self.0 & 0xF) as usize)
     }
 }

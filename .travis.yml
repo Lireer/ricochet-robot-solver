@@ -1,5 +1,6 @@
 language: rust
-sudo: false
+sudo: true
+rust: nightly
 
 cache:
   cargo: true
