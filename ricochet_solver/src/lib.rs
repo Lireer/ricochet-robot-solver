@@ -58,7 +58,7 @@ pub fn solve(board: &Board, positions: RobotPositions, target: Target) -> u8 {
                 }
             }
         }
-        assert!(steps < 2);
+        assert!(steps < 20);
     }
     unreachable!()
 }
