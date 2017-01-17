@@ -21,31 +21,31 @@ fn read_test_json() {
 #[test]
 fn move_right() {
     let (mut positions, board) = read();
-    assert_eq!(positions.green(), (0, 5));
+    assert_eq!(positions.green(), (7, 1));
     positions.move_right(Robot::Green, &board);
-    assert_eq!(positions.green(), (9, 5));
+    assert_eq!(positions.green(), (13, 1));
 }
 
 #[test]
 fn move_left() {
     let (mut positions, board) = read();
-    assert_eq!(positions.green(), (0, 5));
+    assert_eq!(positions.green(), (7, 1));
     positions.move_left(Robot::Green, &board);
-    assert_eq!(positions.green(), (0, 5));
+    assert_eq!(positions.green(), (5, 1));
 }
 
 #[test]
 fn move_up() {
     let (mut positions, board) = read();
-    assert_eq!(positions.green(), (0, 5));
+    assert_eq!(positions.green(), (7, 1));
     positions.move_up(Robot::Green, &board);
-    assert_eq!(positions.green(), (0, 5));
+    assert_eq!(positions.green(), (7, 0));
 }
 
 #[test]
 fn move_down() {
     let (mut positions, board) = read();
-    assert_eq!(positions.green(), (0, 5));
+    assert_eq!(positions.green(), (7, 1));
     positions.move_down(Robot::Green, &board);
-    assert_eq!(positions.green(), (0, 11));
+    assert_eq!(positions.green(), (7, 6));
 }

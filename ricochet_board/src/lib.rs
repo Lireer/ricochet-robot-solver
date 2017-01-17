@@ -54,6 +54,18 @@ impl Board {
         }
     }
 
+    // only useful for 16x16 board
+    pub fn set_center_walls(&mut self) {
+        self.fields[7][6].bottom = true;
+        self.fields[8][6].bottom = true;
+        self.fields[6][7].right = true;
+        self.fields[8][7].right = true;
+        self.fields[6][8].right = true;
+        self.fields[7][8].bottom = true;
+        self.fields[8][8].right = true;
+        self.fields[8][8].bottom = true;
+    }
+
     pub fn wall_right(&self, x: usize, y: usize) -> bool {
         self.fields[x][y].right
     }
