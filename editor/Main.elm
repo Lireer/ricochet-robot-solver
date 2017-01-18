@@ -94,30 +94,48 @@ parseRobPositions text =
         |> Result.map (\x -> (AllDict.fromList Model.objOrd (List.map2 (,) [ Model.Robot Model.Red, Model.Robot Model.Green, Model.Robot Model.Blue, Model.Robot Model.Yellow ] x)))
 
 
+collect : List (Result err ok) -> Result err (List ok)
+collect list =
+    List.foldl
+        (\elem aggregate ->
+            case ( elem, aggregate ) of
+                ( _, Err err ) ->
+                    Err err
+
+                ( Err err, _ ) ->
+                    Err err
+
+                ( Ok val, Ok aggregate ) ->
+                    Ok (val :: aggregate)
+        )
+        (Ok [])
+        list
+
+
 parseTargetPositions : String -> Result String Positions
 parseTargetPositions text =
     parseJsonTargetPositions text
-        |> Result.andThen (List.map (\( target, pos ) -> (target |> jsonTargetToTarget |> Result.map (\target -> ( target, pos )))))
+        |> Result.andThen (\a -> collect (List.map (\( target, pos ) -> (target |> jsonTargetToObject |> Result.map (\target -> ( target, pos )))) a))
         |> Result.map (AllDict.fromList Model.objOrd)
 
 
-jsonTargetToTarget : JsonTarget -> Result String Target
-jsonTargetToTarget target =
+jsonTargetToObject : JsonTarget -> Result String Object
+jsonTargetToObject target =
     case ( target.variant, target.fields ) of
         ( "Spiral", Nothing ) ->
-            Ok Model.Spiral
+            Ok (Model.Target Model.Spiral)
 
         ( "Circle", Just col ) ->
-            Result.map Model.Circle (jsonColorToColor col)
+            Result.map (\a -> Model.Target (Model.Circle a)) (jsonColorToColor col)
 
         ( "Square", Just col ) ->
-            Result.map Model.Square (jsonColorToColor col)
+            Result.map (\a -> Model.Target (Model.Square a)) (jsonColorToColor col)
 
         ( "Triangle", Just col ) ->
-            Result.map Model.Triangle (jsonColorToColor col)
+            Result.map (\a -> Model.Target (Model.Triangle a)) (jsonColorToColor col)
 
         ( "Hexagon", Just col ) ->
-            Result.map Model.Hexagon (jsonColorToColor col)
+            Result.map (\a -> Model.Target (Model.Hexagon a)) (jsonColorToColor col)
 
         ( _, _ ) ->
             Err ("Bad variant: " ++ target.variant)
