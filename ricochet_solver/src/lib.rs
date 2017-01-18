@@ -41,29 +41,29 @@ pub fn solve(board: &Board, positions: RobotPositions, target: Target) -> Vec<(R
         .unwrap()
         .1;
     database.0[positions.0 as usize].reached(0);
-    if eval(board, positions, &mut database, x, y, 0, target) {
-        return 1;
+    if let Some(target) = eval(board, positions, &mut database, x, y, 0, target) {
+        return find_direction(1, &mut database, board, target);
     }
     for steps in 1.. {
         for j in 0..database.0.len() {
             if database.0[j].steps() == Some(steps) {
                 if let Some(target) = eval(board,
-                        RobotPositions(j as u32),
-                        &mut database,
-                        x,
-                        y,
-                        steps,
-                        target) {
-                    return find_direction(steps, &mut database, board, target);
+                                           RobotPositions(j as u32),
+                                           &mut database,
+                                           x,
+                                           y,
+                                           steps,
+                                           target) {
+                    return find_direction(steps + 1, &mut database, board, target);
                 }
             }
         }
-        assert!(steps < 20);
+        assert!(steps < 63);
     }
     unreachable!()
 }
 
-#[derive(Debug)]
+#[derive(Debug,Eq,PartialEq)]
 pub enum Direction {
     Right,
     Left,
@@ -77,24 +77,27 @@ const DIRECTIONS: [fn(&mut RobotPositions, robot: Robot, board: &Board); 4] =
      RobotPositions::move_up,
      RobotPositions::move_down];
 
-/*
-     // mark all bits that differ
-     let diff = pos1 ^ pos2;
-     // find the position of the most right bit that differed
-     let last = diff.trailing_zeros() + 1;
-     // find the position of the most left bit that differed
-     let first = 32 - (diff.leading_zeros() + 1);
-     // the last two bits only tell which bit of the coordinate changed, drop them
-     let last_sector = last >> 2;
-     let first_sector = first >> 2;
-     // if the sector is the same, this is potentially a source location
-     if last_sector == first_sector {
-         // yay
-     }
-*/
+// mark all bits that differ
+// let diff = pos1 ^ pos2;
+// find the position of the most right bit that differed
+// let last = diff.trailing_zeros() + 1;
+// find the position of the most left bit that differed
+// let first = 32 - (diff.leading_zeros() + 1);
+// the last two bits only tell which bit of the coordinate changed, drop them
+// let last_sector = last >> 2;
+// let first_sector = first >> 2;
+// if the sector is the same, this is potentially a source location
+// if last_sector == first_sector {
+// yay
+// }
+//
 
-fn find_direction(steps: usize, database: &mut Database, board: &Board, target: RobotPositions) -> Vec<(Robot, Direction)> {
-
+fn find_direction(steps: u8,
+                  database: &mut Database,
+                  board: &Board,
+                  target: RobotPositions)
+                  -> Vec<(Robot, Direction)> {
+    return vec![];
 }
 
 fn eval(board: &Board,

@@ -6,6 +6,7 @@ use rustc_serialize::Decodable;
 
 use ricochet_board::*;
 use std::fs::File;
+use ricochet_solver::*;
 
 fn read() -> (RobotPositions, Board) {
     let mut file = File::open("tests/test.json").expect("test.json not found");
@@ -22,5 +23,9 @@ fn read_test_json() {
 #[test]
 fn solve() {
     let (positions, board) = read();
-    assert_eq!(ricochet_solver::solve(&board, positions, Target::Spiral), 6);
+    assert_eq!(ricochet_solver::solve(&board, positions, Target::Red(Symbol::Circle)),
+               vec![(Robot::Blue, Direction::Left),
+                    (Robot::Blue, Direction::Down),
+                    (Robot::Red, Direction::Down),
+                    (Robot::Red, Direction::Right)]);
 }

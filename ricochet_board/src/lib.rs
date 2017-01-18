@@ -19,7 +19,7 @@ pub struct Board {
 #[derive(RustcDecodable, RustcEncodable, Copy, Clone)]
 pub struct RobotPositions(pub u32);
 
-#[derive(PartialEq,Copy, Clone)]
+#[derive(Debug,PartialEq,Copy, Clone)]
 pub enum Robot {
     Red = 0,
     Green = 1,
