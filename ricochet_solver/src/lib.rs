@@ -41,20 +41,20 @@ pub fn solve(board: &Board, positions: RobotPositions, target: Target) -> Vec<(R
         .unwrap()
         .1;
     database.0[positions.0 as usize].reached(0);
-    if let Some(target) = eval(board, positions, &mut database, x, y, 0, target) {
-        return find_direction(1, &mut database, board, target);
+    if let Some(result_position) = eval(board, positions, &mut database, x, y, 0, target) {
+        return find_direction(1, &mut database, board, result_position);
     }
     for steps in 1.. {
         for j in 0..database.0.len() {
             if database.0[j].steps() == Some(steps) {
-                if let Some(target) = eval(board,
-                                           RobotPositions(j as u32),
-                                           &mut database,
-                                           x,
-                                           y,
-                                           steps,
-                                           target) {
-                    return find_direction(steps + 1, &mut database, board, target);
+                if let Some(result_position) = eval(board,
+                                                    RobotPositions(j as u32),
+                                                    &mut database,
+                                                    x,
+                                                    y,
+                                                    steps,
+                                                    target) {
+                    return find_direction(steps + 1, &mut database, board, result_position);
                 }
             }
         }
