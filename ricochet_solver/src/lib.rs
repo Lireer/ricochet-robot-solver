@@ -42,7 +42,7 @@ pub fn solve(board: &Board, positions: RobotPositions, target: Target) -> Vec<(R
         .1;
     database.0[positions.0 as usize].reached(0);
     if let Some(result_position) = eval(board, positions, &mut database, x, y, 0, target) {
-        return find_direction(1, &mut database, board, result_position);
+        return find_direction(0, &mut database, board, result_position);
     }
     for steps in 1.. {
         for j in 0..database.0.len() {
@@ -54,7 +54,7 @@ pub fn solve(board: &Board, positions: RobotPositions, target: Target) -> Vec<(R
                                                     y,
                                                     steps,
                                                     target) {
-                    return find_direction(steps + 1, &mut database, board, result_position);
+                    return find_direction(steps, &mut database, board, result_position);
                 }
             }
         }
@@ -95,11 +95,26 @@ const DIRECTIONS: [fn(&mut RobotPositions, robot: Robot, board: &Board); 4] =
 fn find_direction(steps: u8,
                   database: &mut Database,
                   board: &Board,
-                  target: RobotPositions)
+                  result_position: RobotPositions)
                   -> Vec<(Robot, Direction)> {
+    for i in (0..steps).rev() {
+        for j in 1..database.0.len() {
+            if Some(i) == database.0[j].steps() {
+                let diff = (j as u32) ^ (result_position.0 as u32); // mark all bits that differ
+                let last = diff.trailing_zeros() + 1; // find the position of the most right bit that differed
+                let first = 32 - diff.leading_zeros() - 1; // find the position of the most left bit that differed
+                let last_sector = last >> 2; // the last two bits only tell which bit of the coordinate changed, drop them
+                let first_sector = first >> 2;
+                if last_sector == first_sector {
+
+                }
+            }
+        }
+    }
     return vec![];
 }
 
+/// calculates all new possible positions starting from a startposition
 fn eval(board: &Board,
         start: RobotPositions,
         database: &mut Database,
