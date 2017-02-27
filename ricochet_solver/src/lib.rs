@@ -46,7 +46,7 @@ pub fn solve(board: &Board, positions: RobotPositions, target: Target) -> Vec<(R
         .1;
     database.0[positions.0 as usize].reached(0);
     if let Some(result_position) = eval(board, positions, &mut database, x, y, 0, target) {
-        return find_direction(0, &mut database, board, result_position);
+        return find_direction(1, &mut database, board, result_position);
     }
     for steps in 1.. {
         for j in 0..database.0.len() {
@@ -59,7 +59,7 @@ pub fn solve(board: &Board, positions: RobotPositions, target: Target) -> Vec<(R
                                                     steps,
                                                     target) {
                     println!("Lösung möglich, als nächstes Weg finden");
-                    return find_direction(steps, &mut database, board, result_position);
+                    return find_direction(steps+1, &mut database, board, result_position);
                 }
             }
         }
@@ -93,7 +93,7 @@ fn find_direction(steps: u8, //one less than needed to reach the target
     let visited_pos = visited_positions(database, steps);
     let mut path = vec![];
     let mut path_pos = vec![];
-    for i in (0..steps-1).rev() {
+    for i in (0..steps).rev() {
         for j in 0..visited_pos[i as usize].len() {
             let diff = (j as u32) ^ (result_position.0 as u32); // mark all bits that differ
             let last = diff.trailing_zeros() + 1; // find the position of the most right bit that differed
@@ -136,11 +136,12 @@ fn visited_positions(database: &Database,
                      steps: u8)
                      -> Vec<Vec<RobotPositions>> {
     println!("Array mit allen Positionen erzeugen");
-    let mut vis_pos = vec![vec![];steps as usize];
+    let mut vis_pos = vec![vec![];(steps as usize)+1];
     for i in 0..database.0.len() {
         if database.0[i].steps() != None {
             println!("Versuch {}", i);
-            vis_pos[(database.0[i].steps().unwrap() as usize - 1)].push(RobotPositions(i as u32));
+            println!("database.0[i].steps().unwrap(): {}", database.0[i].steps().unwrap() as usize);
+            vis_pos[(database.0[i].steps().unwrap() as usize)].push(RobotPositions(i as u32));
             println!("Versuch {} geklappt", i);
         }
     }
