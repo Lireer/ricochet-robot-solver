@@ -16,7 +16,7 @@ pub struct Board {
     pub targets: BTreeSet<(Target, (usize, usize))>,
 }
 
-#[derive(RustcDecodable, RustcEncodable, Copy, Clone)]
+#[derive(RustcDecodable, RustcEncodable, Copy, Clone, PartialEq, Eq)]
 pub struct RobotPositions(pub u32);
 
 #[derive(Debug,PartialEq,Copy, Clone)]
@@ -144,7 +144,6 @@ impl RobotPositions {
                 if x != x_tmp {
                     self.set_robot(robot, (x_tmp, y));
                 }
-                // TODO Zielabfrage
                 return;
             }
         }
@@ -158,7 +157,6 @@ impl RobotPositions {
                 if y != y_tmp {
                     self.set_robot(robot, (x, y_tmp));
                 }
-                // TODO Zielabfrage
                 return;
             }
         }
@@ -172,7 +170,6 @@ impl RobotPositions {
                 if i != 0 {
                     self.set_robot(robot, (x, y));
                 }
-                // TODO Zielabfrage
                 return;
             }
         }
@@ -186,7 +183,6 @@ impl RobotPositions {
                 if i != 0 {
                     self.set_robot(robot, (x, y));
                 }
-                // TODO Zielabfrage
                 return;
             }
         }
@@ -195,11 +191,13 @@ impl RobotPositions {
 
 impl RobotPositions {
     pub fn from_array(pos: [(u8, u8); 4]) -> Self {
-        RobotPositions(((pos[0].0 as u32) << 28) | ((pos[0].1 as u32) << 24) |
+        RobotPositions(((pos[0].0 as u32) << 28) |
+                       ((pos[0].1 as u32) << 24) |
                        ((pos[1].0 as u32) << 20) |
                        ((pos[1].1 as u32) << 16) |
                        ((pos[2].0 as u32) << 12) |
-                       ((pos[2].1 as u32) << 8) | ((pos[3].0 as u32) << 4) |
+                       ((pos[2].1 as u32) << 8) |
+                       ((pos[3].0 as u32) << 4) |
                        pos[3].1 as u32)
     }
     pub fn set_robot(&mut self, rob: Robot, (x, y): (usize, usize)) {

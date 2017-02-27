@@ -6,6 +6,8 @@ authors = ["carl"]
 [dependencies]
 ricochet_board = { path = "../ricochet_board" }
 rustc-serialize = "0.3"
+enum_primitive = "0.1.1"
+num = "0.1.37"
 
 [profile.test]
 opt-level = 3

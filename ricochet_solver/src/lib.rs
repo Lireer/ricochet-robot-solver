@@ -1,8 +1,11 @@
 #![feature(box_syntax)]
 
 extern crate ricochet_board;
-use ricochet_board::*;
+#[macro_use] extern crate enum_primitive;
+extern crate num;
 
+use ricochet_board::*;
+use num::FromPrimitive;
 
 /// lower 6 bit are the number of steps required to reach this position.
 /// in case all of the first 6 bits are set, this node has not been visited yet
@@ -34,6 +37,7 @@ impl Entry {
 }
 
 pub fn solve(board: &Board, positions: RobotPositions, target: Target) -> Vec<(Robot, Direction)> {
+    println!("Start");
     let mut database = Database(box [Entry(255); 1 << 32]);
     let (x, y) = board.targets
         .iter()
@@ -54,6 +58,7 @@ pub fn solve(board: &Board, positions: RobotPositions, target: Target) -> Vec<(R
                                                     y,
                                                     steps,
                                                     target) {
+                    println!("Lösung möglich, als nächstes Weg finden");
                     return find_direction(steps, &mut database, board, result_position);
                 }
             }
@@ -63,12 +68,14 @@ pub fn solve(board: &Board, positions: RobotPositions, target: Target) -> Vec<(R
     unreachable!()
 }
 
-#[derive(Debug,Eq,PartialEq)]
-pub enum Direction {
-    Right,
-    Left,
-    Up,
-    Down,
+enum_from_primitive! {
+    #[derive(Debug,Eq,PartialEq)]
+    pub enum Direction {
+        Right = 0,
+        Left = 1,
+        Up = 2,
+        Down = 3,
+    }
 }
 
 const DIRECTIONS: [fn(&mut RobotPositions, robot: Robot, board: &Board); 4] =
@@ -77,41 +84,68 @@ const DIRECTIONS: [fn(&mut RobotPositions, robot: Robot, board: &Board); 4] =
      RobotPositions::move_up,
      RobotPositions::move_down];
 
-// mark all bits that differ
-// let diff = pos1 ^ pos2;
-// find the position of the most right bit that differed
-// let last = diff.trailing_zeros() + 1;
-// find the position of the most left bit that differed
-// let first = 32 - (diff.leading_zeros() + 1);
-// the last two bits only tell which bit of the coordinate changed, drop them
-// let last_sector = last >> 2;
-// let first_sector = first >> 2;
-// if the sector is the same, this is potentially a source location
-// if last_sector == first_sector {
-// yay
-// }
-//
 
-fn find_direction(steps: u8,
+fn find_direction(steps: u8, //one less than needed to reach the target
                   database: &mut Database,
                   board: &Board,
                   result_position: RobotPositions)
                   -> Vec<(Robot, Direction)> {
-    for i in (0..steps).rev() {
-        for j in 1..database.0.len() {
-            if Some(i) == database.0[j].steps() {
-                let diff = (j as u32) ^ (result_position.0 as u32); // mark all bits that differ
-                let last = diff.trailing_zeros() + 1; // find the position of the most right bit that differed
-                let first = 32 - diff.leading_zeros() - 1; // find the position of the most left bit that differed
-                let last_sector = last >> 2; // the last two bits only tell which bit of the coordinate changed, drop them
-                let first_sector = first >> 2;
-                if last_sector == first_sector {
-
+    let visited_pos = visited_positions(database, steps);
+    let mut path = vec![];
+    let mut path_pos = vec![];
+    for i in (0..steps-1).rev() {
+        for j in 0..visited_pos[i as usize].len() {
+            let diff = (j as u32) ^ (result_position.0 as u32); // mark all bits that differ
+            let last = diff.trailing_zeros() + 1; // find the position of the most right bit that differed
+            let first = 32 - diff.leading_zeros() - 1; // find the position of the most left bit that differed
+            let last_sector = last >> 2; // the last two bits only tell which bit of the coordinate changed, drop them
+            let first_sector = first >> 2;
+            if last_sector == first_sector // if the sector is the same, this is potentially a source location
+            {
+                match can_reach(&mut RobotPositions(j as u32), result_position, board) {
+                    Some(x) => {path_pos.push(RobotPositions(j as u32));
+                                path.push(x);
+                                break;
+                                }
+                    None => {}
                 }
             }
         }
     }
-    return vec![];
+    return path;
+}
+
+fn can_reach(mut start: &mut RobotPositions,
+             goal: RobotPositions,
+             board: &Board)
+             -> Option<(Robot, Direction)> {
+    for (i, &robot) in [Robot::Red, Robot::Green, Robot::Blue, Robot::Yellow].iter().enumerate() {
+        for (j, dir) in DIRECTIONS.iter().enumerate() {
+            dir(&mut start, robot, board);
+            if *start == goal {
+                return Some((robot, Direction::from_usize(j).unwrap()));
+            }
+        }
+    }
+    None
+}
+
+/// makes an array with all the positions that were reached with the number of steps needed
+/// to reach this position minus one as the index
+fn visited_positions(database: &Database,
+                     steps: u8)
+                     -> Vec<Vec<RobotPositions>> {
+    println!("Array mit allen Positionen erzeugen");
+    let mut vis_pos = vec![vec![];steps as usize];
+    for i in 0..database.0.len() {
+        if database.0[i].steps() != None {
+            println!("Versuch {}", i);
+            vis_pos[(database.0[i].steps().unwrap() as usize - 1)].push(RobotPositions(i as u32));
+            println!("Versuch {} geklappt", i);
+        }
+    }
+    println!("Array erzeugt");
+    return vis_pos;
 }
 
 /// calculates all new possible positions starting from a startposition
