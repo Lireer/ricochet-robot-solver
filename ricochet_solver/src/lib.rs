@@ -1,7 +1,8 @@
 #![feature(box_syntax)]
 
 extern crate ricochet_board;
-#[macro_use] extern crate enum_primitive;
+#[macro_use]
+extern crate enum_primitive;
 extern crate num;
 
 use ricochet_board::*;
@@ -57,7 +58,7 @@ pub fn solve(board: &Board, positions: RobotPositions, target: Target) -> Vec<(R
                                                     y,
                                                     steps,
                                                     target) {
-                    return find_direction(steps+1, &mut database, board, result_position);
+                    return find_direction(steps + 1, &mut database, board, result_position);
                 }
             }
         }
@@ -83,7 +84,7 @@ const DIRECTIONS: [fn(&mut RobotPositions, robot: Robot, board: &Board); 4] =
      RobotPositions::move_down];
 
 
-fn find_direction(steps: u8, //number of steps needed to reach the target
+fn find_direction(steps: u8, // number of steps needed to reach the target
                   database: &mut Database,
                   board: &Board,
                   result_position: RobotPositions)
@@ -93,24 +94,31 @@ fn find_direction(steps: u8, //number of steps needed to reach the target
     let mut path_pos = vec![];
     let mut current_goal = result_position;
     for i in (0..(steps)).rev() {
-        println!("Länge der aktuellen Liste in visited_pos[{}]: {}", i, visited_pos[i as usize].len());
+        println!("Länge der aktuellen Liste in visited_pos[{}]: {}",
+                 i,
+                 visited_pos[i as usize].len());
         for j in 0..visited_pos[i as usize].len() {
             let diff = (visited_pos[i as usize][j as usize].0 as u32) ^ (current_goal.0 as u32); // mark all bits that differ
             let last = diff.trailing_zeros() + 1; // find the position of the most right bit that differed
             let first = 32 - diff.leading_zeros() - 1; // find the position of the most left bit that differed
             let last_sector = last >> 2; // the last two bits only tell which bit of the coordinate changed, drop them
             let first_sector = first >> 2;
-            if last_sector == first_sector // if the sector is the same, this is potentially a source location
+            if last_sector == first_sector
+            // if the sector is the same, this is potentially a source location
             {
-                println!("Änderung im gleichen Sektor gefunden; Position: {}", visited_pos[i as usize][j as usize].0 as u32);
-                match can_reach(&mut RobotPositions(j as u32), result_position, board) {
-                    Some(x) => {path_pos.push(RobotPositions(j as u32));
-                                path.push(x);
-                                current_goal = visited_pos[i as usize][j as usize];
-                                println!("Vorherige Positionen gefunden");
-                                break;
-                                }
-                    None => {println!("can_reach = None");}
+                println!("Änderung im gleichen Sektor gefunden; Position: {:?}",
+                         visited_pos[i as usize][j as usize]);
+                match can_reach(visited_pos[i as usize][j as usize], current_goal, board) {
+                    Some(x) => {
+                        path_pos.push(RobotPositions(j as u32));
+                        path.push(x);
+                        current_goal = visited_pos[i as usize][j as usize];
+                        println!("Vorherige Positionen gefunden");
+                        break;
+                    }
+                    None => {
+                        println!("can_reach = None");
+                    }
                 }
             }
         }
@@ -119,19 +127,20 @@ fn find_direction(steps: u8, //number of steps needed to reach the target
     return path;
 }
 
-fn can_reach(mut start: &mut RobotPositions,
+fn can_reach(start: RobotPositions,
              goal: RobotPositions,
              board: &Board)
              -> Option<(Robot, Direction)> {
-    println!("can_reach gestartet \nstart:{}\ngoal:{}", start.0 as u32, goal.0 as u32);
-    for (i, &robot) in [Robot::Red, Robot::Green, Robot::Blue, Robot::Yellow].iter().enumerate() {
-        println!("Robot:{:?}", &robot);
+    println!("can_reach gestartet \nstart:{:?}\ngoal:{:?}", start, goal);
+    for &robot in [Robot::Red, Robot::Green, Robot::Blue, Robot::Yellow].iter() {
+        println!("Robot:{:?}", robot);
         for (j, dir) in DIRECTIONS.iter().enumerate() {
             println!("Direction:{:?}", Direction::from_usize(j).unwrap());
-            println!("start vorher{}", start.0 as u32);
+            println!("start vorher {:?}", start);
+            let mut start = start;
             dir(&mut start, robot, board);
-            println!("start nachher{}", start.0 as u32);
-            if start == &goal {
+            println!("start nachher {:?}", start);
+            if start == goal {
                 return Some((robot, Direction::from_usize(j).unwrap()));
             }
         }
@@ -141,9 +150,7 @@ fn can_reach(mut start: &mut RobotPositions,
 
 /// makes an array with all the positions that were reached with the number of steps needed
 /// to reach this position minus one as the index
-fn visited_positions(database: &Database,
-                     steps: u8)
-                     -> Vec<Vec<RobotPositions>> {
+fn visited_positions(database: &Database, steps: u8) -> Vec<Vec<RobotPositions>> {
     let mut vis_pos = vec![vec![];(steps as usize)+1];
     for i in 0..database.0.len() {
         if database.0[i].steps() != None {

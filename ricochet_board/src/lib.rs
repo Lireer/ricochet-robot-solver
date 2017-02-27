@@ -1,6 +1,7 @@
 extern crate rustc_serialize;
 
 use std::collections::BTreeSet;
+use std::fmt;
 
 #[derive(RustcDecodable, RustcEncodable, Copy, Clone)]
 pub struct Field {
@@ -191,13 +192,11 @@ impl RobotPositions {
 
 impl RobotPositions {
     pub fn from_array(pos: [(u8, u8); 4]) -> Self {
-        RobotPositions(((pos[0].0 as u32) << 28) |
-                       ((pos[0].1 as u32) << 24) |
+        RobotPositions(((pos[0].0 as u32) << 28) | ((pos[0].1 as u32) << 24) |
                        ((pos[1].0 as u32) << 20) |
                        ((pos[1].1 as u32) << 16) |
                        ((pos[2].0 as u32) << 12) |
-                       ((pos[2].1 as u32) << 8) |
-                       ((pos[3].0 as u32) << 4) |
+                       ((pos[2].1 as u32) << 8) | ((pos[3].0 as u32) << 4) |
                        pos[3].1 as u32)
     }
     pub fn set_robot(&mut self, rob: Robot, (x, y): (usize, usize)) {
@@ -222,5 +221,16 @@ impl RobotPositions {
     }
     pub fn yellow(self) -> (usize, usize) {
         (((self.0 >> 4) & 0xF) as usize, (self.0 & 0xF) as usize)
+    }
+}
+
+impl fmt::Debug for RobotPositions {
+    fn fmt(&self, mut fmt: &mut fmt::Formatter) -> fmt::Result {
+        write!(fmt,
+               "[{:?}, {:?}, {:?}, {:?}]",
+               self.red(),
+               self.green(),
+               self.blue(),
+               self.yellow())
     }
 }

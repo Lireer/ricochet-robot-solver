@@ -14,16 +14,16 @@ fn read() -> (RobotPositions, Board) {
     let mut decoder = Decoder::new(json);
     Decodable::decode(&mut decoder).expect("json does not match (RobotPositions, Board)")
 }
-/*
-#[test]
-fn read_test_json() {
-    read();
-}
-*/
+// #[test]
+// fn read_test_json() {
+// read();
+// }
+//
 
 #[test]
 fn solve() {
     let (positions, board) = read();
+    println!("positions: {:?}", positions);
     assert_eq!(ricochet_solver::solve(&board, positions, Target::Red(Symbol::Circle)),
                vec![(Robot::Red, Direction::Right),
                     (Robot::Red, Direction::Down),
