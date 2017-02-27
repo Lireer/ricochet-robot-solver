@@ -37,7 +37,6 @@ impl Entry {
 }
 
 pub fn solve(board: &Board, positions: RobotPositions, target: Target) -> Vec<(Robot, Direction)> {
-    println!("Start");
     let mut database = Database(box [Entry(255); 1 << 32]);
     let (x, y) = board.targets
         .iter()
@@ -58,7 +57,6 @@ pub fn solve(board: &Board, positions: RobotPositions, target: Target) -> Vec<(R
                                                     y,
                                                     steps,
                                                     target) {
-                    println!("Lösung möglich, als nächstes Weg finden");
                     return find_direction(steps+1, &mut database, board, result_position);
                 }
             }
@@ -85,7 +83,7 @@ const DIRECTIONS: [fn(&mut RobotPositions, robot: Robot, board: &Board); 4] =
      RobotPositions::move_down];
 
 
-fn find_direction(steps: u8, //one less than needed to reach the target
+fn find_direction(steps: u8, //number of steps needed to reach the target
                   database: &mut Database,
                   board: &Board,
                   result_position: RobotPositions)
@@ -93,25 +91,31 @@ fn find_direction(steps: u8, //one less than needed to reach the target
     let visited_pos = visited_positions(database, steps);
     let mut path = vec![];
     let mut path_pos = vec![];
-    for i in (0..steps).rev() {
+    let mut current_goal = result_position;
+    for i in (0..(steps)).rev() {
+        println!("Länge der aktuellen Liste in visited_pos[{}]: {}", i, visited_pos[i as usize].len());
         for j in 0..visited_pos[i as usize].len() {
-            let diff = (j as u32) ^ (result_position.0 as u32); // mark all bits that differ
+            let diff = (visited_pos[i as usize][j as usize].0 as u32) ^ (current_goal.0 as u32); // mark all bits that differ
             let last = diff.trailing_zeros() + 1; // find the position of the most right bit that differed
             let first = 32 - diff.leading_zeros() - 1; // find the position of the most left bit that differed
             let last_sector = last >> 2; // the last two bits only tell which bit of the coordinate changed, drop them
             let first_sector = first >> 2;
             if last_sector == first_sector // if the sector is the same, this is potentially a source location
             {
+                println!("Änderung im gleichen Sektor gefunden; Position: {}", visited_pos[i as usize][j as usize].0 as u32);
                 match can_reach(&mut RobotPositions(j as u32), result_position, board) {
                     Some(x) => {path_pos.push(RobotPositions(j as u32));
                                 path.push(x);
+                                current_goal = visited_pos[i as usize][j as usize];
+                                println!("Vorherige Positionen gefunden");
                                 break;
                                 }
-                    None => {}
+                    None => {println!("can_reach = None");}
                 }
             }
         }
     }
+    println!("path.len():{}", path.len());
     return path;
 }
 
@@ -119,10 +123,15 @@ fn can_reach(mut start: &mut RobotPositions,
              goal: RobotPositions,
              board: &Board)
              -> Option<(Robot, Direction)> {
+    println!("can_reach gestartet \nstart:{}\ngoal:{}", start.0 as u32, goal.0 as u32);
     for (i, &robot) in [Robot::Red, Robot::Green, Robot::Blue, Robot::Yellow].iter().enumerate() {
+        println!("Robot:{:?}", &robot);
         for (j, dir) in DIRECTIONS.iter().enumerate() {
+            println!("Direction:{:?}", Direction::from_usize(j).unwrap());
+            println!("start vorher{}", start.0 as u32);
             dir(&mut start, robot, board);
-            if *start == goal {
+            println!("start nachher{}", start.0 as u32);
+            if start == &goal {
                 return Some((robot, Direction::from_usize(j).unwrap()));
             }
         }
@@ -135,17 +144,12 @@ fn can_reach(mut start: &mut RobotPositions,
 fn visited_positions(database: &Database,
                      steps: u8)
                      -> Vec<Vec<RobotPositions>> {
-    println!("Array mit allen Positionen erzeugen");
     let mut vis_pos = vec![vec![];(steps as usize)+1];
     for i in 0..database.0.len() {
         if database.0[i].steps() != None {
-            println!("Versuch {}", i);
-            println!("database.0[i].steps().unwrap(): {}", database.0[i].steps().unwrap() as usize);
             vis_pos[(database.0[i].steps().unwrap() as usize)].push(RobotPositions(i as u32));
-            println!("Versuch {} geklappt", i);
         }
     }
-    println!("Array erzeugt");
     return vis_pos;
 }
 
