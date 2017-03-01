@@ -81,7 +81,8 @@ enum_from_primitive! {
 
 impl fmt::Display for Direction {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{:?}", &self)
+        let string = format!("{:?}", &self);
+        f.pad(&string)
     }
 }
 

@@ -22,8 +22,11 @@ fn main() {
     let mut solving = true;
     while solving {
         let path = solve(&board, positions, Target::Red(Symbol::Square));
+        println!("Steps needed to reach target: {}", path.len());
         for i in 0..path.len() {
-            println!("Robot: {:>6}    Direction: {:>5}", path[i].0, path[i].1);
+            println!("Robot: {robot:<5}    Direction: {dir:<6}",
+                     robot = path[i].0,
+                     dir = path[i].1);
         }
         solving = false;
     }
