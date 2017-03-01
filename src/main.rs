@@ -20,10 +20,10 @@ fn main() {
     };
 
     /// Beispiel Board mit Wänden und Targets
-    board.wall_enclosure();    // Set outer walls
-    board.set_center_walls();   // Set walls around the four center fields
-    fill_board_with_walls(&mut board);    // Example board
-    set_targets_on_board(&mut board);    // Set targets on board
+    board.wall_enclosure(); // Set outer walls
+    board.set_center_walls(); // Set walls around the four center fields
+    fill_board_with_walls(&mut board); // Example board
+    set_targets_on_board(&mut board); // Set targets on board
 
 
     let mut save = File::create("test.json").expect("Schreiben der json-Datei");
