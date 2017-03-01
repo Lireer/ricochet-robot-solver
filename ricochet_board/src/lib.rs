@@ -1,6 +1,7 @@
 extern crate rustc_serialize;
 
 use std::collections::BTreeSet;
+use std::fmt;
 
 #[derive(RustcDecodable, RustcEncodable, Copy, Clone)]
 pub struct Field {
@@ -16,10 +17,10 @@ pub struct Board {
     pub targets: BTreeSet<(Target, (usize, usize))>,
 }
 
-#[derive(RustcDecodable, RustcEncodable, Copy, Clone)]
+#[derive(RustcDecodable, RustcEncodable, Copy, Clone, PartialEq, Eq)]
 pub struct RobotPositions(pub u32);
 
-#[derive(PartialEq,Copy, Clone)]
+#[derive(Debug,PartialEq,Copy, Clone)]
 pub enum Robot {
     Red = 0,
     Green = 1,
@@ -144,7 +145,6 @@ impl RobotPositions {
                 if x != x_tmp {
                     self.set_robot(robot, (x_tmp, y));
                 }
-                // TODO Zielabfrage
                 return;
             }
         }
@@ -158,7 +158,6 @@ impl RobotPositions {
                 if y != y_tmp {
                     self.set_robot(robot, (x, y_tmp));
                 }
-                // TODO Zielabfrage
                 return;
             }
         }
@@ -172,7 +171,6 @@ impl RobotPositions {
                 if i != 0 {
                     self.set_robot(robot, (x, y));
                 }
-                // TODO Zielabfrage
                 return;
             }
         }
@@ -186,7 +184,6 @@ impl RobotPositions {
                 if i != 0 {
                     self.set_robot(robot, (x, y));
                 }
-                // TODO Zielabfrage
                 return;
             }
         }
@@ -224,5 +221,16 @@ impl RobotPositions {
     }
     pub fn yellow(self) -> (usize, usize) {
         (((self.0 >> 4) & 0xF) as usize, (self.0 & 0xF) as usize)
+    }
+}
+
+impl fmt::Debug for RobotPositions {
+    fn fmt(&self, mut fmt: &mut fmt::Formatter) -> fmt::Result {
+        write!(fmt,
+               "[{:?}, {:?}, {:?}, {:?}]",
+               self.red(),
+               self.green(),
+               self.blue(),
+               self.yellow())
     }
 }
