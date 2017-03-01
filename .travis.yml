@@ -13,9 +13,6 @@ install:
 
 script:
  - set -e
- - PATH=$PATH:~/.cargo/bin cargo fmt -- --write-mode=diff
- - cd ricochet_board && PATH=$PATH:~/.cargo/bin cargo fmt -- --write-mode=diff && cd ..
- - cd ricochet_solver && PATH=$PATH:~/.cargo/bin cargo fmt -- --write-mode=diff && cd ..
  - cargo build
  - cd ricochet_board && cargo test && cd ..
  - cd ricochet_solver && cargo test && cd ..
