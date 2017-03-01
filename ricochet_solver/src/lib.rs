@@ -58,6 +58,7 @@ pub fn solve(board: &Board, positions: RobotPositions, target: Target) -> Vec<(R
 													y,
 													steps,
 													target) {
+					println!("Steps: {}", steps+1);
 					return find_direction(steps + 1, &mut database, board, result_position);
 				}
 			}
@@ -91,39 +92,33 @@ fn find_direction(steps: u8, // number of steps needed to reach the target
 				  -> Vec<(Robot, Direction)> {
 	let visited_pos = visited_positions(database, steps);
 	let mut path = vec![];
-	let mut path_pos = vec![];
 	let mut current_goal = result_position;
 	for i in (0..(steps)).rev() {
-		println!("Länge der aktuellen Liste in visited_pos[{}]: {}",
-				 i,
-				 visited_pos[i as usize].len());
+		println!("i: {}\ncurrent_goal: {:?}", i, current_goal);
+
 		for j in 0..visited_pos[i as usize].len() {
 			let diff = (visited_pos[i as usize][j as usize].0 as u32) ^ (current_goal.0 as u32); // mark all bits that differ
-			let last = diff.trailing_zeros() + 1; // find the position of the most right bit that differed
+			let last = diff.trailing_zeros(); // find the position of the most right bit that differed
 			let first = 32 - diff.leading_zeros() - 1; // find the position of the most left bit that differed
 			let last_sector = last >> 2; // the last two bits only tell which bit of the coordinate changed, drop them
 			let first_sector = first >> 2;
 			if last_sector == first_sector
 			// if the sector is the same, this is potentially a source location
 			{
-				println!("Änderung im gleichen Sektor gefunden; Position: {:?}",
-						 visited_pos[i as usize][j as usize]);
+				println!("diff:{}   last:{}   first:{}   last_sector:{}   first_sector:{}", diff, last, first, last_sector, first_sector);
 				match can_reach(visited_pos[i as usize][j as usize], current_goal, board) {
 					Some(x) => {
-						path_pos.push(RobotPositions(j as u32));
 						path.push(x);
 						current_goal = visited_pos[i as usize][j as usize];
-						println!("Vorherige Positionen gefunden: {:?}", current_goal);
+						println!("can_reach = Some({:?})", current_goal);
 						break;
 					}
-					None => {
-						println!("can_reach = None");
-					}
+					None => {println!("can_reach = None\nUntersuchte Position: {:?}",visited_pos[i as usize][j as usize]);}
 				}
 			}
 		}
 	}
-	println!("path.len():{}", path.len());
+	&path.reverse();
 	return path;
 }
 
@@ -131,15 +126,10 @@ fn can_reach(start: RobotPositions,
 			 goal: RobotPositions,
 			 board: &Board)
 			 -> Option<(Robot, Direction)> {
-	println!("can_reach gestartet \nstart:{:?}\ngoal:{:?}", start, goal);
 	for &robot in [Robot::Red, Robot::Green, Robot::Blue, Robot::Yellow].iter() {
-		println!("Robot:{:?}", robot);
 		for (j, dir) in DIRECTIONS.iter().enumerate() {
-			println!("Direction:{:?}", Direction::from_usize(j).unwrap());
-			println!("start vorher {:?}", start);
 			let mut start = start;
 			dir(&mut start, robot, board);
-			println!("start nachher {:?}", start);
 			if start == goal {
 				return Some((robot, Direction::from_usize(j).unwrap()));
 			}
