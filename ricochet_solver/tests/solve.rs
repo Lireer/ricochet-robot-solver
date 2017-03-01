@@ -25,7 +25,6 @@ fn read_test_json() {
 #[test]
 fn solve() {
     let (positions, board) = read();
-    println!("positions: {:?}", positions);
     assert_eq!(ricochet_solver::solve(&board, positions, Target::Red(Symbol::Square)),
                vec![(Robot::Green, Direction::Down),
                     (Robot::Red, Direction::Right),

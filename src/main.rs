@@ -1,16 +1,43 @@
 extern crate ricochet_board;
+extern crate ricochet_solver;
 extern crate rustc_serialize;
 
 use rustc_serialize::json::*;
 use std::fs::File;
 use std::io::prelude::*;
 use ricochet_board::*;
+use ricochet_solver::*;
 
 fn main() {
     // Erzeugung der Positionen
     let positions = RobotPositions::from_array([(0, 1), (7, 1), (5, 4), (7, 15)]);
 
     // Erzeugung des Boards
+    let board = example_board();
+
+
+    let mut save = File::create("test.json").expect("Schreiben der json-Datei");
+    write!(save, "{}", as_pretty_json(&(&positions, &board))).expect("Die json-Datei beschreiben");
+
+    let mut solving = true;
+    while solving {
+        let path = solve(&board, positions, Target::Red(Symbol::Square));
+        for i in 0..path.len() {
+            println!("Robot: {:>6}    Direction: {:>5}", path[i].0, path[i].1);
+        }
+        solving = false;
+    }
+}
+
+
+fn example_board() -> Board {
+    let mut board = default_board();
+    fill_board_with_walls(&mut board); // Set walls on example board
+    set_targets_on_board(&mut board); // Set targets on example board
+    return board;
+}
+
+fn default_board() -> Board {
     let mut board = Board {
         fields: [[Field {
             bottom: false,
@@ -18,17 +45,9 @@ fn main() {
         }; BOARDSIZE]; BOARDSIZE],
         targets: Default::default(),
     };
-
-    /// Beispiel Board mit Wänden und Targets
     board.wall_enclosure(); // Set outer walls
     board.set_center_walls(); // Set walls around the four center fields
-    fill_board_with_walls(&mut board); // Example board
-    set_targets_on_board(&mut board); // Set targets on board
-
-
-    let mut save = File::create("test.json").expect("Schreiben der json-Datei");
-
-    write!(save, "{}", as_pretty_json(&(&positions, &board))).expect("Die json-Datei beschreiben");
+    return board;
 }
 
 fn fill_board_with_walls(board: &mut Board) {

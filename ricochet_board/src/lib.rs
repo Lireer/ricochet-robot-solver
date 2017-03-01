@@ -44,6 +44,12 @@ pub enum Symbol {
     Hexagon,
 }
 
+impl fmt::Display for Robot {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", &self)
+    }
+}
+
 impl Board {
     pub fn wall_enclosure(&mut self) {
         for i in 0..BOARDSIZE {

@@ -7,6 +7,7 @@ extern crate num;
 
 use ricochet_board::*;
 use num::FromPrimitive;
+use std::fmt;
 
 /// lower 6 bit are the number of steps required to reach this position.
 /// in case all of the first 6 bits are set, this node has not been visited yet
@@ -59,7 +60,6 @@ pub fn solve(board: &Board, positions: RobotPositions, target: Target) -> Vec<(R
                          y,
                          steps,
                          target) {
-                    println!("Steps: {}", steps + 1);
                     return find_direction(steps + 1, &mut database, board, result_position);
                 }
             }
@@ -79,6 +79,12 @@ enum_from_primitive! {
 	}
 }
 
+impl fmt::Display for Direction {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", &self)
+    }
+}
+
 const DIRECTIONS: [fn(&mut RobotPositions, robot: Robot, board: &Board); 4] =
     [RobotPositions::move_right,
      RobotPositions::move_left,
@@ -95,8 +101,6 @@ fn find_direction(steps: u8, // number of steps needed to reach the target
     let mut path = vec![];
     let mut current_goal = result_position;
     for i in (0..(steps)).rev() {
-        println!("i: {}\ncurrent_goal: {:?}", i, current_goal);
-
         for j in 0..visited_pos[i as usize].len() {
             let diff = (visited_pos[i as usize][j as usize].0 as u32) ^ (current_goal.0 as u32); // mark all bits that differ
             let last = diff.trailing_zeros(); // find the position of the most right bit that differed
@@ -106,23 +110,13 @@ fn find_direction(steps: u8, // number of steps needed to reach the target
             if last_sector == first_sector
             // if the sector is the same, this is potentially a source location
             {
-                println!("diff:{}   last:{}   first:{}   last_sector:{}   first_sector:{}",
-                         diff,
-                         last,
-                         first,
-                         last_sector,
-                         first_sector);
                 match can_reach(visited_pos[i as usize][j as usize], current_goal, board) {
                     Some(x) => {
                         path.push(x);
                         current_goal = visited_pos[i as usize][j as usize];
-                        println!("can_reach = Some({:?})", current_goal);
                         break;
                     }
-                    None => {
-                        println!("can_reach = None\nUntersuchte Position: {:?}",
-                                 visited_pos[i as usize][j as usize]);
-                    }
+                    None => {}
                 }
             }
         }
