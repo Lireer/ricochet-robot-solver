@@ -1,6 +1,8 @@
 extern crate ricochet_board;
 extern crate ricochet_solver;
 extern crate rustc_serialize;
+#[macro_use]
+extern crate text_io;
 
 use rustc_serialize::json::*;
 use std::fs::File;
@@ -9,29 +11,52 @@ use ricochet_board::*;
 use ricochet_solver::*;
 
 fn main() {
-    // Erzeugung der Positionen
-    let positions = RobotPositions::from_array([(0, 1), (7, 1), (5, 4), (7, 15)]);
-
     // Erzeugung des Boards
     let board = example_board();
 
+    // Erzeugung der Positionen
+    let array = ask_for_robotpositions();
+    let positions = RobotPositions::from_array(array);
+    let target = Target::Red(Symbol::Circle);
 
-    let mut save = File::create("test.json").expect("Schreiben der json-Datei");
-    write!(save, "{}", as_pretty_json(&(&positions, &board))).expect("Die json-Datei beschreiben");
+    let mut save = File::create("test.json").expect("Create test.json");
+    write!(save, "{}", as_pretty_json(&(&positions, &board))).expect("Write into test.json");
 
-    let mut solving = true;
-    while solving {
-        let path = solve(&board, positions, Target::Red(Symbol::Square));
+    'outer: loop {
+        println!("Solving...");
+        let path = solve(&board, positions, target);
         println!("Steps needed to reach target: {}", path.len());
+        println!("Press enter to show path.");
+        let key: String = read!("{}\n");
         for i in 0..path.len() {
-            println!("Robot: {robot:<5}    Direction: {dir:<6}",
-                     robot = path[i].0,
-                     dir = path[i].1);
+            println!("Robot     Direction");
+            println!("{robot:<10}{dir:<6}", robot = path[i].0, dir = path[i].1);
         }
-        solving = false;
+        println!("Continue? (Y/n)");
+        'inner: loop {
+            let input: String = read!("{}\n");
+            match input.trim() {
+                "Y" | "y" | "" => break,
+                "n" => break 'outer,
+                _ => println!("Input not accepted! {}", input),
+            }
+        }
     }
 }
 
+fn ask_for_robotpositions() -> [(u8, u8); 4] {
+    let mut positions = [(0, 0); 4];
+    println!("Please input the coordinates of the Robots.\nPlease write in this format: \"x,y\"");
+    for (i, &robot) in [Robot::Red, Robot::Green, Robot::Blue, Robot::Yellow].iter().enumerate() {
+        println!("{:?}: ", robot);
+        let a: u8;
+        let b: u8;
+        let pos: String = read!("{}\n");
+        scan!(pos.trim().bytes() => "{},{}", a, b);
+        positions[i] = (a, b);
+    }
+    return positions;
+}
 
 fn example_board() -> Board {
     let mut board = default_board();
@@ -101,7 +126,7 @@ fn fill_board_with_walls(board: &mut Board) {
 fn set_targets_on_board(board: &mut Board) {
     use ricochet_board::Symbol::*;
     board.targets.insert((Target::Spiral, (2, 8)));
-    board.targets.insert((Target::Red(Circle), (14, 4)));
+    board.targets.insert((Target::Red(Circle), (12, 12))); //(14, 4)
     board.targets.insert((Target::Red(Triangle), (1, 3)));
     board.targets.insert((Target::Red(Square), (14, 13)));
     board.targets.insert((Target::Red(Hexagon), (4, 12)));
