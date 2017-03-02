@@ -15,36 +15,88 @@ fn main() {
     let board = example_board();
 
     // Erzeugung der Positionen
-    let array = ask_for_robotpositions();
-    let positions = RobotPositions::from_array(array);
-    let target = Target::Red(Symbol::Circle);
+    let mut positions = ask_for_robotpositions();
+    let mut target = ask_for_target();
+    // Target::Red(Symbol::Circle);
 
     let mut save = File::create("test.json").expect("Create test.json");
     write!(save, "{}", as_pretty_json(&(&positions, &board))).expect("Write into test.json");
 
     'outer: loop {
         println!("Solving...");
-        let path = solve(&board, positions, target);
+        let solve = solve(&board, positions, target);
+        let path = solve.1;
         println!("Steps needed to reach target: {}", path.len());
         println!("Press enter to show path.");
         let key: String = read!("{}\n");
+        println!("Step Robot   Direction");
         for i in 0..path.len() {
-            println!("Robot     Direction");
-            println!("{robot:<10}{dir:<6}", robot = path[i].0, dir = path[i].1);
+            println!(" {step:>2}  {robot:<8}{dir:<6}",
+                     step = i + 1,
+                     robot = path[i].0,
+                     dir = path[i].1);
         }
         println!("Continue? (Y/n)");
-        'inner: loop {
+        loop {
             let input: String = read!("{}\n");
-            match input.trim() {
-                "Y" | "y" | "" => break,
+            match input.to_lowercase().trim() {
+                "y" | "" => break,
                 "n" => break 'outer,
                 _ => println!("Input not accepted! {}", input),
             }
         }
+        println!("Is the end position the new starting position? (Y/n)");
+        loop {
+            let input: String = read!("{}\n");
+            match input.to_lowercase().trim() {
+                "y" | "" => {
+                    positions = solve.0;
+                    break;
+                }
+                "n" => {
+                    positions = ask_for_robotpositions();
+                    break;
+                }
+                _ => println!("Input not accepted! {}", input),
+            }
+        }
+        println!("Please enter the new target");
+        target = ask_for_target();
     }
 }
 
-fn ask_for_robotpositions() -> [(u8, u8); 4] {
+fn ask_for_target() -> Target {
+    println!("What color is the target?");
+    println!("Accepted input: \"red\"(r), \"green\"(g), \"blue\"(b), \"yellow\"(y), \"spiral\"(s)");
+    let color: String = read!("{}\n");
+    loop {
+        match color.to_lowercase().trim() {
+            "red" | "r" => return Target::Red(ask_for_symbol()),
+            "green" | "g" => return Target::Green(ask_for_symbol()),
+            "blue" | "b" => return Target::Blue(ask_for_symbol()),
+            "yellow" | "y" => return Target::Yellow(ask_for_symbol()),
+            "spiral" | "s" => return Target::Spiral,
+            _ => println!("Input not accepted: {}", color),
+        }
+    }
+}
+
+fn ask_for_symbol() -> Symbol {
+    println!("What is the shape of the target?");
+    println!("Accepted input: \"Circle\"(c), \"Triangle\"(t), \"Square\"(s), \"Hexagon\"(h)");
+    let shape: String = read!("{}\n");
+    loop {
+        match shape.to_lowercase().trim() {
+            "circle" | "c" => return Symbol::Circle,
+            "triangle" | "t" => return Symbol::Triangle,
+            "square" | "s" => return Symbol::Square,
+            "hexagon" | "h" => return Symbol::Hexagon,
+            _ => println!("Input not accepted: {}", shape),
+        }
+    }
+}
+
+fn ask_for_robotpositions() -> RobotPositions {
     let mut positions = [(0, 0); 4];
     println!("Please input the coordinates of the Robots.\nPlease write in this format: \"x,y\"");
     for (i, &robot) in [Robot::Red, Robot::Green, Robot::Blue, Robot::Yellow].iter().enumerate() {
@@ -55,7 +107,7 @@ fn ask_for_robotpositions() -> [(u8, u8); 4] {
         scan!(pos.trim().bytes() => "{},{}", a, b);
         positions[i] = (a, b);
     }
-    return positions;
+    return RobotPositions::from_array(positions);
 }
 
 fn example_board() -> Board {
