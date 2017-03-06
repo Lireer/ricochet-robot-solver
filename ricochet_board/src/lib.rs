@@ -27,7 +27,7 @@ pub enum Robot {
     Blue = 2,
     Yellow = 3,
 }
-#[derive(RustcDecodable, RustcEncodable, Clone, Copy, Ord, PartialOrd, Eq, PartialEq)]
+#[derive(Debug, RustcDecodable, RustcEncodable, Clone, Copy, Ord, PartialOrd, Eq, PartialEq)]
 pub enum Target {
     Red(Symbol),
     Green(Symbol),
@@ -36,12 +36,19 @@ pub enum Target {
     Spiral,
 }
 
-#[derive(RustcDecodable, RustcEncodable, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, RustcDecodable, RustcEncodable, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Symbol {
     Circle,
     Triangle,
     Square,
     Hexagon,
+}
+
+impl fmt::Display for Target {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let string = format!("{:?}", self);
+        f.pad(&string)
+    }
 }
 
 impl fmt::Display for Robot {
@@ -202,9 +209,8 @@ impl RobotPositions {
         RobotPositions(((pos[0].0 as u32) << 28) | ((pos[0].1 as u32) << 24) |
                        ((pos[1].0 as u32) << 20) |
                        ((pos[1].1 as u32) << 16) |
-                       ((pos[2].0 as u32) << 12) |
-                       ((pos[2].1 as u32) << 8) | ((pos[3].0 as u32) << 4) |
-                       pos[3].1 as u32)
+                       ((pos[2].0 as u32) << 12) | ((pos[2].1 as u32) << 8) |
+                       ((pos[3].0 as u32) << 4) | pos[3].1 as u32)
     }
     pub fn set_robot(&mut self, rob: Robot, (x, y): (usize, usize)) {
         let pos = ((x as u32) << 4) | (y as u32);
@@ -229,6 +235,19 @@ impl RobotPositions {
     pub fn yellow(self) -> (usize, usize) {
         (((self.0 >> 4) & 0xF) as usize, (self.0 & 0xF) as usize)
     }
+
+    pub fn red_display(self) -> String {
+        format!("{},{}", self.red().0, self.red().1)
+    }
+    pub fn green_display(self) -> String {
+        format!("{},{}", self.green().0, self.green().1)
+    }
+    pub fn blue_display(self) -> String {
+        format!("{},{}", self.blue().0, self.blue().1)
+    }
+    pub fn yellow_display(self) -> String {
+        format!("{},{}", self.yellow().0, self.yellow().1)
+    }
 }
 
 impl fmt::Debug for RobotPositions {
@@ -239,5 +258,16 @@ impl fmt::Debug for RobotPositions {
                self.green(),
                self.blue(),
                self.yellow())
+    }
+}
+
+impl fmt::Display for RobotPositions {
+    fn fmt(&self, mut fmt: &mut fmt::Formatter) -> fmt::Result {
+        write!(fmt,
+               "Red: {}\nGreen: {}\nBlue: {}\nYellow: {}",
+               self.red_display(),
+               self.green_display(),
+               self.blue_display(),
+               self.yellow_display())
     }
 }

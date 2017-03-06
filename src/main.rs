@@ -21,11 +21,9 @@ fn main() {
     let mut positions = ask_for_robotpositions();
     //let mut save = File::create("test.json").expect("Create test.json");
     //write!(save, "{}", as_pretty_json(&(&positions, &board))).expect("Write into test.json");
-    let mut target = ask_for_target();
-    // Target::Red(Symbol::Circle);
-
 
     'outer: loop {
+        let target = ask_for_target();
         println!("Solving...");
         let solve = solve(&board, positions, target, database);
         let path = solve.1;
@@ -64,25 +62,50 @@ fn main() {
                 _ => println!("Input not accepted! {}", input),
             }
         }
-        println!("Please enter the new target");
-        target = ask_for_target();
     }
 }
 
-
-
 fn ask_for_target() -> Target {
+    let mut target;
     println!("What color is the target?");
-    println!("Accepted input: \"red\"(r), \"green\"(g), \"blue\"(b), \"yellow\"(y), \"spiral\"(s)");
-    let color: String = read!("{}\n");
-    loop {
-        match color.to_lowercase().trim() {
-            "red" | "r" => return Target::Red(ask_for_symbol()),
-            "green" | "g" => return Target::Green(ask_for_symbol()),
-            "blue" | "b" => return Target::Blue(ask_for_symbol()),
-            "yellow" | "y" => return Target::Yellow(ask_for_symbol()),
-            "spiral" | "s" => return Target::Spiral,
-            _ => println!("Input not accepted: {}", color),
+    'outer: loop {
+        println!("Accepted input: \"red\"(r), \"green\"(g), \"blue\"(b), \"yellow\"(y), \
+                  \"spiral\"(s)");
+        loop {
+            let color: String = read!("{}\n");
+            match color.to_lowercase().trim() {
+                "red" | "r" => {
+                    target = Target::Red(ask_for_symbol());
+                    break;
+                }
+                "green" | "g" => {
+                    target = Target::Green(ask_for_symbol());
+                    break;
+                }
+                "blue" | "b" => {
+                    target = Target::Blue(ask_for_symbol());
+                    break;
+                }
+                "yellow" | "y" => {
+                    target = Target::Yellow(ask_for_symbol());
+                    break;
+                }
+                "spiral" | "s" => {
+                    target = Target::Spiral;
+                    break;
+                }
+                _ => println!("Input not accepted: {}", color),
+            }
+        }
+        println!("Please confirm your input.");
+        println!("Is the {} the correct target? (Y/n)", target);
+        loop {
+            let input: String = read!("{}\n");
+            match input.to_lowercase().trim() {
+                "y" | "" => return target,
+                "n" => break,
+                _ => println!("Input not accepted! {}", input),
+            }
         }
     }
 }
@@ -104,14 +127,31 @@ fn ask_for_symbol() -> Symbol {
 
 fn ask_for_robotpositions() -> RobotPositions {
     let mut positions = [(0, 0); 4];
-    println!("Please input the coordinates of the Robots.\nPlease write in this format: \"x,y\"");
-    for (i, &robot) in [Robot::Red, Robot::Green, Robot::Blue, Robot::Yellow].iter().enumerate() {
-        println!("{:?}: ", robot);
-        let a: u8;
-        let b: u8;
-        let pos: String = read!("{}\n");
-        scan!(pos.trim().bytes() => "{},{}", a, b);
-        positions[i] = (a, b);
+    'outer: loop {
+        println!("Please input the coordinates of the Robots.\nPlease write in this format: \
+                  \"x,y\"");
+        for (i, &robot) in [Robot::Red, Robot::Green, Robot::Blue, Robot::Yellow]
+            .iter()
+            .enumerate() {
+            println!("{:?}: ", robot);
+            let a: u8;
+            let b: u8;
+            let pos: String = read!("{}\n");
+            scan!(pos.trim().bytes() => "{},{}", a, b);
+            positions[i] = (a, b);
+        }
+        let robopos = RobotPositions::from_array(positions);
+        println!("Please confirm your input.");
+        println!("{}", robopos);
+        println!("Is this correct? (Y/n)");
+        loop {
+            let input: String = read!("{}\n");
+            match input.to_lowercase().trim() {
+                "y" | "" => break 'outer,
+                "n" => break,
+                _ => println!("Input not accepted! {}", input),
+            }
+        }
     }
     return RobotPositions::from_array(positions);
 }
