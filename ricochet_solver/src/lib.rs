@@ -12,7 +12,7 @@ use std::fmt;
 /// lower 6 bit are the number of steps required to reach this position.
 /// in case all of the first 6 bits are set, this node has not been visited yet
 #[derive(Copy, Clone)]
-struct Entry(u8);
+pub struct Entry(pub u8);
 
 /// the u32 position in the database array encodes the robot positions like follows:
 ///
@@ -20,7 +20,7 @@ struct Entry(u8);
 /// |x1  |y1  |x2  |y2  |x3  |y3  |x4  |y4  |
 /// |0000|0000|0000|0000|0000|0000|0000|0000|
 ///
-struct Database(Box<[Entry; 1 << 32]>);
+pub struct Database(pub Box<[Entry; 1 << 32]>);
 
 
 impl Entry {
@@ -40,9 +40,10 @@ impl Entry {
 
 pub fn solve(board: &Board,
              positions: RobotPositions,
-             target: Target)
+             target: Target,
+             datab: Database)
              -> (RobotPositions, Vec<(Robot, Direction)>) {
-    let mut database = Database(box [Entry(255); 1 << 32]);
+    let mut database = datab;
     let (x, y) = board.targets
         .iter()
         .find(|&&(t, _)| t == target)
@@ -55,13 +56,14 @@ pub fn solve(board: &Board,
     for steps in 1.. {
         for j in 0..database.0.len() {
             if database.0[j].steps() == Some(steps) {
-                if let Some(result_position) = eval(board,
-                                                    RobotPositions(j as u32),
-                                                    &mut database,
-                                                    x,
-                                                    y,
-                                                    steps,
-                                                    target) {
+                if let Some(result_position) =
+                    eval(board,
+                         RobotPositions(j as u32),
+                         &mut database,
+                         x,
+                         y,
+                         steps,
+                         target) {
                     return (result_position,
                             find_direction(steps + 1, &mut database, board, result_position));
                 }

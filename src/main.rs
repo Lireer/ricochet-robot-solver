@@ -1,12 +1,13 @@
+#![feature(box_syntax)]
 extern crate ricochet_board;
 extern crate ricochet_solver;
 extern crate rustc_serialize;
 #[macro_use]
 extern crate text_io;
 
-use rustc_serialize::json::*;
-use std::fs::File;
-use std::io::prelude::*;
+//use rustc_serialize::json::*;
+//use std::fs::File;
+//use std::io::prelude::*;
 use ricochet_board::*;
 use ricochet_solver::*;
 
@@ -14,17 +15,19 @@ fn main() {
     // Erzeugung des Boards
     let board = example_board();
 
+    let mut database = Database(box [ricochet_solver::Entry(255); 1 << 32]);
+
     // Erzeugung der Positionen
     let mut positions = ask_for_robotpositions();
+    //let mut save = File::create("test.json").expect("Create test.json");
+    //write!(save, "{}", as_pretty_json(&(&positions, &board))).expect("Write into test.json");
     let mut target = ask_for_target();
     // Target::Red(Symbol::Circle);
 
-    let mut save = File::create("test.json").expect("Create test.json");
-    write!(save, "{}", as_pretty_json(&(&positions, &board))).expect("Write into test.json");
 
     'outer: loop {
         println!("Solving...");
-        let solve = solve(&board, positions, target);
+        let solve = solve(&board, positions, target, database);
         let path = solve.1;
         println!("Steps needed to reach target: {}", path.len());
         println!("Press enter to show path.");
@@ -45,6 +48,7 @@ fn main() {
                 _ => println!("Input not accepted! {}", input),
             }
         }
+        database = Database(box [ricochet_solver::Entry(255); 1 << 32]);
         println!("Is the end position the new starting position? (Y/n)");
         loop {
             let input: String = read!("{}\n");
@@ -64,6 +68,8 @@ fn main() {
         target = ask_for_target();
     }
 }
+
+
 
 fn ask_for_target() -> Target {
     println!("What color is the target?");
