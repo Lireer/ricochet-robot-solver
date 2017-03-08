@@ -97,8 +97,7 @@ fn database_solve(board: &Board,
              0,
              target,
              &mut visited_pos) {
-        return (result_position,
-                find_direction(1, &mut database, board, result_position, visited_pos));
+        return (result_position, find_direction(1, board, result_position, visited_pos));
     }
     for steps in 1.. {
         for j in 0..database.0.len() {
@@ -113,11 +112,7 @@ fn database_solve(board: &Board,
                          target,
                          &mut visited_pos) {
                     return (result_position,
-                            find_direction(steps + 1,
-                                           &mut database,
-                                           board,
-                                           result_position,
-                                           visited_pos));
+                            find_direction(steps + 1, board, result_position, visited_pos));
                 }
             }
         }
@@ -177,7 +172,6 @@ const DIRECTIONS: [fn(&mut RobotPositions, robot: Robot, board: &Board); 4] =
 
 
 fn find_direction(steps: u8, // number of steps needed to reach the target
-                  database: &mut Database,
                   board: &Board,
                   result_position: RobotPositions,
                   visited_pos: Vec<Vec<RobotPositions>>)
@@ -224,19 +218,7 @@ fn can_reach(start: RobotPositions,
     }
     None
 }
-/*
-/// makes an array with all the positions that were reached with the number of steps needed
-/// to reach this position minus one as the index
-fn visited_positions(database: &Database, steps: u8) -> Vec<Vec<RobotPositions>> {
-    let mut visited_pos = vec![vec![];(steps as usize)+1];
-    for i in 0..database.0.len() {
-        if database.0[i].steps() != None {
-            visited_pos[(database.0[i].steps().unwrap() as usize)].push(RobotPositions(i as u32));
-        }
-    }
-    return visited_pos;
-}
-*/
+
 /// calculates all new possible positions starting from a startposition
 fn eval(board: &Board,
         start: RobotPositions,
