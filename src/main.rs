@@ -5,9 +5,9 @@ extern crate rustc_serialize;
 #[macro_use]
 extern crate text_io;
 
-//use rustc_serialize::json::*;
-//use std::fs::File;
-//use std::io::prelude::*;
+// use rustc_serialize::json::*;
+// use std::fs::File;
+// use std::io::prelude::*;
 use ricochet_board::*;
 use ricochet_solver::*;
 
@@ -19,8 +19,8 @@ fn main() {
 
     // Erzeugung der Positionen
     let mut positions = ask_for_robotpositions();
-    //let mut save = File::create("test.json").expect("Create test.json");
-    //write!(save, "{}", as_pretty_json(&(&positions, &board))).expect("Write into test.json");
+    // let mut save = File::create("test.json").expect("Create test.json");
+    // write!(save, "{}", as_pretty_json(&(&positions, &board))).expect("Write into test.json");
 
     'outer: loop {
         let target = ask_for_target();
@@ -29,7 +29,7 @@ fn main() {
         let path = solve.1;
         println!("Steps needed to reach target: {}", path.len());
         println!("Press enter to show path.");
-        let key: String = read!("{}\n");
+        let _: String = read!("{}\n");
         println!("Step Robot   Direction");
         for i in 0..path.len() {
             println!(" {step:>2}  {robot:<8}{dir:<6}",

@@ -46,7 +46,13 @@ pub enum Symbol {
 
 impl fmt::Display for Target {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let string = format!("{:?}", self);
+        let string = match *self {
+            Target::Red(symb) => format!("Red {:?}", symb),
+            Target::Green(symb) => format!("Green {:?}", symb),
+            Target::Blue(symb) => format!("Blue {:?}", symb),
+            Target::Yellow(symb) => format!("Yellow {:?}", symb),
+            Target::Spiral => "Spiral".to_string(),
+        };
         f.pad(&string)
     }
 }
@@ -209,8 +215,9 @@ impl RobotPositions {
         RobotPositions(((pos[0].0 as u32) << 28) | ((pos[0].1 as u32) << 24) |
                        ((pos[1].0 as u32) << 20) |
                        ((pos[1].1 as u32) << 16) |
-                       ((pos[2].0 as u32) << 12) | ((pos[2].1 as u32) << 8) |
-                       ((pos[3].0 as u32) << 4) | pos[3].1 as u32)
+                       ((pos[2].0 as u32) << 12) |
+                       ((pos[2].1 as u32) << 8) | ((pos[3].0 as u32) << 4) |
+                       pos[3].1 as u32)
     }
     pub fn set_robot(&mut self, rob: Robot, (x, y): (usize, usize)) {
         let pos = ((x as u32) << 4) | (y as u32);
