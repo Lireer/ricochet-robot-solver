@@ -41,28 +41,66 @@ impl Entry {
 pub fn solve(board: &Board,
              positions: RobotPositions,
              target: Target,
-             datab: Database)
+             mut database: Database)
              -> (RobotPositions, Vec<(Robot, Direction)>) {
-    let mut database = datab;
-    let (x, y) = board.targets
+    let (targetx, targety) = board.targets
         .iter()
         .find(|&&(t, _)| t == target)
         .unwrap()
         .1;
+    match target {
+        Target::Spiral => {
+            if positions.contains_robot(targetx, targety) {
+                return (positions, vec![]);
+            }
+        }
+        Target::Red(_) => {
+            if positions.contains_red(targetx, targety) {
+                return (positions, vec![]);
+            }
+        }
+        Target::Green(_) => {
+            if positions.contains_green(targetx, targety) {
+                return (positions, vec![]);
+            }
+        }
+        Target::Blue(_) => {
+            if positions.contains_blue(targetx, targety) {
+                return (positions, vec![]);
+            }
+        }
+        Target::Yellow(_) => {
+            if positions.contains_yellow(targetx, targety) {
+                return (positions, vec![]);
+            }
+        }
+    }
     database.0[positions.0 as usize].reached(0);
-    if let Some(result_position) = eval(board, positions, &mut database, x, y, 0, target) {
+    database_solve(board, positions, target, targetx, targety, database)
+}
+
+fn database_solve(board: &Board,
+                  positions: RobotPositions,
+                  target: Target,
+                  targetx: usize,
+                  targety: usize,
+                  mut database: Database)
+                  -> (RobotPositions, Vec<(Robot, Direction)>) {
+    if let Some(result_position) =
+        eval(board, positions, &mut database, targetx, targety, 0, target) {
         return (result_position, find_direction(1, &mut database, board, result_position));
     }
     for steps in 1.. {
         for j in 0..database.0.len() {
             if database.0[j].steps() == Some(steps) {
-                if let Some(result_position) = eval(board,
-                                                    RobotPositions(j as u32),
-                                                    &mut database,
-                                                    x,
-                                                    y,
-                                                    steps,
-                                                    target) {
+                if let Some(result_position) =
+                    eval(board,
+                         RobotPositions(j as u32),
+                         &mut database,
+                         targetx,
+                         targety,
+                         steps,
+                         target) {
                     return (result_position,
                             find_direction(steps + 1, &mut database, board, result_position));
                 }
@@ -72,7 +110,17 @@ pub fn solve(board: &Board,
     }
     unreachable!()
 }
+/*
+fn vec_solve(board: &Board,
+             positions: RobotPositions,
+             target: Target,
+             targetx: usize,
+             targety: usize,
+             mut database: Database)
+             -> (RobotPositions, Vec<(Robot, Direction)>) {
 
+}
+*/
 enum_from_primitive! {
 	#[derive(Debug,Eq,PartialEq)]
 	pub enum Direction {
