@@ -27,6 +27,7 @@ fn main() {
         println!("Solving...");
         let solve = solve(&board, positions, target, database);
         let path = solve.1;
+        print!("\u{0007}");
         println!("Steps needed to reach target: {}", path.len());
         println!("Press enter to show path.");
         let _: String = read!("{}\n");
@@ -131,8 +132,8 @@ fn ask_for_robotpositions() -> RobotPositions {
         println!("Please input the coordinates of the Robots.\nPlease write in this format: \
                   \"x,y\"");
         for (i, &robot) in [Robot::Red, Robot::Green, Robot::Blue, Robot::Yellow]
-            .iter()
-            .enumerate() {
+                .iter()
+                .enumerate() {
             println!("{:?}: ", robot);
             let a: u8;
             let b: u8;
