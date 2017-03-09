@@ -76,7 +76,7 @@ pub fn solve(board: &Board,
         }
     }
     database.0[positions.0 as usize].reached(0);
-    database_solve(board, positions, target, targetx, targety, database)
+    vec_solve(board, positions, target, targetx, targety, database)
 }
 
 fn database_solve(board: &Board,
@@ -130,17 +130,20 @@ fn vec_solve(board: &Board,
              -> (RobotPositions, Vec<(Robot, Direction)>) {
     let mut visited_pos = vec![vec![]];
     visited_pos[0] = vec![positions];
-    for steps in 1.. {
-        for i in 0..visited_pos[steps - 1].len() {
+    for steps in 0.. {
+        for i in 0..visited_pos[steps].len() {
             if let Some(result_position) =
                 eval(board,
-                     visited_pos[steps - 1][i],
+                     visited_pos[steps][i],
                      &mut database,
                      targetx,
                      targety,
                      steps as u8,
                      target,
-                     &mut visited_pos) {}
+                     &mut visited_pos) {
+                return (result_position,
+                        find_direction((steps + 1) as u8, board, result_position, visited_pos));
+            }
         }
     }
 
@@ -231,6 +234,7 @@ fn eval(board: &Board,
         -> Option<RobotPositions> {
     let mut new = [[start; 4]; 4];
     let mut vec: Vec<RobotPositions> = Vec::new();
+
     if visited_pos.len() == steps as usize + 1 {
         visited_pos.push(vec![]);
     }
