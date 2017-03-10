@@ -1,3 +1,5 @@
+#![feature(box_syntax)]
+
 extern crate ricochet_board;
 extern crate ricochet_solver;
 extern crate rustc_serialize;
@@ -25,13 +27,15 @@ fn read_test_json() {
 #[test]
 fn solve() {
     let (positions, board) = read();
-    assert_eq!(ricochet_solver::solve(&board, positions, Target::Red(Symbol::Square)),
-               vec![(Robot::Green, Direction::Down),
-                    (Robot::Red, Direction::Right),
-                    (Robot::Red, Direction::Down),
-                    (Robot::Green, Direction::Left),
-                    (Robot::Red, Direction::Up),
-                    (Robot::Red, Direction::Right),
-                    (Robot::Red, Direction::Down),
-                    (Robot::Red, Direction::Right)]);
+    let database = Database(box [ricochet_solver::Entry(255); 1 << 32]);
+    assert_eq!(ricochet_solver::solve(&board, positions, Target::Red(Symbol::Square), database),
+               (RobotPositions(3980809343 as u32),
+                vec![(Robot::Red, Direction::Right),
+                     (Robot::Red, Direction::Down),
+                     (Robot::Green, Direction::Down),
+                     (Robot::Green, Direction::Left),
+                     (Robot::Red, Direction::Up),
+                     (Robot::Red, Direction::Right),
+                     (Robot::Red, Direction::Down),
+                     (Robot::Red, Direction::Right)]));
 }
