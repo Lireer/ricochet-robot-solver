@@ -43,19 +43,10 @@ update msg model =
             ( { model | drag = Nothing, objects = Maybe.withDefault model.objects (Maybe.map (updatePosition model.objects) model.drag) }, Cmd.none )
 
         Model.NewJson text ->
-            ( { model | json = parseJson text }, Cmd.none )
-
-        -- do nothing for now
-        Model.LoadJson ->
-            ( { model |
-                board = model.json
-                    |> Result.map (\(_, b) -> b)
-                    |> Result.withDefault model.board,
-                objects = model.json
-                    |> Result.map (\(o, _) -> o)
-                    |> Result.withDefault model.objects
-            } , Cmd.none )
-
+            (case parseJson text of
+                Err text -> { model | error = Maybe.Just text }
+                Ok (pos, board) -> { model | objects = pos, board = board, error = Maybe.Nothing }
+            , Cmd.none )
 
 parseJson : String -> Result String ( Positions, Board )
 parseJson text =
