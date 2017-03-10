@@ -47,7 +47,14 @@ update msg model =
 
         -- do nothing for now
         Model.LoadJson ->
-            ( model, Cmd.none )
+            ( { model |
+                board = model.json
+                    |> Result.map (\(_, b) -> b)
+                    |> Result.withDefault model.board,
+                objects = model.json
+                    |> Result.map (\(o, _) -> o)
+                    |> Result.withDefault model.objects
+            } , Cmd.none )
 
 
 parseJson : String -> Result String ( Positions, Board )
@@ -58,8 +65,8 @@ parseJson text =
 parseBoard : String -> Result String Board
 parseBoard text =
     decode Field
-        |> required "bottom" bool
         |> required "right" bool
+        |> required "bottom" bool
         |> list
         |> list
         |> field "fields"
