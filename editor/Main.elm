@@ -11,7 +11,7 @@ import BoardConfig exposing (..)
 import View exposing (..)
 import Json.Decode exposing (decodeString, index, Decoder, bool, array, nullable, int, fail, succeed, list, field)
 import Json.Decode.Pipeline exposing (decode, required)
-import Array exposing (Array)
+import Bitwise exposing (shiftRightBy)
 
 
 main : Program Never Model Msg
@@ -72,27 +72,33 @@ parsePositions text =
     Result.map2 AllDict.union (parseTargetPositions text) (parseRobPositions text)
 
 
-expectTuple : Array Int -> Decoder ( Int, Int )
-expectTuple arr =
-    case Maybe.map2 (,) (Array.get 0 arr) (Array.get 1 arr) of
-        Just success ->
-            succeed success
+expectCompact : Int -> Positions
+expectCompact i =
+    let
+        r = Bitwise.shiftRightBy i 24
+        g = (Bitwise.shiftRightBy i 16) % 8
+        b = (Bitwise.shiftRightBy i 8) % 8
+        y = i % 8
+    in
+        AllDict.fromList Model.objOrd [
+            (Model.Robot Model.Red, compactPos r),
+            (Model.Robot Model.Green, compactPos g),
+            (Model.Robot Model.Blue, compactPos b),
+            (Model.Robot Model.Yellow, compactPos y)
+        ]
 
-        Nothing ->
-            fail "expected inner position to be a tuple"
+
+compactPos : Int -> (Int, Int)
+compactPos i = (Bitwise.shiftRightBy i 4, i % 4)
 
 
 parseRobPositions : String -> Result String Positions
 parseRobPositions text =
     int
-        |> array
-        |> Json.Decode.andThen expectTuple
-        |> list
-        |> field "rob_position"
+        |> field "_field0"
         |> index 0
-        |> flip decodeString text
-        |> Result.map (\x -> (AllDict.fromList Model.objOrd (List.map2 (,) [ Model.Robot Model.Red, Model.Robot Model.Green, Model.Robot Model.Blue, Model.Robot Model.Yellow ] x)))
-
+        |> \d -> Json.Decode.decodeString d text
+        |> Result.map expectCompact
 
 collect : List (Result err ok) -> Result err (List ok)
 collect list =
@@ -115,88 +121,68 @@ collect list =
 parseTargetPositions : String -> Result String Positions
 parseTargetPositions text =
     parseJsonTargetPositions text
-        |> Result.andThen (\a -> collect (List.map (\( target, pos ) -> (target |> jsonTargetToObject |> Result.map (\target -> ( target, pos )))) a))
+        |> Result.map (List.map (\(x, y) -> (Model.Target x, y)))
         |> Result.map (AllDict.fromList Model.objOrd)
 
 
-jsonTargetToObject : JsonTarget -> Result String Object
-jsonTargetToObject target =
-    case ( target.variant, target.fields ) of
-        ( "Spiral", Nothing ) ->
-            Ok (Model.Target Model.Spiral)
-
-        ( "Circle", Just col ) ->
-            Result.map (\a -> Model.Target (Model.Circle a)) (jsonColorToColor col)
-
-        ( "Square", Just col ) ->
-            Result.map (\a -> Model.Target (Model.Square a)) (jsonColorToColor col)
-
-        ( "Triangle", Just col ) ->
-            Result.map (\a -> Model.Target (Model.Triangle a)) (jsonColorToColor col)
-
-        ( "Hexagon", Just col ) ->
-            Result.map (\a -> Model.Target (Model.Hexagon a)) (jsonColorToColor col)
-
-        ( _, _ ) ->
-            Err ("Bad variant: " ++ target.variant)
-
-
-jsonColorToColor : String -> Result String Model.RobotColor
+jsonColorToColor : String -> Decoder Model.RobotColor
 jsonColorToColor col =
     case col of
         "Red" ->
-            Ok Model.Red
+            succeed Model.Red
 
         "Green" ->
-            Ok Model.Green
+            succeed Model.Green
 
         "Blue" ->
-            Ok Model.Blue
+            succeed Model.Blue
 
         "Yellow" ->
-            Ok Model.Yellow
+            succeed Model.Yellow
 
         _ ->
-            Err ("Bad Color: " ++ col)
+            fail ("Bad Color: " ++ col)
 
 
-f1 : Int -> Int -> Maybe JsonTarget -> Maybe ( JsonTarget, ( Int, Int ) )
-f1 y x field =
-    field |> Maybe.map (\field -> ( field, ( x, y ) ))
-
-
-targetGridToPositionList : List (List (Maybe JsonTarget)) -> List ( JsonTarget, ( Int, Int ) )
-targetGridToPositionList rows =
-    rows
-        |> List.indexedMap (\y -> (List.indexedMap (f1 y)))
-        |> List.concat
-        |> List.filterMap (\x -> x)
-
-
-parseJsonTargetPositions : String -> Result String (List ( JsonTarget, ( Int, Int ) ))
+parseJsonTargetPositions : String -> Result String (List ( Target, ( Int, Int ) ))
 parseJsonTargetPositions text =
     jsonTargetDecoder
-        |> field "target"
         |> list
-        |> list
-        |> Json.Decode.map targetGridToPositionList
-        |> field "fields"
+        |> field "targets"
         |> index 1
         |> flip decodeString text
 
-
-targetDecoder : Decoder Target
-targetDecoder =
-    fail "bar"
-
-
-type alias JsonTarget =
-    { variant : String, fields : Maybe String }
-
-
-jsonTargetDecoder : Decoder (Maybe JsonTarget)
+jsonTargetDecoder : Decoder (Target, (Int, Int))
 jsonTargetDecoder =
-    fail "foo"
+    let
+        pos = Json.Decode.map2 (,)
+            (int |> Json.Decode.index 0 |> Json.Decode.index 1)
+            (int |> Json.Decode.index 1 |> Json.Decode.index 1)
+        spiral = Json.Decode.string
+            |> Json.Decode.index 0
+            |> Json.Decode.andThen (\a -> if a == "Spiral" then succeed Model.Spiral else fail "expected a spiral")
+        color = Json.Decode.string
+            |> Json.Decode.field "variant"
+            |> Json.Decode.index 0
+            |> Json.Decode.andThen jsonColorToColor
+        shape = Json.Decode.string
+            |> Json.Decode.index 0
+            |> Json.Decode.field "fields"
+            |> Json.Decode.index 0
+            |> Json.Decode.andThen
+            (\sha -> case sha of
+                "Circle" -> succeed Model.Circle
+                "Triangle" -> succeed Model.Triangle
+                "Square" -> succeed Model.Square
+                "Hexagon" -> succeed Model.Hexagon
+                other -> fail other)
+            |> Json.Decode.map2 (\color shape -> shape color) color
+        target = Json.Decode.oneOf [
+            spiral,
+            shape
+        ]
+    in
+        Json.Decode.map2 (,) target pos
 
 
 collides : ( Object, ( Int, Int ) ) -> ( Object, ( Int, Int ) ) -> Bool
