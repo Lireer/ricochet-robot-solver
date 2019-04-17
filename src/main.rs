@@ -1,4 +1,4 @@
-use text_io::{read, scan};
+use text_io::{read, scan, try_read, try_scan};
 
 use ricochet_board::{Board, Field, Robot, RobotPositions, Symbol, Target, BOARDSIZE};
 use ricochet_solver::{solve, Database};
