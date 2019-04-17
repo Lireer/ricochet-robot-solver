@@ -19,32 +19,28 @@ fn main() {
         println!("Solving...");
         let solve = solve(&board, positions, target, database);
         let path = solve.1;
-        print!("\u{0007}");
         println!("Steps needed to reach target: {}", path.len());
         println!("Press enter to show path.");
-        let _: String = read!("{}\n");
+        let _: String = read!();
         println!("Step Robot   Direction");
-        for i in 0..path.len() {
-            println!(
-                " {step:>2}  {robot:<8}{dir:<6}",
-                step = i + 1,
-                robot = path[i].0,
-                dir = path[i].1
-            );
+        for (step, (robot, dir)) in path.iter().enumerate() {
+            println!(" {:>2}  {:<8}{:<6}", step + 1, robot, dir);
         }
         println!("Continue? (Y/n)");
+
         loop {
-            let input: String = read!("{}\n");
+            let input: String = read!();
             match input.to_lowercase().trim() {
                 "y" | "" => break,
                 "n" => break 'outer,
                 _ => println!("Input not accepted! {}", input),
             }
         }
+
         database = Database::new();
         println!("Is the end position the new starting position? (Y/n)");
         loop {
-            let input: String = read!("{}\n");
+            let input: String = read!();
             match input.to_lowercase().trim() {
                 "y" | "" => {
                     positions = solve.0;
@@ -63,13 +59,13 @@ fn main() {
 fn ask_for_target() -> Target {
     let mut target;
     println!("What color is the target?");
-    'outer: loop {
+    loop {
         println!(
             "Accepted input: \"red\"(r), \"green\"(g), \"blue\"(b), \"yellow\"(y), \
              \"spiral\"(s)"
         );
         loop {
-            let color: String = read!("{}\n");
+            let color: String = read!();
             match color.to_lowercase().trim() {
                 "red" | "r" => {
                     target = Target::Red(ask_for_symbol());
@@ -97,7 +93,7 @@ fn ask_for_target() -> Target {
         println!("Please confirm your input.");
         println!("Is the {} the correct target? (Y/n)", target);
         loop {
-            let input: String = read!("{}\n");
+            let input: String = read!();
             match input.to_lowercase().trim() {
                 "y" | "" => return target,
                 "n" => break,
@@ -136,7 +132,7 @@ fn ask_for_robotpositions() -> RobotPositions {
             println!("{:?}: ", robot);
             let a: u8;
             let b: u8;
-            let pos: String = read!("{}\n");
+            let pos: String = read!();
             scan!(pos.trim().bytes() => "{},{}", a, b);
             positions[i] = (a, b);
         }
@@ -145,7 +141,7 @@ fn ask_for_robotpositions() -> RobotPositions {
         println!("{}", robopos);
         println!("Is this correct? (Y/n)");
         loop {
-            let input: String = read!("{}\n");
+            let input: String = read!();
             match input.to_lowercase().trim() {
                 "y" | "" => break 'outer,
                 "n" => break,
@@ -153,14 +149,14 @@ fn ask_for_robotpositions() -> RobotPositions {
             }
         }
     }
-    return RobotPositions::from_array(positions);
+    RobotPositions::from_array(positions)
 }
 
 fn example_board() -> Board {
     let mut board = default_board();
     fill_board_with_walls(&mut board); // Set walls on example board
     set_targets_on_board(&mut board); // Set targets on example board
-    return board;
+    board
 }
 
 fn default_board() -> Board {
@@ -173,7 +169,7 @@ fn default_board() -> Board {
     };
     board.wall_enclosure(); // Set outer walls
     board.set_center_walls(); // Set walls around the four center fields
-    return board;
+    board
 }
 
 fn fill_board_with_walls(board: &mut Board) {

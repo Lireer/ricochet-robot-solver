@@ -27,7 +27,7 @@ pub struct Entry(pub u8);
 impl Entry {
     /// returns the number of steps required to reach this node
     fn steps(self) -> Option<u8> {
-        let steps = self.0 & 0b111111;
+        let steps = self.0 & 0b11_1111;
         if steps == 63 {
             None
         } else {
@@ -36,7 +36,7 @@ impl Entry {
     }
 
     fn reached(&mut self, steps: u8) {
-        let old = self.0 & 0b111111;
+        let old = self.0 & 0b11_1111;
         if old == 63 {
             self.0 = steps;
         }
@@ -160,8 +160,7 @@ fn vec_solve(
             }
         }
     }
-
-    return (positions, vec![]);
+    (positions, vec![])
 }
 
 enum_from_primitive! {
@@ -206,19 +205,17 @@ fn find_direction(
             if last_sector == first_sector
             // if the sector is the same, this is potentially a source location
             {
-                match can_reach(visited_pos[i as usize][j as usize], current_goal, board) {
-                    Some(x) => {
-                        path.push(x);
-                        current_goal = visited_pos[i as usize][j as usize];
-                        break;
-                    }
-                    None => {}
+                if let Some(x) = can_reach(visited_pos[i as usize][j as usize], current_goal, board)
+                {
+                    path.push(x);
+                    current_goal = visited_pos[i as usize][j as usize];
+                    break;
                 }
             }
         }
     }
-    &path.reverse();
-    return path;
+    path.reverse();
+    path
 }
 
 fn can_reach(
