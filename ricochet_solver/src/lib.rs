@@ -1,5 +1,3 @@
-#![feature(box_syntax)]
-
 extern crate ricochet_board;
 #[macro_use]
 extern crate enum_primitive;
@@ -9,19 +7,25 @@ use ricochet_board::*;
 use num::FromPrimitive;
 use std::fmt;
 
-/// lower 6 bit are the number of steps required to reach this position.
-/// in case all of the first 6 bits are set, this node has not been visited yet
-#[derive(Copy, Clone)]
-pub struct Entry(pub u8);
-
-/// the u32 position in the database array encodes the robot positions like follows:
+/// the u32 position in the database vec encodes the robot positions like follows:
 ///
 /// | Red     | Green   | Blue    | Yellow  |
 /// |x1  |y1  |x2  |y2  |x3  |y3  |x4  |y4  |
 /// |0000|0000|0000|0000|0000|0000|0000|0000|
 ///
-pub struct Database(pub Box<[Entry; 1 << 32]>);
+pub struct Database(pub Vec<Entry>);
 
+impl Database {
+    /// Creates a new Database with a capacity of `2^32`
+    pub fn new() -> Self {
+        Database(vec![Entry(255); 1 << 32])
+    }
+}
+
+/// lower 6 bit are the number of steps required to reach this position.
+/// in case all of the first 6 bits are set, this node has not been visited yet
+#[derive(Copy, Clone)]
+pub struct Entry(pub u8);
 
 impl Entry {
     /// returns the number of steps required to reach this node

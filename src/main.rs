@@ -1,4 +1,3 @@
-#![feature(box_syntax)]
 extern crate ricochet_board;
 extern crate ricochet_solver;
 extern crate rustc_serialize;
@@ -15,7 +14,7 @@ fn main() {
     // Erzeugung des Boards
     let board = example_board();
 
-    let mut database = Database(box [ricochet_solver::Entry(255); 1 << 32]);
+    let mut database = Database::new();
 
     // Erzeugung der Positionen
     let mut positions = ask_for_robotpositions();
@@ -47,7 +46,7 @@ fn main() {
                 _ => println!("Input not accepted! {}", input),
             }
         }
-        database = Database(box [ricochet_solver::Entry(255); 1 << 32]);
+        database = Database::new();
         println!("Is the end position the new starting position? (Y/n)");
         loop {
             let input: String = read!("{}\n");
