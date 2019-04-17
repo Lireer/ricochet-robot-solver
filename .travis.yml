@@ -1,6 +1,6 @@
 language: rust
 sudo: true
-rust: nightly
+rust: stable
 
 cache:
   cargo: true
@@ -9,7 +9,7 @@ cache:
   - elm-stuff
 
 install:
-  - npm install -g elm
+  - npm install -g elm@0.18.0
 
 script:
  - set -e
