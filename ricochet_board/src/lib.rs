@@ -1,5 +1,3 @@
-extern crate rustc_serialize;
-
 use std::collections::BTreeSet;
 use std::fmt;
 

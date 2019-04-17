@@ -2,6 +2,7 @@
 name = "ricochet_board"
 version = "0.1.0"
 authors = ["carl"]
+edition = "2018"
 
 [dependencies]
 rustc-serialize = "0.3"
