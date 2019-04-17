@@ -5,8 +5,8 @@ use rustc_serialize::json::*;
 use rustc_serialize::Decodable;
 
 use ricochet_board::*;
-use std::fs::File;
 use ricochet_solver::*;
+use std::fs::File;
 
 fn read() -> (RobotPositions, Board) {
     let mut file = File::open("tests/test.json").expect("test.json not found");
@@ -15,25 +15,29 @@ fn read() -> (RobotPositions, Board) {
     Decodable::decode(&mut decoder).expect("json does not match (RobotPositions, Board)")
 }
 
-
 #[test]
 fn read_test_json() {
     read();
 }
 
-
 #[test]
 fn solve() {
     let (positions, board) = read();
     let database = Database::new();
-    assert_eq!(ricochet_solver::solve(&board, positions, Target::Red(Symbol::Square), database),
-               (RobotPositions(3980809343 as u32),
-                vec![(Robot::Red, Direction::Right),
-                     (Robot::Red, Direction::Down),
-                     (Robot::Green, Direction::Down),
-                     (Robot::Green, Direction::Left),
-                     (Robot::Red, Direction::Up),
-                     (Robot::Red, Direction::Right),
-                     (Robot::Red, Direction::Down),
-                     (Robot::Red, Direction::Right)]));
+    assert_eq!(
+        ricochet_solver::solve(&board, positions, Target::Red(Symbol::Square), database),
+        (
+            RobotPositions(3980809343 as u32),
+            vec![
+                (Robot::Red, Direction::Right),
+                (Robot::Red, Direction::Down),
+                (Robot::Green, Direction::Down),
+                (Robot::Green, Direction::Left),
+                (Robot::Red, Direction::Up),
+                (Robot::Red, Direction::Right),
+                (Robot::Red, Direction::Down),
+                (Robot::Red, Direction::Right)
+            ]
+        )
+    );
 }
