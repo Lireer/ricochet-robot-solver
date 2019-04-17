@@ -32,10 +32,12 @@ fn main() {
         let _: String = read!("{}\n");
         println!("Step Robot   Direction");
         for i in 0..path.len() {
-            println!(" {step:>2}  {robot:<8}{dir:<6}",
-                     step = i + 1,
-                     robot = path[i].0,
-                     dir = path[i].1);
+            println!(
+                " {step:>2}  {robot:<8}{dir:<6}",
+                step = i + 1,
+                robot = path[i].0,
+                dir = path[i].1
+            );
         }
         println!("Continue? (Y/n)");
         loop {
@@ -69,8 +71,10 @@ fn ask_for_target() -> Target {
     let mut target;
     println!("What color is the target?");
     'outer: loop {
-        println!("Accepted input: \"red\"(r), \"green\"(g), \"blue\"(b), \"yellow\"(y), \
-                  \"spiral\"(s)");
+        println!(
+            "Accepted input: \"red\"(r), \"green\"(g), \"blue\"(b), \"yellow\"(y), \
+             \"spiral\"(s)"
+        );
         loop {
             let color: String = read!("{}\n");
             match color.to_lowercase().trim() {
@@ -128,11 +132,14 @@ fn ask_for_symbol() -> Symbol {
 fn ask_for_robotpositions() -> RobotPositions {
     let mut positions = [(0, 0); 4];
     'outer: loop {
-        println!("Please input the coordinates of the Robots.\nPlease write in this format: \
-                  \"x,y\"");
+        println!(
+            "Please input the coordinates of the Robots.\nPlease write in this format: \
+             \"x,y\""
+        );
         for (i, &robot) in [Robot::Red, Robot::Green, Robot::Blue, Robot::Yellow]
-                .iter()
-                .enumerate() {
+            .iter()
+            .enumerate()
+        {
             println!("{:?}: ", robot);
             let a: u8;
             let b: u8;
