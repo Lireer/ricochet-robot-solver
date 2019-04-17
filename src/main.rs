@@ -1,14 +1,7 @@
-extern crate ricochet_board;
-extern crate ricochet_solver;
-extern crate rustc_serialize;
-#[macro_use]
-extern crate text_io;
+use text_io::{read, scan};
 
-// use rustc_serialize::json::*;
-// use std::fs::File;
-// use std::io::prelude::*;
-use ricochet_board::*;
-use ricochet_solver::*;
+use ricochet_board::{Board, Field, Robot, RobotPositions, Symbol, Target, BOARDSIZE};
+use ricochet_solver::{solve, Database};
 
 fn main() {
     // Erzeugung des Boards

@@ -1,11 +1,8 @@
-extern crate ricochet_board;
-#[macro_use]
-extern crate enum_primitive;
-extern crate num;
-
+use enum_primitive::*;
 use num::FromPrimitive;
-use ricochet_board::*;
 use std::fmt;
+
+use ricochet_board::{Board, Robot, RobotPositions, Target};
 
 /// the u32 position in the database vec encodes the robot positions like follows:
 ///
