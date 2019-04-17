@@ -113,8 +113,8 @@ fn ask_for_target() -> Target {
 fn ask_for_symbol() -> Symbol {
     println!("What is the shape of the target?");
     println!("Accepted input: \"Circle\"(c), \"Triangle\"(t), \"Square\"(s), \"Hexagon\"(h)");
-    let shape: String = read!("{}\n");
     loop {
+        let shape: String = read!("{}\n");
         match shape.to_lowercase().trim() {
             "circle" | "c" => return Symbol::Circle,
             "triangle" | "t" => return Symbol::Triangle,
