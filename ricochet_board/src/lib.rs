@@ -258,7 +258,7 @@ impl RobotPositions {
 }
 
 impl fmt::Debug for RobotPositions {
-    fn fmt(&self, mut fmt: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         write!(fmt,
                "[{:?}, {:?}, {:?}, {:?}]",
                self.red(),
@@ -269,7 +269,7 @@ impl fmt::Debug for RobotPositions {
 }
 
 impl fmt::Display for RobotPositions {
-    fn fmt(&self, mut fmt: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         write!(fmt,
                "Red: {}\nGreen: {}\nBlue: {}\nYellow: {}",
                self.red_display(),

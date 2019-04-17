@@ -79,7 +79,7 @@ pub fn solve(board: &Board,
     vec_solve(board, positions, target, targetx, targety, database)
 }
 
-fn database_solve(board: &Board,
+pub fn database_solve(board: &Board,
                   positions: RobotPositions,
                   target: Target,
                   targetx: usize,
@@ -230,7 +230,7 @@ fn eval(board: &Board,
         target_y: usize,
         steps: u8,
         target: Target,
-        mut visited_pos: &mut Vec<Vec<RobotPositions>>)
+        visited_pos: &mut Vec<Vec<RobotPositions>>)
         -> Option<RobotPositions> {
     let mut new = [[start; 4]; 4];
     let mut vec: Vec<RobotPositions> = Vec::new();
