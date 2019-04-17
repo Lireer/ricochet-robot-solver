@@ -5,7 +5,7 @@ authors = ["carl"]
 edition = "2018"
 
 [dependencies]
-rustc-serialize = "0.3"
+rustc-serialize = "0.3.24"
 ricochet_board = {path="ricochet_board"}
 ricochet_solver = {path="ricochet_solver"}
-text_io = "0.1.6"
+text_io = "0.1.7"
