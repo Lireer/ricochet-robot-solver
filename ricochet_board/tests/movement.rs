@@ -1,5 +1,3 @@
-extern crate ricochet_board;
-extern crate rustc_serialize;
 use rustc_serialize::json::*;
 use rustc_serialize::Decodable;
 
