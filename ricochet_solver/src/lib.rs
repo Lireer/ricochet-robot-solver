@@ -49,44 +49,44 @@ pub fn solve(
     target: Target,
     mut database: Database,
 ) -> (RobotPosition, Vec<(Robot, Direction)>) {
-    let (targetx, targety) = board.targets.iter().find(|&&(t, _)| t == target).unwrap().1;
+    let (target_col, target_row) = board.targets.iter().find(|&&(t, _)| t == target).unwrap().1;
     match target {
         Target::Spiral => {
-            if positions.contains_robot(targetx, targety) {
+            if positions.contains_robot(target_col, target_row) {
                 return (positions, vec![]);
             }
         }
         Target::Red(_) => {
-            if positions.contains_red(targetx, targety) {
+            if positions.contains_red(target_col, target_row) {
                 return (positions, vec![]);
             }
         }
         Target::Green(_) => {
-            if positions.contains_green(targetx, targety) {
+            if positions.contains_green(target_col, target_row) {
                 return (positions, vec![]);
             }
         }
         Target::Blue(_) => {
-            if positions.contains_blue(targetx, targety) {
+            if positions.contains_blue(target_col, target_row) {
                 return (positions, vec![]);
             }
         }
         Target::Yellow(_) => {
-            if positions.contains_yellow(targetx, targety) {
+            if positions.contains_yellow(target_col, target_row) {
                 return (positions, vec![]);
             }
         }
     }
     database.0[positions.0 as usize].reached(0);
-    vec_solve(board, positions, target, targetx, targety, database)
+    vec_solve(board, positions, target, target_col, target_row, database)
 }
 
 pub fn database_solve(
     board: &Board,
     positions: RobotPosition,
     target: Target,
-    targetx: usize,
-    targety: usize,
+    target_col: usize,
+    target_row: usize,
     mut database: Database,
 ) -> (RobotPosition, Vec<(Robot, Direction)>) {
     let mut visited_pos = vec![vec![]];
@@ -95,8 +95,8 @@ pub fn database_solve(
         board,
         positions,
         &mut database,
-        targetx,
-        targety,
+        target_col,
+        target_row,
         0,
         target,
         &mut visited_pos,
@@ -113,8 +113,8 @@ pub fn database_solve(
                     board,
                     RobotPosition(j as u32),
                     &mut database,
-                    targetx,
-                    targety,
+                    target_col,
+                    target_row,
                     steps,
                     target,
                     &mut visited_pos,
@@ -135,8 +135,8 @@ fn vec_solve(
     board: &Board,
     positions: RobotPosition,
     target: Target,
-    targetx: usize,
-    targety: usize,
+    target_col: usize,
+    target_row: usize,
     mut database: Database,
 ) -> (RobotPosition, Vec<(Robot, Direction)>) {
     let mut visited_pos = vec![vec![]];
@@ -147,8 +147,8 @@ fn vec_solve(
                 board,
                 visited_pos[steps][i],
                 &mut database,
-                targetx,
-                targety,
+                target_col,
+                target_row,
                 steps as u8,
                 target,
                 &mut visited_pos,
@@ -205,9 +205,9 @@ fn find_direction(
             if last_sector == first_sector
             // if the sector is the same, this is potentially a source location
             {
-                if let Some(x) = can_reach(visited_pos[i as usize][j as usize], current_goal, board)
+                if let Some(col) = can_reach(visited_pos[i as usize][j as usize], current_goal, board)
                 {
-                    path.push(x);
+                    path.push(col);
                     current_goal = visited_pos[i as usize][j as usize];
                     break;
                 }
@@ -240,8 +240,8 @@ fn eval(
     board: &Board,
     start: RobotPosition,
     database: &mut Database,
-    target_x: usize,
-    target_y: usize,
+    target_col: usize,
+    target_row: usize,
     steps: u8,
     target: Target,
     visited_pos: &mut Vec<Vec<RobotPosition>>,
@@ -264,27 +264,27 @@ fn eval(
             database.0[new[i][j].0 as usize].reached(steps + 1);
             match target {
                 Target::Spiral => {
-                    if new[i][j].contains_robot(target_x, target_y) {
+                    if new[i][j].contains_robot(target_col, target_row) {
                         return Some(new[i][j]);
                     }
                 }
                 Target::Red(_) => {
-                    if robot == Robot::Red && new[i][j].contains_red(target_x, target_y) {
+                    if robot == Robot::Red && new[i][j].contains_red(target_col, target_row) {
                         return Some(new[i][j]);
                     }
                 }
                 Target::Green(_) => {
-                    if robot == Robot::Green && new[i][j].contains_green(target_x, target_y) {
+                    if robot == Robot::Green && new[i][j].contains_green(target_col, target_row) {
                         return Some(new[i][j]);
                     }
                 }
                 Target::Blue(_) => {
-                    if robot == Robot::Blue && new[i][j].contains_blue(target_x, target_y) {
+                    if robot == Robot::Blue && new[i][j].contains_blue(target_col, target_row) {
                         return Some(new[i][j]);
                     }
                 }
                 Target::Yellow(_) => {
-                    if robot == Robot::Yellow && new[i][j].contains_yellow(target_x, target_y) {
+                    if robot == Robot::Yellow && new[i][j].contains_yellow(target_col, target_row) {
                         return Some(new[i][j]);
                     }
                 }

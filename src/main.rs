@@ -123,7 +123,7 @@ fn ask_for_robotpositions() -> RobotPosition {
     'outer: loop {
         println!(
             "Please input the coordinates of the Robots.\nPlease write in this format: \
-             \"x,y\""
+             \"column,row\""
         );
         for (i, &robot) in [Robot::Red, Robot::Green, Robot::Blue, Robot::Yellow]
             .iter()

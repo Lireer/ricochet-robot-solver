@@ -85,85 +85,89 @@ impl Board {
         self.fields[8][8].bottom = true;
     }
 
-    pub fn wall_right(&self, x: usize, y: usize) -> bool {
-        self.fields[x][y].right
+    #[inline]
+    pub fn wall_right(&self, col: usize, row: usize) -> bool {
+        self.fields[col][row].right
     }
 
-    pub fn wall_bottom(&self, x: usize, y: usize) -> bool {
-        self.fields[x][y].bottom
+    #[inline]
+    pub fn wall_bottom(&self, col: usize, row: usize) -> bool {
+        self.fields[col][row].bottom
     }
 
-    pub fn wall_left(&self, x: usize, y: usize) -> bool {
-        if x == 0 {
-            self.wall_right(BOARDSIZE - 1, y)
+    #[inline]
+    pub fn wall_left(&self, col: usize, row: usize) -> bool {
+        if col == 0 {
+            self.wall_right(BOARDSIZE - 1, row)
         } else {
-            self.wall_right(x - 1, y)
+            self.wall_right(col - 1, row)
         }
     }
 
-    pub fn wall_top(&self, x: usize, y: usize) -> bool {
-        if y == 0 {
-            self.wall_bottom(x, BOARDSIZE - 1)
+    #[inline]
+    pub fn wall_top(&self, col: usize, row: usize) -> bool {
+        if row == 0 {
+            self.wall_bottom(col, BOARDSIZE - 1)
         } else {
-            self.wall_bottom(x, y - 1)
+            self.wall_bottom(col, row - 1)
         }
     }
 }
 
 impl RobotPosition {
-    pub fn contains_robot(self, x: usize, y: usize) -> bool {
-        let byte = ((x << 4) | y) as u32;
+    pub fn contains_robot(self, col: usize, row: usize) -> bool {
+        let byte = ((col << 4) | row) as u32;
         ((self.0 & 0xFF) == byte)
             || (((self.0 >> 8) & 0xFF) == byte)
             || (((self.0 >> 16) & 0xFF) == byte)
             || (((self.0 >> 24) & 0xFF) == byte)
     }
 
-    pub fn contains_red(self, x: usize, y: usize) -> bool {
-        let byte = ((x << 4) | y) as u32;
+    pub fn contains_red(self, col: usize, row: usize) -> bool {
+        let byte = ((col << 4) | row) as u32;
         (((self.0 >> 24) & 0xFF) == byte)
     }
 
-    pub fn contains_green(self, x: usize, y: usize) -> bool {
-        let byte = ((x << 4) | y) as u32;
+    pub fn contains_green(self, col: usize, row: usize) -> bool {
+        let byte = ((col << 4) | row) as u32;
         (((self.0 >> 16) & 0xFF) == byte)
     }
 
-    pub fn contains_blue(self, x: usize, y: usize) -> bool {
-        let byte = ((x << 4) | y) as u32;
+    pub fn contains_blue(self, col: usize, row: usize) -> bool {
+        let byte = ((col << 4) | row) as u32;
         (((self.0 >> 8) & 0xFF) == byte)
     }
 
-    pub fn contains_yellow(self, x: usize, y: usize) -> bool {
-        let byte = ((x << 4) | y) as u32;
+    pub fn contains_yellow(self, col: usize, row: usize) -> bool {
+        let byte = ((col << 4) | row) as u32;
         ((self.0 & 0xFF) == byte)
     }
 
-    fn can_move_right(self, board: &Board, x: usize, y: usize) -> bool {
-        !board.wall_right(x, y) && !self.contains_robot((x + 1) % BOARDSIZE, y)
+    fn can_move_right(self, board: &Board, col: usize, row: usize) -> bool {
+        !board.wall_right(col, row) && !self.contains_robot((col + 1) % BOARDSIZE, row)
     }
 
-    fn can_move_down(self, board: &Board, x: usize, y: usize) -> bool {
-        !board.wall_bottom(x, y) && !self.contains_robot(x, (y + 1) % BOARDSIZE)
+    fn can_move_down(self, board: &Board, col: usize, row: usize) -> bool {
+        !board.wall_bottom(col, row) && !self.contains_robot(col, (row + 1) % BOARDSIZE)
     }
 
-    fn can_move_left(self, board: &Board, x: usize, y: usize) -> bool {
-        !board.wall_left(x, y) && !self.contains_robot((x + BOARDSIZE - 1) % BOARDSIZE, y)
+    fn can_move_left(self, board: &Board, col: usize, row: usize) -> bool {
+        !board.wall_left(col, row) && !self.contains_robot((col + BOARDSIZE - 1) % BOARDSIZE, row)
     }
 
-    fn can_move_up(self, board: &Board, x: usize, y: usize) -> bool {
-        !board.wall_top(x, y) && !self.contains_robot(x, (y + BOARDSIZE - 1) % BOARDSIZE)
+    fn can_move_up(self, board: &Board, col: usize, row: usize) -> bool {
+        !board.wall_top(col, row) && !self.contains_robot(col, (row + BOARDSIZE - 1) % BOARDSIZE)
     }
 }
 
 impl RobotPosition {
     pub fn move_right(&mut self, robot: Robot, board: &Board) {
-        let (x, y) = self.robot(robot);
-        for x_tmp in x.. {
-            let x_tmp = x_tmp % BOARDSIZE;
-            if !self.can_move_right(board, x_tmp, y) {
-                if x != x_tmp {
-                    self.set_robot(robot, (x_tmp, y));
+        let (col, row) = self.robot(robot);
+        for col_tmp in col.. {
+            let col_tmp = col_tmp % BOARDSIZE;
+            if !self.can_move_right(board, col_tmp, row) {
+                if col != col_tmp {
+                    self.set_robot(robot, (col_tmp, row));
                 }
                 return;
             }
@@ -171,12 +175,12 @@ impl RobotPosition {
     }
 
     pub fn move_down(&mut self, robot: Robot, board: &Board) {
-        let (x, y) = self.robot(robot);
-        for y_tmp in y.. {
-            let y_tmp = y_tmp % BOARDSIZE;
-            if !self.can_move_down(board, x, y_tmp) {
-                if y != y_tmp {
-                    self.set_robot(robot, (x, y_tmp));
+        let (col, row) = self.robot(robot);
+        for row_tmp in row.. {
+            let row_tmp = row_tmp % BOARDSIZE;
+            if !self.can_move_down(board, col, row_tmp) {
+                if row != row_tmp {
+                    self.set_robot(robot, (col, row_tmp));
                 }
                 return;
             }
@@ -184,12 +188,12 @@ impl RobotPosition {
     }
 
     pub fn move_left(&mut self, robot: Robot, board: &Board) {
-        let (x, y) = self.robot(robot);
+        let (col, row) = self.robot(robot);
         for i in 0.. {
-            let x = (x + BOARDSIZE - i) % BOARDSIZE;
-            if !self.can_move_left(board, x, y) {
+            let col = (col + BOARDSIZE - i) % BOARDSIZE;
+            if !self.can_move_left(board, col, row) {
                 if i != 0 {
-                    self.set_robot(robot, (x, y));
+                    self.set_robot(robot, (col, row));
                 }
                 return;
             }
@@ -197,12 +201,12 @@ impl RobotPosition {
     }
 
     pub fn move_up(&mut self, robot: Robot, board: &Board) {
-        let (x, y) = self.robot(robot);
+        let (col, row) = self.robot(robot);
         for i in 0.. {
-            let y = (y + BOARDSIZE - i) % BOARDSIZE;
-            if !self.can_move_up(board, x, y) {
+            let row = (row + BOARDSIZE - i) % BOARDSIZE;
+            if !self.can_move_up(board, col, row) {
                 if i != 0 {
-                    self.set_robot(robot, (x, y));
+                    self.set_robot(robot, (col, row));
                 }
                 return;
             }
@@ -223,8 +227,8 @@ impl RobotPosition {
                 | u32::from(pos[3].1),
         )
     }
-    pub fn set_robot(&mut self, rob: Robot, (x, y): (usize, usize)) {
-        let pos = ((x as u32) << 4) | (y as u32);
+    pub fn set_robot(&mut self, rob: Robot, (col, row): (usize, usize)) {
+        let pos = ((col as u32) << 4) | (row as u32);
         let rob = rob as usize;
         self.0 &= !(0xFF << (8 * (3 - rob)));
         self.0 |= pos << (8 * (3 - rob));
