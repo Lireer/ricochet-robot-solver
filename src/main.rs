@@ -160,16 +160,16 @@ fn example_board() -> Board {
 }
 
 fn default_board() -> Board {
-    let mut board = Board {
+    let board = Board {
         fields: [[Field {
             bottom: false,
             right: false,
         }; BOARDSIZE]; BOARDSIZE],
         targets: Default::default(),
     };
-    board.wall_enclosure(); // Set outer walls
-    board.set_center_walls(); // Set walls around the four center fields
     board
+        .wall_enclosure() // Set outer walls
+        .set_center_walls() // Set walls around the four center fields
 }
 
 fn fill_board_with_walls(board: &mut Board) {

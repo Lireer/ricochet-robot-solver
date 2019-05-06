@@ -63,26 +63,56 @@ impl fmt::Display for Robot {
 }
 
 impl Board {
-    pub fn wall_enclosure(&mut self) {
-        for i in 0..BOARDSIZE {
-            self.fields[i][BOARDSIZE - 1].bottom = true;
-        }
-
-        for i in 0..BOARDSIZE {
-            self.fields[BOARDSIZE - 1][i].right = true;
-        }
+    pub fn wall_enclosure(self) -> Self {
+        self.enclose_lengths(0, 0, BOARDSIZE, BOARDSIZE)
     }
 
     // only useful for 16x16 board
-    pub fn set_center_walls(&mut self) {
-        self.fields[6][7].right = true;
-        self.fields[6][8].right = true;
-        self.fields[7][6].bottom = true;
-        self.fields[7][8].bottom = true;
-        self.fields[8][6].bottom = true;
-        self.fields[8][7].right = true;
-        self.fields[8][8].right = true;
-        self.fields[8][8].bottom = true;
+    pub fn set_center_walls(self) -> Self {
+        self.enclose_lengths(7, 7, 2, 2)
+    }
+
+    /// Encloses a rectangle defined by the left upper corner and its width and length.
+    /// The field [col, row] is inside the enclosure. Wraps around at the end of the board.
+    /// # Panics
+    /// - Panics if [col, row] is out of bounds.
+    pub fn enclose_lengths(self, col: usize, row: usize, len: usize, width: usize) -> Self {
+        let top_row = if row == 0 { BOARDSIZE - 1 } else { row - 1 };
+        let bottom_row = if row + len - 1 >= BOARDSIZE {
+            BOARDSIZE - 1
+        } else {
+            row + len - 1
+        };
+
+        let left_col = if col == 0 { BOARDSIZE - 1 } else { col - 1 };
+        let right_col = if col + width - 1 >= BOARDSIZE {
+            BOARDSIZE - 1
+        } else {
+            col + width - 1
+        };
+
+        self.set_horizontal_line(col, top_row, width)
+            .set_horizontal_line(col, bottom_row, width)
+            .set_vertical_line(left_col, row, len)
+            .set_vertical_line(right_col, row, len)
+    }
+
+    /// Starts from `[col, row]` and sets `len` fields below to have a wall on the right side
+    #[inline]
+    fn set_vertical_line(mut self, col: usize, row: usize, len: usize) -> Self {
+        for row in row..(row + len) {
+            self.fields[col][row].right = true;
+        }
+        self
+    }
+
+    /// Starts from `[col, row]` and sets `len` fields to the right to have a wall on the bottom side
+    #[inline]
+    fn set_horizontal_line(mut self, col: usize, row: usize, width: usize) -> Self {
+        for col in col..(col + width) {
+            self.fields[col][row].bottom = true;
+        }
+        self
     }
 
     #[inline]
