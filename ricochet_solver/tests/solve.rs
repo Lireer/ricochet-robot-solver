@@ -5,11 +5,11 @@ use ricochet_board::*;
 use ricochet_solver::*;
 use std::fs::File;
 
-fn read() -> (RobotPositions, Board) {
+fn read() -> (RobotPosition, Board) {
     let mut file = File::open("tests/test.json").expect("test.json not found");
     let json = Json::from_reader(&mut file).expect("invalid json");
     let mut decoder = Decoder::new(json);
-    Decodable::decode(&mut decoder).expect("json does not match (RobotPositions, Board)")
+    Decodable::decode(&mut decoder).expect("json does not match (RobotPosition, Board)")
 }
 
 #[test]
@@ -24,7 +24,7 @@ fn solve() {
     assert_eq!(
         ricochet_solver::solve(&board, positions, Target::Red(Symbol::Square), database),
         (
-            RobotPositions(3980809343 as u32),
+            RobotPosition(3980809343 as u32),
             vec![
                 (Robot::Red, Direction::Right),
                 (Robot::Red, Direction::Down),

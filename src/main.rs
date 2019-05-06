@@ -1,6 +1,6 @@
 use text_io::{read, scan, try_read, try_scan};
 
-use ricochet_board::{Board, Field, Robot, RobotPositions, Symbol, Target, BOARDSIZE};
+use ricochet_board::{Board, Field, Robot, RobotPosition, Symbol, Target, BOARDSIZE};
 use ricochet_solver::{solve, Database};
 
 fn main() {
@@ -118,7 +118,7 @@ fn ask_for_symbol() -> Symbol {
     }
 }
 
-fn ask_for_robotpositions() -> RobotPositions {
+fn ask_for_robotpositions() -> RobotPosition {
     let mut positions = [(0, 0); 4];
     'outer: loop {
         println!(
@@ -136,7 +136,7 @@ fn ask_for_robotpositions() -> RobotPositions {
             scan!(pos.trim().bytes() => "{},{}", a, b);
             positions[i] = (a, b);
         }
-        let robopos = RobotPositions::from_array(positions);
+        let robopos = RobotPosition::from_array(positions);
         println!("Please confirm your input.");
         println!("{}", robopos);
         println!("Is this correct? (Y/n)");
@@ -149,7 +149,7 @@ fn ask_for_robotpositions() -> RobotPositions {
             }
         }
     }
-    RobotPositions::from_array(positions)
+    RobotPosition::from_array(positions)
 }
 
 fn example_board() -> Board {

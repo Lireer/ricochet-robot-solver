@@ -2,7 +2,7 @@ use enum_primitive::*;
 use num::FromPrimitive;
 use std::fmt;
 
-use ricochet_board::{Board, Robot, RobotPositions, Target};
+use ricochet_board::{Board, Robot, RobotPosition, Target};
 
 /// the u32 position in the database vec encodes the robot positions like follows:
 ///
@@ -45,10 +45,10 @@ impl Entry {
 
 pub fn solve(
     board: &Board,
-    positions: RobotPositions,
+    positions: RobotPosition,
     target: Target,
     mut database: Database,
-) -> (RobotPositions, Vec<(Robot, Direction)>) {
+) -> (RobotPosition, Vec<(Robot, Direction)>) {
     let (targetx, targety) = board.targets.iter().find(|&&(t, _)| t == target).unwrap().1;
     match target {
         Target::Spiral => {
@@ -83,12 +83,12 @@ pub fn solve(
 
 pub fn database_solve(
     board: &Board,
-    positions: RobotPositions,
+    positions: RobotPosition,
     target: Target,
     targetx: usize,
     targety: usize,
     mut database: Database,
-) -> (RobotPositions, Vec<(Robot, Direction)>) {
+) -> (RobotPosition, Vec<(Robot, Direction)>) {
     let mut visited_pos = vec![vec![]];
     visited_pos[0] = vec![positions];
     if let Some(result_position) = eval(
@@ -111,7 +111,7 @@ pub fn database_solve(
             if database.0[j].steps() == Some(steps) {
                 if let Some(result_position) = eval(
                     board,
-                    RobotPositions(j as u32),
+                    RobotPosition(j as u32),
                     &mut database,
                     targetx,
                     targety,
@@ -133,12 +133,12 @@ pub fn database_solve(
 
 fn vec_solve(
     board: &Board,
-    positions: RobotPositions,
+    positions: RobotPosition,
     target: Target,
     targetx: usize,
     targety: usize,
     mut database: Database,
-) -> (RobotPositions, Vec<(Robot, Direction)>) {
+) -> (RobotPosition, Vec<(Robot, Direction)>) {
     let mut visited_pos = vec![vec![]];
     visited_pos[0] = vec![positions];
     for steps in 0.. {
@@ -180,18 +180,18 @@ impl fmt::Display for Direction {
     }
 }
 
-const DIRECTIONS: [fn(&mut RobotPositions, robot: Robot, board: &Board); 4] = [
-    RobotPositions::move_right,
-    RobotPositions::move_left,
-    RobotPositions::move_up,
-    RobotPositions::move_down,
+const DIRECTIONS: [fn(&mut RobotPosition, robot: Robot, board: &Board); 4] = [
+    RobotPosition::move_right,
+    RobotPosition::move_left,
+    RobotPosition::move_up,
+    RobotPosition::move_down,
 ];
 
 fn find_direction(
     steps: u8, // number of steps needed to reach the target
     board: &Board,
-    result_position: RobotPositions,
-    visited_pos: Vec<Vec<RobotPositions>>,
+    result_position: RobotPosition,
+    visited_pos: Vec<Vec<RobotPosition>>,
 ) -> Vec<(Robot, Direction)> {
     let mut path = vec![];
     let mut current_goal = result_position;
@@ -219,8 +219,8 @@ fn find_direction(
 }
 
 fn can_reach(
-    start: RobotPositions,
-    goal: RobotPositions,
+    start: RobotPosition,
+    goal: RobotPosition,
     board: &Board,
 ) -> Option<(Robot, Direction)> {
     for &robot in [Robot::Red, Robot::Green, Robot::Blue, Robot::Yellow].iter() {
@@ -238,16 +238,16 @@ fn can_reach(
 /// calculates all new possible positions starting from a startposition
 fn eval(
     board: &Board,
-    start: RobotPositions,
+    start: RobotPosition,
     database: &mut Database,
     target_x: usize,
     target_y: usize,
     steps: u8,
     target: Target,
-    visited_pos: &mut Vec<Vec<RobotPositions>>,
-) -> Option<RobotPositions> {
+    visited_pos: &mut Vec<Vec<RobotPosition>>,
+) -> Option<RobotPosition> {
     let mut new = [[start; 4]; 4];
-    let mut vec: Vec<RobotPositions> = Vec::new();
+    let mut vec: Vec<RobotPosition> = Vec::new();
 
     if visited_pos.len() == steps as usize + 1 {
         visited_pos.push(vec![]);

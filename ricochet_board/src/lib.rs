@@ -16,7 +16,7 @@ pub struct Board {
 }
 
 #[derive(RustcDecodable, RustcEncodable, Copy, Clone, PartialEq, Eq)]
-pub struct RobotPositions(pub u32);
+pub struct RobotPosition(pub u32);
 
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub enum Robot {
@@ -110,7 +110,7 @@ impl Board {
     }
 }
 
-impl RobotPositions {
+impl RobotPosition {
     pub fn contains_robot(self, x: usize, y: usize) -> bool {
         let byte = ((x << 4) | y) as u32;
         ((self.0 & 0xFF) == byte)
@@ -156,7 +156,7 @@ impl RobotPositions {
     }
 }
 
-impl RobotPositions {
+impl RobotPosition {
     pub fn move_right(&mut self, robot: Robot, board: &Board) {
         let (x, y) = self.robot(robot);
         for x_tmp in x.. {
@@ -210,9 +210,9 @@ impl RobotPositions {
     }
 }
 
-impl RobotPositions {
+impl RobotPosition {
     pub fn from_array(pos: [(u8, u8); 4]) -> Self {
-        RobotPositions(
+        RobotPosition(
             (u32::from(pos[0].0) << 28)
                 | (u32::from(pos[0].1) << 24)
                 | (u32::from(pos[1].0) << 20)
@@ -267,7 +267,7 @@ impl RobotPositions {
     }
 }
 
-impl fmt::Debug for RobotPositions {
+impl fmt::Debug for RobotPosition {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         write!(
             fmt,
@@ -280,7 +280,7 @@ impl fmt::Debug for RobotPositions {
     }
 }
 
-impl fmt::Display for RobotPositions {
+impl fmt::Display for RobotPosition {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         write!(
             fmt,
