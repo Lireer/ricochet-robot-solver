@@ -21,7 +21,7 @@ fn main() {
         let path = solve.1;
         println!("Steps needed to reach target: {}", path.len());
         println!("Press enter to show path.");
-        let _: String = read!();
+        let _: String = read!("{}\n");
         println!("Step Robot   Direction");
         for (step, (robot, dir)) in path.iter().enumerate() {
             println!(" {:>2}  {:<8}{:<6}", step + 1, robot, dir);
@@ -29,7 +29,7 @@ fn main() {
         println!("Continue? (Y/n)");
 
         loop {
-            let input: String = read!();
+            let input: String = read!("{}\n");
             match input.to_lowercase().trim() {
                 "y" | "" => break,
                 "n" => break 'outer,
@@ -40,7 +40,7 @@ fn main() {
         database = Database::new();
         println!("Is the end position the new starting position? (Y/n)");
         loop {
-            let input: String = read!();
+            let input: String = read!("{}\n");
             match input.to_lowercase().trim() {
                 "y" | "" => {
                     positions = solve.0;
@@ -65,7 +65,7 @@ fn ask_for_target() -> Target {
              \"spiral\"(s)"
         );
         loop {
-            let color: String = read!();
+            let color: String = read!("{}\n");
             match color.to_lowercase().trim() {
                 "red" | "r" => {
                     target = Target::Red(ask_for_symbol());
@@ -93,7 +93,7 @@ fn ask_for_target() -> Target {
         println!("Please confirm your input.");
         println!("Is the {} the correct target? (Y/n)", target);
         loop {
-            let input: String = read!();
+            let input: String = read!("{}\n");
             match input.to_lowercase().trim() {
                 "y" | "" => return target,
                 "n" => break,
@@ -132,7 +132,7 @@ fn ask_for_robotpositions() -> RobotPosition {
             println!("{:?}: ", robot);
             let a: u8;
             let b: u8;
-            let pos: String = read!();
+            let pos: String = read!("{}\n");
             scan!(pos.trim().bytes() => "{},{}", a, b);
             positions[i] = (a, b);
         }
@@ -141,7 +141,7 @@ fn ask_for_robotpositions() -> RobotPosition {
         println!("{}", robopos);
         println!("Is this correct? (Y/n)");
         loop {
-            let input: String = read!();
+            let input: String = read!("{}\n");
             match input.to_lowercase().trim() {
                 "y" | "" => break 'outer,
                 "n" => break,
