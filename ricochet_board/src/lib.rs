@@ -1,13 +1,13 @@
 use std::collections::BTreeSet;
 use std::fmt;
 
+pub const BOARDSIZE: usize = 16;
+
 #[derive(RustcDecodable, RustcEncodable, Copy, Clone)]
 pub struct Field {
     pub bottom: bool,
     pub right: bool,
 }
-
-pub const BOARDSIZE: usize = 16;
 
 #[derive(RustcDecodable, RustcEncodable)]
 pub struct Board {
@@ -25,6 +25,7 @@ pub enum Robot {
     Blue = 2,
     Yellow = 3,
 }
+
 #[derive(Debug, RustcDecodable, RustcEncodable, Clone, Copy, Ord, PartialOrd, Eq, PartialEq)]
 pub enum Target {
     Red(Symbol),
@@ -78,14 +79,14 @@ impl Board {
     /// - Panics if [col, row] is out of bounds.
     pub fn enclose_lengths(self, col: usize, row: usize, len: usize, width: usize) -> Self {
         let top_row = if row == 0 { BOARDSIZE - 1 } else { row - 1 };
-        let bottom_row = if row + len - 1 >= BOARDSIZE {
+        let bottom_row = if row + len > BOARDSIZE {
             BOARDSIZE - 1
         } else {
             row + len - 1
         };
 
         let left_col = if col == 0 { BOARDSIZE - 1 } else { col - 1 };
-        let right_col = if col + width - 1 >= BOARDSIZE {
+        let right_col = if col + width > BOARDSIZE {
             BOARDSIZE - 1
         } else {
             col + width - 1
@@ -199,7 +200,7 @@ impl RobotPosition {
                 if col != col_tmp {
                     self.set_robot(robot, (col_tmp, row));
                 }
-                return;
+                break;
             }
         }
     }
@@ -212,7 +213,7 @@ impl RobotPosition {
                 if row != row_tmp {
                     self.set_robot(robot, (col, row_tmp));
                 }
-                return;
+                break;
             }
         }
     }
@@ -225,7 +226,7 @@ impl RobotPosition {
                 if i != 0 {
                     self.set_robot(robot, (col, row));
                 }
-                return;
+                break;
             }
         }
     }
@@ -238,7 +239,7 @@ impl RobotPosition {
                 if i != 0 {
                     self.set_robot(robot, (col, row));
                 }
-                return;
+                break;
             }
         }
     }
