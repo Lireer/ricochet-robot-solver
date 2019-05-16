@@ -3,6 +3,9 @@ use std::fmt;
 
 pub const BOARDSIZE: usize = 16;
 
+// using an u64 we could encode a 256x256 board and a 65536x65536 board using an u128
+type PositionEncoding = u32;
+
 #[derive(RustcDecodable, RustcEncodable, Copy, Clone)]
 pub struct Field {
     pub bottom: bool,
@@ -16,7 +19,7 @@ pub struct Board {
 }
 
 #[derive(RustcDecodable, RustcEncodable, Copy, Clone, PartialEq, Eq)]
-pub struct RobotPosition(pub u32);
+pub struct RobotPosition(pub PositionEncoding);
 
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub enum Robot {
@@ -147,7 +150,7 @@ impl Board {
 
 impl RobotPosition {
     pub fn contains_robot(self, col: usize, row: usize) -> bool {
-        let byte = ((col << 4) | row) as u32;
+        let byte = ((col << 4) | row) as PositionEncoding;
         ((self.0 & 0xFF) == byte)
             || (((self.0 >> 8) & 0xFF) == byte)
             || (((self.0 >> 16) & 0xFF) == byte)
@@ -155,22 +158,22 @@ impl RobotPosition {
     }
 
     pub fn contains_red(self, col: usize, row: usize) -> bool {
-        let byte = ((col << 4) | row) as u32;
+        let byte = ((col << 4) | row) as PositionEncoding;
         (((self.0 >> 24) & 0xFF) == byte)
     }
 
     pub fn contains_green(self, col: usize, row: usize) -> bool {
-        let byte = ((col << 4) | row) as u32;
+        let byte = ((col << 4) | row) as PositionEncoding;
         (((self.0 >> 16) & 0xFF) == byte)
     }
 
     pub fn contains_blue(self, col: usize, row: usize) -> bool {
-        let byte = ((col << 4) | row) as u32;
+        let byte = ((col << 4) | row) as PositionEncoding;
         (((self.0 >> 8) & 0xFF) == byte)
     }
 
     pub fn contains_yellow(self, col: usize, row: usize) -> bool {
-        let byte = ((col << 4) | row) as u32;
+        let byte = ((col << 4) | row) as PositionEncoding;
         ((self.0 & 0xFF) == byte)
     }
 
@@ -248,18 +251,18 @@ impl RobotPosition {
 impl RobotPosition {
     pub fn from_array(pos: [(u8, u8); 4]) -> Self {
         RobotPosition(
-            (u32::from(pos[0].0) << 28)
-                | (u32::from(pos[0].1) << 24)
-                | (u32::from(pos[1].0) << 20)
-                | (u32::from(pos[1].1) << 16)
-                | (u32::from(pos[2].0) << 12)
-                | (u32::from(pos[2].1) << 8)
-                | (u32::from(pos[3].0) << 4)
-                | u32::from(pos[3].1),
+            (PositionEncoding::from(pos[0].0) << 28)
+                | (PositionEncoding::from(pos[0].1) << 24)
+                | (PositionEncoding::from(pos[1].0) << 20)
+                | (PositionEncoding::from(pos[1].1) << 16)
+                | (PositionEncoding::from(pos[2].0) << 12)
+                | (PositionEncoding::from(pos[2].1) << 8)
+                | (PositionEncoding::from(pos[3].0) << 4)
+                | PositionEncoding::from(pos[3].1),
         )
     }
     pub fn set_robot(&mut self, rob: Robot, (col, row): (usize, usize)) {
-        let pos = ((col as u32) << 4) | (row as u32);
+        let pos = ((col as PositionEncoding) << 4) | (row as PositionEncoding);
         let rob = rob as usize;
         self.0 &= !(0xFF << (8 * (3 - rob)));
         self.0 |= pos << (8 * (3 - rob));
