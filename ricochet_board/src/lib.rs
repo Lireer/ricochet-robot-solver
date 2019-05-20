@@ -101,7 +101,7 @@ impl Board {
             .set_vertical_line(right_col, row, len)
     }
 
-    pub fn print_walls(board: Vec<Vec<Field>>) {
+    pub fn str_representation(board: Vec<Vec<Field>>) -> String {
         let mut print = "".to_owned();
         for row in 0..board.len() {
             for col in 0..board[0].len() {
@@ -118,7 +118,7 @@ impl Board {
             }
             print += "\n";
         }
-        println!("{}", print)
+        print
     }
 
     /// Starts from `[col, row]` and sets `len` fields below to have a wall on the right side
@@ -165,6 +165,17 @@ impl Board {
         } else {
             self.wall_bottom(col, row - 1)
         }
+    }
+}
+
+impl fmt::Debug for Board {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        let to_print: Vec<Vec<Field>> = self
+            .fields
+            .iter()
+            .map(|&a| a.iter().map(|&a| a).collect())
+            .collect();
+        write!(fmt, "{}", Board::str_representation(to_print))
     }
 }
 

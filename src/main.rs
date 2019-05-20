@@ -8,12 +8,7 @@ fn main() {
     let board = example_board();
 
     // Print board
-    // let mut to_print: Vec<Vec<Field>> = Vec::new();
-    // for a in board.fields.iter() {
-    //     let v = a.clone().iter().map(|&a| a).collect();
-    //     to_print.push(v);
-    // }
-    // Board::print_walls(to_print);
+    // println!("{:?}", board);
 
     let mut database = Database::new();
 
