@@ -101,6 +101,26 @@ impl Board {
             .set_vertical_line(right_col, row, len)
     }
 
+    pub fn print_walls(board: Vec<Vec<Field>>) {
+        let mut print = "".to_owned();
+        for row in 0..board.len() {
+            for col in 0..board[0].len() {
+                if board[col][row].bottom {
+                    print += "__"
+                } else {
+                    print += "  "
+                }
+                if board[col][row].right {
+                    print += "|"
+                } else {
+                    print += " "
+                }
+            }
+            print += "\n";
+        }
+        println!("{}", print)
+    }
+
     /// Starts from `[col, row]` and sets `len` fields below to have a wall on the right side
     #[inline]
     fn set_vertical_line(mut self, col: usize, row: usize, len: usize) -> Self {

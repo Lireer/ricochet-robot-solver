@@ -7,6 +7,14 @@ fn main() {
     // Erzeugung des Boards
     let board = example_board();
 
+    // Print board
+    // let mut to_print: Vec<Vec<Field>> = Vec::new();
+    // for a in board.fields.iter() {
+    //     let v = a.clone().iter().map(|&a| a).collect();
+    //     to_print.push(v);
+    // }
+    // Board::print_walls(to_print);
+
     let mut database = Database::new();
 
     // Erzeugung der Positionen
