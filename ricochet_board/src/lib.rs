@@ -1,6 +1,8 @@
 use std::collections::BTreeSet;
 use std::fmt;
 
+pub mod template;
+
 pub const BOARDSIZE: usize = 16;
 
 // using an u64 we could encode a 256x256 board and a 65536x65536 board using an u128
@@ -359,44 +361,5 @@ impl fmt::Display for RobotPosition {
             self.blue_display(),
             self.yellow_display()
         )
-    }
-}
-
-pub enum Orientation {
-    UpperLeft,
-    UpperRight,
-    BottomRight,
-    BottomLeft,
-}
-
-pub struct BoardTemplate {
-    orientation: Orientation,
-    template: [[Field; BOARDSIZE / 2]; BOARDSIZE / 2],
-}
-
-impl BoardTemplate {
-    pub fn rotate_right(&mut self) {
-        self.orientation = match self.orientation {
-            Orientation::UpperLeft => Orientation::UpperRight,
-            Orientation::UpperRight => Orientation::BottomRight,
-            Orientation::BottomRight => Orientation::BottomLeft,
-            Orientation::BottomLeft => Orientation::UpperLeft,
-        };
-
-        let mut new_temp = [[Field {
-            bottom: false,
-            right: false,
-        }; BOARDSIZE / 2]; BOARDSIZE / 2];
-
-        for row in 0..BOARDSIZE / 2 {
-            for col in 0..BOARDSIZE / 2 {
-                if self.template[row][col].bottom {
-                    new_temp[(BOARDSIZE / 2 - 1) - col - 1][row].right = true
-                }
-                if self.template[row][col].right {
-                    new_temp[(BOARDSIZE / 2 - 1) - col][row].right = true
-                }
-            }
-        }
     }
 }
