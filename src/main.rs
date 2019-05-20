@@ -1,4 +1,4 @@
-use text_io::{read, scan, try_read, try_scan};
+use text_io::{read, try_read, try_scan};
 
 use ricochet_board::{Board, Field, Robot, RobotPosition, Symbol, Target, BOARDSIZE};
 use ricochet_solver::{solve, Database};
@@ -10,7 +10,7 @@ fn main() {
     let mut database = Database::new();
 
     // Erzeugung der Positionen
-    let mut positions = ask_for_robotpositions();
+    let mut positions = ask_for_robot_positions();
     // let mut save = File::create("test.json").expect("Create test.json");
     // write!(save, "{}", as_pretty_json(&(&positions, &board))).expect("Write into test.json");
 
@@ -33,7 +33,7 @@ fn main() {
             match input.to_lowercase().trim() {
                 "y" | "" => break,
                 "n" => break 'outer,
-                _ => println!("Input not accepted! {}", input),
+                _ => println!("Input invalid! {}", input),
             }
         }
 
@@ -47,10 +47,10 @@ fn main() {
                     break;
                 }
                 "n" => {
-                    positions = ask_for_robotpositions();
+                    positions = ask_for_robot_positions();
                     break;
                 }
-                _ => println!("Input not accepted! {}", input),
+                _ => println!("Input invalid! {}", input),
             }
         }
     }
@@ -87,7 +87,7 @@ fn ask_for_target() -> Target {
                     target = Target::Spiral;
                     break;
                 }
-                _ => println!("Input not accepted: {}", color),
+                _ => println!("Input invalid! {}", color),
             }
         }
         println!("Please confirm your input.");
@@ -97,7 +97,7 @@ fn ask_for_target() -> Target {
             match input.to_lowercase().trim() {
                 "y" | "" => return target,
                 "n" => break,
-                _ => println!("Input not accepted! {}", input),
+                _ => println!("Input invalid! {}", input),
             }
         }
     }
@@ -113,12 +113,12 @@ fn ask_for_symbol() -> Symbol {
             "triangle" | "t" => return Symbol::Triangle,
             "square" | "s" => return Symbol::Square,
             "hexagon" | "h" => return Symbol::Hexagon,
-            _ => println!("Input not accepted: {}", shape),
+            _ => println!("Input invalid: {}", shape),
         }
     }
 }
 
-fn ask_for_robotpositions() -> RobotPosition {
+fn ask_for_robot_positions() -> RobotPosition {
     let mut positions = [(0, 0); 4];
     'outer: loop {
         println!(
@@ -130,11 +130,16 @@ fn ask_for_robotpositions() -> RobotPosition {
             .enumerate()
         {
             println!("{:?}: ", robot);
-            let a: u8;
-            let b: u8;
-            let pos: String = read!("{}\n");
-            scan!(pos.trim().bytes() => "{},{}", a, b);
-            positions[i] = (a, b);
+            loop {
+                let pos: String = read!("{}\n");
+                match parse_robot_position(pos) {
+                    Ok((a, b)) if (a as usize) < BOARDSIZE || (b as usize) < BOARDSIZE => {
+                        positions[i] = (a, b);
+                        break;
+                    }
+                    _ => println!("Input invalid"),
+                }
+            }
         }
         let robopos = RobotPosition::from_array(positions);
         println!("Please confirm your input.");
@@ -145,11 +150,18 @@ fn ask_for_robotpositions() -> RobotPosition {
             match input.to_lowercase().trim() {
                 "y" | "" => break 'outer,
                 "n" => break,
-                _ => println!("Input not accepted! {}", input),
+                _ => println!("Input invalid! {}", input),
             }
         }
     }
     RobotPosition::from_array(positions)
+}
+
+fn parse_robot_position(pos: String) -> Result<(u8, u8), text_io::Error> {
+    let a: u8;
+    let b: u8;
+    try_scan!(pos.trim().bytes() => "{},{}", a, b);
+    Ok((a, b))
 }
 
 fn example_board() -> Board {
