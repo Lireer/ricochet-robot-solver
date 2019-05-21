@@ -14,6 +14,15 @@ pub struct Field {
     pub right: bool,
 }
 
+impl Default for Field {
+    fn default() -> Self {
+        Field {
+            bottom: false,
+            right: false,
+        }
+    }
+}
+
 #[derive(RustcDecodable, RustcEncodable)]
 pub struct Board {
     pub fields: [[Field; BOARDSIZE]; BOARDSIZE],
@@ -103,26 +112,6 @@ impl Board {
             .set_vertical_line(right_col, row, len)
     }
 
-    pub fn str_representation(board: Vec<Vec<Field>>) -> String {
-        let mut print = "".to_owned();
-        for row in 0..board.len() {
-            for col in 0..board[0].len() {
-                if board[col][row].bottom {
-                    print += "__"
-                } else {
-                    print += "  "
-                }
-                if board[col][row].right {
-                    print += "|"
-                } else {
-                    print += " "
-                }
-            }
-            print += "\n";
-        }
-        print
-    }
-
     /// Starts from `[col, row]` and sets `len` fields below to have a wall on the right side
     #[inline]
     fn set_vertical_line(mut self, col: usize, row: usize, len: usize) -> Self {
@@ -175,9 +164,9 @@ impl fmt::Debug for Board {
         let to_print: Vec<Vec<Field>> = self
             .fields
             .iter()
-            .map(|&a| a.iter().map(|&a| a).collect())
+            .map(|&a| a.to_vec())
             .collect();
-        write!(fmt, "{}", Board::str_representation(to_print))
+        write!(fmt, "{}", board_string(to_print))
     }
 }
 
@@ -362,4 +351,24 @@ impl fmt::Display for RobotPosition {
             self.yellow_display()
         )
     }
+}
+
+pub fn board_string(board: Vec<Vec<Field>>) -> String {
+    let mut print = "".to_owned();
+    for row in 0..board.len() {
+        for col in 0..board[row].len() {
+            if board[col][row].bottom {
+                print += "__"
+            } else {
+                print += "▆▆"
+            }
+            if board[col][row].right {
+                print += "|"
+            } else {
+                print += " "
+            }
+        }
+        print += "\n";
+    }
+    print
 }
