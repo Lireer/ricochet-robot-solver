@@ -2,7 +2,7 @@ use std::fmt;
 
 use crate::{Field, Symbol::*, Target, BOARDSIZE};
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum Orientation {
     UpperLeft,
     UpperRight,
@@ -10,7 +10,22 @@ pub enum Orientation {
     BottomLeft,
 }
 
-#[derive(Copy, Clone, Debug)]
+impl fmt::Display for Orientation {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            fmt,
+            "{}",
+            match self {
+                Orientation::UpperLeft => "upper left",
+                Orientation::UpperRight => "upper right",
+                Orientation::BottomRight => "bottom right",
+                Orientation::BottomLeft => "bottom left",
+            }
+        )
+    }
+}
+
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub enum TempColor {
     Green,
     Red,
@@ -18,7 +33,22 @@ pub enum TempColor {
     Yellow,
 }
 
-#[derive(Copy, Clone, Debug)]
+impl fmt::Display for TempColor {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            fmt,
+            "{}",
+            match self {
+                TempColor::Green => r#""green"(g)"#,
+                TempColor::Red => r#""red"(r)"#,
+                TempColor::Blue => r#""blue"(b)"#,
+                TempColor::Yellow => r#""yellow"(y)"#,
+            }
+        )
+    }
+}
+
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum WallDirection {
     Bottom,
     Right,
@@ -33,7 +63,7 @@ impl WallDirection {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct BoardTemplate {
     orientation: Orientation,
     color: TempColor,
@@ -42,6 +72,10 @@ pub struct BoardTemplate {
 }
 
 impl BoardTemplate {
+    pub fn color(&self) -> TempColor {
+        self.color
+    }
+
     pub fn rotate_right(mut self) -> Self {
         self.orientation = match self.orientation {
             Orientation::UpperLeft => Orientation::UpperRight,

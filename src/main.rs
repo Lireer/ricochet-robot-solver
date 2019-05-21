@@ -1,14 +1,28 @@
+use std::collections::HashSet;
+use std::iter::FromIterator;
 use text_io::{read, try_read, try_scan};
 
-use ricochet_board::{Board, Field, Robot, RobotPosition, Symbol, Target, BOARDSIZE};
+use ricochet_board::{template, Board, Field, Robot, RobotPosition, Symbol, Target, BOARDSIZE};
 use ricochet_solver::{solve, Database};
 
 fn main() {
-    // Erzeugung des Boards
-    let board = example_board();
+    // Create the board
+    let mut board;
+    'outer: loop {
+        board = build_board_from_parts();
+        println!("Please confirm your input.");
+        println!("Is this the correct board? (Y/n)\n{:?}", board);
+        loop {
+            let input: String = read!("{}\n");
+            match input.to_lowercase().trim() {
+                "y" | "" => break 'outer,
+                "n" => break,
+                _ => println!("Input invalid! {}", input),
+            }
+        }
+    }
 
-    // Print board
-    // println!("{:?}", board);
+    panic!();
 
     let mut database = Database::new();
 
@@ -17,7 +31,7 @@ fn main() {
     // let mut save = File::create("test.json").expect("Create test.json");
     // write!(save, "{}", as_pretty_json(&(&positions, &board))).expect("Write into test.json");
 
-    'outer: loop {
+    'game: loop {
         let target = ask_for_target();
         println!("Solving...");
         let solve = solve(&board, positions, target, database);
@@ -35,7 +49,7 @@ fn main() {
             let input: String = read!("{}\n");
             match input.to_lowercase().trim() {
                 "y" | "" => break,
-                "n" => break 'outer,
+                "n" => break 'game,
                 _ => println!("Input invalid! {}", input),
             }
         }
@@ -165,6 +179,89 @@ fn parse_robot_position(pos: String) -> Result<(u8, u8), text_io::Error> {
     let b: u8;
     try_scan!(pos.trim().bytes() => "{},{}", a, b);
     Ok((a, b))
+}
+
+fn build_board_from_parts() -> Board {
+    let templates = template::gen_templates();
+
+    let orientation = [
+        template::Orientation::UpperLeft,
+        template::Orientation::UpperRight,
+        template::Orientation::BottomRight,
+        template::Orientation::BottomLeft,
+    ];
+
+    let mut possible_colors: HashSet<template::TempColor> = dbg!(HashSet::from_iter(
+        [
+            template::TempColor::Red,
+            template::TempColor::Blue,
+            template::TempColor::Green,
+            template::TempColor::Yellow,
+        ]
+        .iter()
+        .cloned(),
+    ));
+
+    let mut board_parts = Vec::new();
+
+    for part in orientation.iter() {
+        println!(
+            "What color is the {} board part? You can find the color near the center.",
+            part
+        );
+        let mut accept_inputs = "Accepted input:".to_string();
+        for pc in &possible_colors {
+            accept_inputs = format!("{} {}", accept_inputs, &pc.to_string());
+        }
+        println!("{}?", accept_inputs);
+        let color;
+        loop {
+            let col: String = read!("{}\n");
+            match col.to_lowercase().trim() {
+                "red" | "r" if possible_colors.get(&template::TempColor::Red) != None => {
+                    color = template::TempColor::Red;
+                    break;
+                }
+                "blue" | "b" if possible_colors.get(&template::TempColor::Blue) != None => {
+                    color = template::TempColor::Blue;
+                    break;
+                }
+                "green" | "g" if possible_colors.get(&template::TempColor::Green) != None => {
+                    color = template::TempColor::Green;
+                    break;
+                }
+                "yellow" | "y" if possible_colors.get(&template::TempColor::Yellow) != None => {
+                    color = template::TempColor::Yellow;
+                    break;
+                }
+                _ => println!("Input invalid! {}", col),
+            }
+        }
+
+        println!("Which of these parts is it? (1, 2, 3)");
+        let mut temps = templates.iter().filter(|t| t.color() == color);
+        for (i, temp) in temps.clone().enumerate() {
+            println!("{}.\n{}", i + 1, temp);
+        }
+        loop {
+            let input: String = read!("{}\n");
+            match input.trim().to_lowercase().parse::<usize>() {
+                Ok(i) if i < 4 => board_parts.push(temps.nth(i - 1).unwrap()),
+                _ => {
+                    println!("Input invalid!");
+                    continue;
+                }
+            };
+            break;
+        }
+
+        possible_colors.retain(|&c| c != color);
+    }
+    for part in board_parts {
+        println!("{}", part);
+    }
+    // TODO: Make a board from the parts
+    unimplemented!();
 }
 
 fn example_board() -> Board {
