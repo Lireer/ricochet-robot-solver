@@ -9,3 +9,14 @@ rustc-serialize = "0.3.24"
 ricochet_board = {path="ricochet_board"}
 ricochet_solver = {path="ricochet_solver"}
 text_io = "0.1.7"
+
+[profile.release]
+opt-level = 3
+debug = false
+rpath = false
+lto = true
+debug-assertions = false
+codegen-units = 1
+panic = 'unwind'
+incremental = false
+overflow-checks = false
