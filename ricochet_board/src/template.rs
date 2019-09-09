@@ -97,7 +97,7 @@ impl BoardTemplate {
     pub fn walls(&self) -> &Vec<((isize, isize), WallDirection)> {
         &self.walls
     }
-    
+
     pub fn targets(&self) -> &Vec<((isize, isize), Target)> {
         &self.targets
     }
@@ -113,11 +113,9 @@ impl BoardTemplate {
         self.walls = self
             .walls
             .iter()
-            .map(|&((c, r), dir)| {
-                match dir {
-                    WallDirection::Right => (((BOARDSIZE / 2) as isize - r - 1, c), dir.rotate()),
-                    WallDirection::Bottom => (((BOARDSIZE / 2 - 1) as isize - r - 1, c), dir.rotate())
-                }
+            .map(|&((c, r), dir)| match dir {
+                WallDirection::Right => (((BOARDSIZE / 2) as isize - r - 1, c), dir.rotate()),
+                WallDirection::Bottom => (((BOARDSIZE / 2 - 1) as isize - r - 1, c), dir.rotate()),
             })
             .collect();
 

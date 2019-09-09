@@ -105,14 +105,14 @@ impl Board {
     fn add_template(&mut self, temp: &BoardTemplate) {
         // get the needed offset
         let (col_add, row_add) = match temp.orientation() {
-            Orientation::UpperLeft => (0,0),
-            Orientation::UpperRight => (8,0),
-            Orientation::BottomRight => (8,8),
-            Orientation::BottomLeft => (0,8),
+            Orientation::UpperLeft => (0, 0),
+            Orientation::UpperRight => (8, 0),
+            Orientation::BottomRight => (8, 8),
+            Orientation::BottomLeft => (0, 8),
         };
 
         // set the walls
-        for ((c,r), dir) in temp.walls() {
+        for ((c, r), dir) in temp.walls() {
             let c = (c + col_add) as usize;
             let r = (r + row_add) as usize;
 
@@ -123,10 +123,10 @@ impl Board {
         }
 
         // set the targets
-        for ((c,r), target) in temp.targets() {
+        for ((c, r), target) in temp.targets() {
             let c = (c + col_add) as usize;
             let r = (r + row_add) as usize;
-            self.targets.insert((*target, (c,r)));
+            self.targets.insert((*target, (c, r)));
         }
     }
 
@@ -213,11 +213,7 @@ impl Board {
 
 impl fmt::Debug for Board {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        let to_print: Vec<Vec<Field>> = self
-            .fields
-            .iter()
-            .map(|&a| a.to_vec())
-            .collect();
+        let to_print: Vec<Vec<Field>> = self.fields.iter().map(|&a| a.to_vec()).collect();
         write!(fmt, "{}", board_string(to_print))
     }
 }
