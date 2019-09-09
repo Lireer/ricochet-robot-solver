@@ -76,6 +76,18 @@ impl BoardTemplate {
         self.color
     }
 
+    pub fn orientation(&self) -> Orientation {
+        self.orientation
+    }
+
+    pub fn walls(&self) -> &Vec<((isize, isize), WallDirection)> {
+        &self.walls
+    }
+    
+    pub fn targets(&self) -> &Vec<((isize, isize), Target)> {
+        &self.targets
+    }
+    
     pub fn rotate_right(mut self) -> Self {
         self.orientation = match self.orientation {
             Orientation::UpperLeft => Orientation::UpperRight,
