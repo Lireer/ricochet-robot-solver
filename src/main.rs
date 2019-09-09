@@ -2,27 +2,24 @@ use std::collections::HashSet;
 use std::iter::FromIterator;
 use text_io::{read, try_read, try_scan};
 
-use ricochet_board::{template, Board, Field, Robot, RobotPosition, Symbol, Target, BOARDSIZE};
+use ricochet_board::{template, Board, Robot, RobotPosition, Symbol, Target, BOARDSIZE};
 use ricochet_solver::{solve, Database};
 
 fn main() {
     // Create the board
-    let mut board;
-    'outer: loop {
-        board = build_board_from_parts();
+    let board = 'outer: loop {
+        let board = build_board_from_parts();
         println!("Please confirm your input.");
         println!("Is this the correct board? (Y/n)\n{:?}", board);
         loop {
             let input: String = read!("{}\n");
             match input.to_lowercase().trim() {
-                "y" | "" => break 'outer,
+                "y" | "" => break 'outer board,
                 "n" => break,
                 _ => println!("Input invalid! {}", input),
             }
         }
-    }
-
-    panic!();
+    };
 
     let mut database = Database::new();
 
@@ -191,7 +188,7 @@ fn build_board_from_parts() -> Board {
         template::Orientation::BottomLeft,
     ];
 
-    let mut possible_colors: HashSet<template::TempColor> = dbg!(HashSet::from_iter(
+    let mut possible_colors: HashSet<template::TempColor> = HashSet::from_iter(
         [
             template::TempColor::Red,
             template::TempColor::Blue,
@@ -200,14 +197,14 @@ fn build_board_from_parts() -> Board {
         ]
         .iter()
         .cloned(),
-    ));
+    );
 
     let mut board_parts = Vec::new();
 
-    for part in orientation.iter() {
+    for orient in orientation.iter() {
         println!(
             "What color is the {} board part? You can find the color near the center.",
-            part
+            orient
         );
         let mut accept_inputs = "Accepted input:".to_string();
         for pc in &possible_colors {
@@ -239,14 +236,25 @@ fn build_board_from_parts() -> Board {
         }
 
         println!("Which of these parts is it? (1, 2, 3)");
-        let mut temps = templates.iter().filter(|t| t.color() == color);
-        for (i, temp) in temps.clone().enumerate() {
+        let mut temps: Vec<template::BoardTemplate> = templates
+            .iter()
+            .filter(|t| t.color() == color)
+            .cloned()
+            .collect();
+
+        temps.iter_mut().for_each(|temp| temp.rotate_to(*orient));
+
+        for (i, temp) in temps.iter().enumerate() {
             println!("{}.\n{}", i + 1, temp);
         }
+
         loop {
             let input: String = read!("{}\n");
             match input.trim().to_lowercase().parse::<usize>() {
-                Ok(i) if i < 4 => board_parts.push(temps.nth(i - 1).unwrap()),
+                // TODO: make the limit of 3 dependant on the actual length of temps
+                Ok(i) if (1..=3).contains(&i) => {
+                    board_parts.push(temps.get(i - 1).unwrap().clone())
+                }
                 _ => {
                     println!("Input invalid!");
                     continue;

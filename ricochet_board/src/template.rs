@@ -10,6 +10,20 @@ pub enum Orientation {
     BottomLeft,
 }
 
+impl Orientation {
+    pub fn right_rotations_to(self, orient: Orientation) -> usize {
+        let all = [
+            Orientation::UpperLeft,
+            Orientation::UpperRight,
+            Orientation::BottomRight,
+            Orientation::BottomLeft,
+        ];
+        let self_pos = all.iter().position(|o| o == &self).unwrap() as isize;
+        let orient_pos = all.iter().position(|o| o == &orient).unwrap() as isize;
+        (orient_pos - self_pos + all.len() as isize) as usize % all.len()
+    }
+}
+
 impl fmt::Display for Orientation {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         write!(
@@ -87,8 +101,8 @@ impl BoardTemplate {
     pub fn targets(&self) -> &Vec<((isize, isize), Target)> {
         &self.targets
     }
-    
-    pub fn rotate_right(mut self) -> Self {
+
+    pub fn rotate_right(&mut self) {
         self.orientation = match self.orientation {
             Orientation::UpperLeft => Orientation::UpperRight,
             Orientation::UpperRight => Orientation::BottomRight,
@@ -99,15 +113,25 @@ impl BoardTemplate {
         self.walls = self
             .walls
             .iter()
-            .map(|&((c, r), dir)| (((BOARDSIZE / 2 - 1) as isize - r - 1, c), dir.rotate()))
+            .map(|&((c, r), dir)| {
+                match dir {
+                    WallDirection::Right => (((BOARDSIZE / 2) as isize - r - 1, c), dir.rotate()),
+                    WallDirection::Bottom => (((BOARDSIZE / 2 - 1) as isize - r - 1, c), dir.rotate())
+                }
+            })
             .collect();
+
         self.targets = self
             .targets
             .iter()
-            .map(|&((c, r), t)| (((BOARDSIZE / 2 - 1) as isize - r - 1, c), t))
+            .map(|&((c, r), t)| (((BOARDSIZE / 2) as isize - r - 1, c), t))
             .collect();
+    }
 
-        self
+    pub fn rotate_to(&mut self, orient: Orientation) {
+        for _ in 0..self.orientation.right_rotations_to(orient) {
+            self.rotate_right();
+        }
     }
 
     fn default_template(color: TempColor) -> Self {
