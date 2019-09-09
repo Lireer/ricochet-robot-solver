@@ -1,14 +1,25 @@
+use std::collections::HashSet;
+use std::iter::FromIterator;
 use text_io::{read, try_read, try_scan};
 
-use ricochet_board::{Board, Field, Robot, RobotPosition, Symbol, Target, BOARDSIZE};
+use ricochet_board::{template, Board, Robot, RobotPosition, Symbol, Target, BOARDSIZE};
 use ricochet_solver::{solve, Database};
 
 fn main() {
-    // Erzeugung des Boards
-    let board = example_board();
-
-    // Print board
-    // println!("{:?}", board);
+    // Create the board
+    let board = 'outer: loop {
+        let board = build_board_from_parts();
+        println!("Please confirm your input.");
+        println!("Is this the correct board? (Y/n)\n{:?}", board);
+        loop {
+            let input: String = read!("{}\n");
+            match input.to_lowercase().trim() {
+                "y" | "" => break 'outer board,
+                "n" => break,
+                _ => println!("Input invalid! {}", input),
+            }
+        }
+    };
 
     let mut database = Database::new();
 
@@ -17,7 +28,7 @@ fn main() {
     // let mut save = File::create("test.json").expect("Create test.json");
     // write!(save, "{}", as_pretty_json(&(&positions, &board))).expect("Write into test.json");
 
-    'outer: loop {
+    'game: loop {
         let target = ask_for_target();
         println!("Solving...");
         let solve = solve(&board, positions, target, database);
@@ -35,7 +46,7 @@ fn main() {
             let input: String = read!("{}\n");
             match input.to_lowercase().trim() {
                 "y" | "" => break,
-                "n" => break 'outer,
+                "n" => break 'game,
                 _ => println!("Input invalid! {}", input),
             }
         }
@@ -167,88 +178,94 @@ fn parse_robot_position(pos: String) -> Result<(u8, u8), text_io::Error> {
     Ok((a, b))
 }
 
-fn example_board() -> Board {
-    let mut board = default_board();
-    fill_board_with_walls(&mut board); // Set walls on example board
-    set_targets_on_board(&mut board); // Set targets on example board
-    board
-}
+fn build_board_from_parts() -> Board {
+    let templates = template::gen_templates();
 
-fn default_board() -> Board {
-    let board = Board {
-        fields: [[Field {
-            bottom: false,
-            right: false,
-        }; BOARDSIZE]; BOARDSIZE],
-        targets: Default::default(),
-    };
-    board
-        .wall_enclosure() // Set outer walls
-        .set_center_walls() // Set walls around the four center fields
-}
+    let orientation = [
+        template::Orientation::UpperLeft,
+        template::Orientation::UpperRight,
+        template::Orientation::BottomRight,
+        template::Orientation::BottomLeft,
+    ];
 
-fn fill_board_with_walls(board: &mut Board) {
-    board.fields[0][3].bottom = true;
-    board.fields[0][11].bottom = true;
-    board.fields[2][2].right = true;
-    board.fields[2][3].bottom = true;
-    board.fields[2][4].right = true;
-    board.fields[2][9].bottom = true;
-    board.fields[2][10].right = true;
-    board.fields[3][1].bottom = true;
-    board.fields[3][13].right = true;
-    board.fields[4][3].right = true;
-    board.fields[4][5].right = true;
-    board.fields[4][5].bottom = true;
-    board.fields[4][12].bottom = true;
-    board.fields[4][15].right = true;
-    board.fields[5][0].right = true;
-    board.fields[5][3].bottom = true;
-    board.fields[5][8].right = true;
-    board.fields[5][8].bottom = true;
-    board.fields[5][14].right = true;
-    board.fields[6][14].bottom = true;
-    board.fields[8][3].right = true;
-    board.fields[9][0].right = true;
-    board.fields[9][2].bottom = true;
-    board.fields[9][9].right = true;
-    board.fields[9][11].right = true;
-    board.fields[9][11].bottom = true;
-    board.fields[10][6].right = true;
-    board.fields[10][6].bottom = true;
-    board.fields[10][9].bottom = true;
-    board.fields[10][15].right = true;
-    board.fields[11][8].right = true;
-    board.fields[12][7].bottom = true;
-    board.fields[12][14].right = true;
-    board.fields[13][0].bottom = true;
-    board.fields[13][1].right = true;
-    board.fields[13][6].right = true;
-    board.fields[13][13].bottom = true;
-    board.fields[14][6].bottom = true;
-    board.fields[14][11].bottom = true;
-    board.fields[14][12].right = true;
-    board.fields[15][4].bottom = true;
-    board.fields[15][10].bottom = true;
-}
+    let mut possible_colors: HashSet<template::TempColor> = HashSet::from_iter(
+        [
+            template::TempColor::Red,
+            template::TempColor::Blue,
+            template::TempColor::Green,
+            template::TempColor::Yellow,
+        ]
+        .iter()
+        .cloned(),
+    );
 
-fn set_targets_on_board(board: &mut Board) {
-    use ricochet_board::Symbol::*;
-    board.targets.insert((Target::Spiral, (12, 8)));
-    board.targets.insert((Target::Red(Circle), (9, 3)));
-    board.targets.insert((Target::Red(Triangle), (5, 8)));
-    board.targets.insert((Target::Red(Square), (2, 4)));
-    board.targets.insert((Target::Red(Hexagon), (13, 14)));
-    board.targets.insert((Target::Green(Circle), (4, 13)));
-    board.targets.insert((Target::Green(Triangle), (13, 1)));
-    board.targets.insert((Target::Green(Square), (14, 12)));
-    board.targets.insert((Target::Green(Hexagon), (4, 5)));
-    board.targets.insert((Target::Blue(Circle), (10, 9)));
-    board.targets.insert((Target::Blue(Triangle), (5, 3)));
-    board.targets.insert((Target::Blue(Square), (10, 6)));
-    board.targets.insert((Target::Blue(Hexagon), (2, 10)));
-    board.targets.insert((Target::Yellow(Circle), (3, 2)));
-    board.targets.insert((Target::Yellow(Triangle), (9, 11)));
-    board.targets.insert((Target::Yellow(Square), (6, 14)));
-    board.targets.insert((Target::Yellow(Hexagon), (14, 6)));
+    let mut board_parts = Vec::new();
+
+    for orient in orientation.iter() {
+        println!(
+            "What color is the {} board part? You can find the color near the center.",
+            orient
+        );
+        let mut accept_inputs = "Accepted input:".to_string();
+        for pc in &possible_colors {
+            accept_inputs = format!("{} {}", accept_inputs, &pc.to_string());
+        }
+        println!("{}?", accept_inputs);
+        let color;
+        loop {
+            let col: String = read!("{}\n");
+            match col.to_lowercase().trim() {
+                "red" | "r" if possible_colors.get(&template::TempColor::Red) != None => {
+                    color = template::TempColor::Red;
+                    break;
+                }
+                "blue" | "b" if possible_colors.get(&template::TempColor::Blue) != None => {
+                    color = template::TempColor::Blue;
+                    break;
+                }
+                "green" | "g" if possible_colors.get(&template::TempColor::Green) != None => {
+                    color = template::TempColor::Green;
+                    break;
+                }
+                "yellow" | "y" if possible_colors.get(&template::TempColor::Yellow) != None => {
+                    color = template::TempColor::Yellow;
+                    break;
+                }
+                _ => println!("Input invalid! {}", col),
+            }
+        }
+
+        println!("Which of these parts is it? (1, 2, 3)");
+        let mut temps: Vec<template::BoardTemplate> = templates
+            .iter()
+            .filter(|t| t.color() == color)
+            .cloned()
+            .collect();
+
+        temps.iter_mut().for_each(|temp| temp.rotate_to(*orient));
+
+        for (i, temp) in temps.iter().enumerate() {
+            println!("{}.\n{}", i + 1, temp);
+        }
+
+        loop {
+            let input: String = read!("{}\n");
+            match input.trim().to_lowercase().parse::<usize>() {
+                // TODO: make the limit of 3 dependant on the actual length of temps
+                Ok(i) if (1..=3).contains(&i) => {
+                    board_parts.push(temps.get(i - 1).unwrap().clone())
+                }
+                _ => {
+                    println!("Input invalid!");
+                    continue;
+                }
+            };
+            break;
+        }
+
+        possible_colors.retain(|&c| c != color);
+    }
+
+    // Create a board from the parts
+    Board::from_templates(&board_parts)
 }

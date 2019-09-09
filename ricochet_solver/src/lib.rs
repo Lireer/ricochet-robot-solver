@@ -205,7 +205,8 @@ fn find_direction(
             if last_sector == first_sector
             // if the sector is the same, this is potentially a source location
             {
-                if let Some(col) = can_reach(visited_pos[i as usize][j as usize], current_goal, board)
+                if let Some(col) =
+                    can_reach(visited_pos[i as usize][j as usize], current_goal, board)
                 {
                     path.push(col);
                     current_goal = visited_pos[i as usize][j as usize];

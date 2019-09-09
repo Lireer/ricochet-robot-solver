@@ -1,5 +1,8 @@
+pub mod template;
+
 use std::collections::BTreeSet;
 use std::fmt;
+use template::{BoardTemplate, Orientation, WallDirection};
 
 pub const BOARDSIZE: usize = 16;
 
@@ -10,6 +13,15 @@ type PositionEncoding = u32;
 pub struct Field {
     pub bottom: bool,
     pub right: bool,
+}
+
+impl Default for Field {
+    fn default() -> Self {
+        Field {
+            bottom: false,
+            right: false,
+        }
+    }
 }
 
 #[derive(RustcDecodable, RustcEncodable)]
@@ -66,7 +78,58 @@ impl fmt::Display for Robot {
     }
 }
 
+impl Default for Board {
+    fn default() -> Self {
+        let board = Board {
+            fields: [[Field {
+                bottom: false,
+                right: false,
+            }; BOARDSIZE]; BOARDSIZE],
+            targets: Default::default(),
+        };
+        board
+            .wall_enclosure() // Set outer walls
+            .set_center_walls() // Set walls around the four center fields
+    }
+}
+
 impl Board {
+    pub fn from_templates(temps: &[BoardTemplate]) -> Self {
+        let mut board = Board::default();
+        for temp in temps {
+            board.add_template(temp);
+        }
+        board
+    }
+
+    fn add_template(&mut self, temp: &BoardTemplate) {
+        // get the needed offset
+        let (col_add, row_add) = match temp.orientation() {
+            Orientation::UpperLeft => (0, 0),
+            Orientation::UpperRight => (8, 0),
+            Orientation::BottomRight => (8, 8),
+            Orientation::BottomLeft => (0, 8),
+        };
+
+        // set the walls
+        for ((c, r), dir) in temp.walls() {
+            let c = (c + col_add) as usize;
+            let r = (r + row_add) as usize;
+
+            match dir {
+                WallDirection::Bottom => self.fields[c][r].bottom = true,
+                WallDirection::Right => self.fields[c][r].right = true,
+            }
+        }
+
+        // set the targets
+        for ((c, r), target) in temp.targets() {
+            let c = (c + col_add) as usize;
+            let r = (r + row_add) as usize;
+            self.targets.insert((*target, (c, r)));
+        }
+    }
+
     pub fn wall_enclosure(self) -> Self {
         self.enclose_lengths(0, 0, BOARDSIZE, BOARDSIZE)
     }
@@ -99,26 +162,6 @@ impl Board {
             .set_horizontal_line(col, bottom_row, width)
             .set_vertical_line(left_col, row, len)
             .set_vertical_line(right_col, row, len)
-    }
-
-    pub fn str_representation(board: Vec<Vec<Field>>) -> String {
-        let mut print = "".to_owned();
-        for row in 0..board.len() {
-            for col in 0..board[0].len() {
-                if board[col][row].bottom {
-                    print += "__"
-                } else {
-                    print += "  "
-                }
-                if board[col][row].right {
-                    print += "|"
-                } else {
-                    print += " "
-                }
-            }
-            print += "\n";
-        }
-        print
     }
 
     /// Starts from `[col, row]` and sets `len` fields below to have a wall on the right side
@@ -170,12 +213,8 @@ impl Board {
 
 impl fmt::Debug for Board {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        let to_print: Vec<Vec<Field>> = self
-            .fields
-            .iter()
-            .map(|&a| a.iter().map(|&a| a).collect())
-            .collect();
-        write!(fmt, "{}", Board::str_representation(to_print))
+        let to_print: Vec<Vec<Field>> = self.fields.iter().map(|&a| a.to_vec()).collect();
+        write!(fmt, "{}", board_string(to_print))
     }
 }
 
@@ -360,4 +399,24 @@ impl fmt::Display for RobotPosition {
             self.yellow_display()
         )
     }
+}
+
+pub fn board_string(board: Vec<Vec<Field>>) -> String {
+    let mut print = "".to_owned();
+    for row in 0..board.len() {
+        for col in 0..board[row].len() {
+            if board[col][row].bottom {
+                print += "__"
+            } else {
+                print += "▆▆"
+            }
+            if board[col][row].right {
+                print += "|"
+            } else {
+                print += " "
+            }
+        }
+        print += "\n";
+    }
+    print
 }
