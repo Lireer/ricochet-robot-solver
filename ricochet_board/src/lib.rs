@@ -229,22 +229,22 @@ impl RobotPosition {
 
     pub fn contains_red(self, col: usize, row: usize) -> bool {
         let byte = ((col << 4) | row) as PositionEncoding;
-        (((self.0 >> 24) & 0xFF) == byte)
+        ((self.0 >> 24) & 0xFF) == byte
     }
 
     pub fn contains_green(self, col: usize, row: usize) -> bool {
         let byte = ((col << 4) | row) as PositionEncoding;
-        (((self.0 >> 16) & 0xFF) == byte)
+        ((self.0 >> 16) & 0xFF) == byte
     }
 
     pub fn contains_blue(self, col: usize, row: usize) -> bool {
         let byte = ((col << 4) | row) as PositionEncoding;
-        (((self.0 >> 8) & 0xFF) == byte)
+        ((self.0 >> 8) & 0xFF) == byte
     }
 
     pub fn contains_yellow(self, col: usize, row: usize) -> bool {
         let byte = ((col << 4) | row) as PositionEncoding;
-        ((self.0 & 0xFF) == byte)
+        (self.0 & 0xFF) == byte
     }
 
     fn can_move_right(self, board: &Board, col: usize, row: usize) -> bool {
