@@ -81,56 +81,6 @@ pub fn solve(
     vec_solve(board, positions, target, target_col, target_row, database)
 }
 
-pub fn database_solve(
-    board: &Board,
-    positions: RobotPosition,
-    target: Target,
-    target_col: usize,
-    target_row: usize,
-    mut database: Database,
-) -> (RobotPosition, Vec<(Robot, Direction)>) {
-    let mut visited_pos = vec![vec![]];
-    visited_pos[0] = vec![positions];
-    if let Some(result_position) = eval(
-        board,
-        positions,
-        &mut database,
-        target_col,
-        target_row,
-        0,
-        target,
-        &mut visited_pos,
-    ) {
-        return (
-            result_position,
-            find_direction(1, board, result_position, visited_pos),
-        );
-    }
-    for steps in 1.. {
-        for j in 0..database.0.len() {
-            if database.0[j].steps() == Some(steps) {
-                if let Some(result_position) = eval(
-                    board,
-                    RobotPosition(j as u32),
-                    &mut database,
-                    target_col,
-                    target_row,
-                    steps,
-                    target,
-                    &mut visited_pos,
-                ) {
-                    return (
-                        result_position,
-                        find_direction(steps + 1, board, result_position, visited_pos),
-                    );
-                }
-            }
-        }
-        assert!(steps < 63);
-    }
-    unreachable!()
-}
-
 fn vec_solve(
     board: &Board,
     positions: RobotPosition,
