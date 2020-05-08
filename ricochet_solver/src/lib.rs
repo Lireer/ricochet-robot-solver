@@ -2,12 +2,12 @@ use enum_primitive::*;
 use num::FromPrimitive;
 use std::fmt;
 
-use ricochet_board::{Board, Robot, RobotPosition, Target};
+use ricochet_board::{Board, Color, RobotPositions, Target};
 
 /// the u32 position in the database vec encodes the robot positions like follows:
 ///
-/// | Red     | Green   | Blue    | Yellow  |
-/// |x1  |y1  |x2  |y2  |x3  |y3  |x4  |y4  |
+/// | Red     | Blue    | Green   | Yellow  |
+/// |x1  |y1  |x3  |y3  |x2  |y2  |x4  |y4  |
 /// |0000|0000|0000|0000|0000|0000|0000|0000|
 ///
 pub struct Database(pub Vec<Entry>);
@@ -45,14 +45,14 @@ impl Entry {
 
 pub fn solve(
     board: &Board,
-    positions: RobotPosition,
+    positions: RobotPositions,
     target: Target,
     mut database: Database,
-) -> (RobotPosition, Vec<(Robot, Direction)>) {
+) -> (RobotPositions, Vec<(Color, Direction)>) {
     let (target_col, target_row) = board.targets.iter().find(|&&(t, _)| t == target).unwrap().1;
     match target {
         Target::Spiral => {
-            if positions.contains_robot(target_col, target_row) {
+            if positions.contains_any_robot(target_col, target_row) {
                 return (positions, vec![]);
             }
         }
@@ -61,13 +61,13 @@ pub fn solve(
                 return (positions, vec![]);
             }
         }
-        Target::Green(_) => {
-            if positions.contains_green(target_col, target_row) {
+        Target::Blue(_) => {
+            if positions.contains_blue(target_col, target_row) {
                 return (positions, vec![]);
             }
         }
-        Target::Blue(_) => {
-            if positions.contains_blue(target_col, target_row) {
+        Target::Green(_) => {
+            if positions.contains_green(target_col, target_row) {
                 return (positions, vec![]);
             }
         }
@@ -83,12 +83,12 @@ pub fn solve(
 
 fn vec_solve(
     board: &Board,
-    positions: RobotPosition,
+    positions: RobotPositions,
     target: Target,
     target_col: usize,
     target_row: usize,
     mut database: Database,
-) -> (RobotPosition, Vec<(Robot, Direction)>) {
+) -> (RobotPositions, Vec<(Color, Direction)>) {
     let mut visited_pos = vec![vec![]];
     visited_pos[0] = vec![positions];
     for steps in 0.. {
@@ -130,19 +130,19 @@ impl fmt::Display for Direction {
     }
 }
 
-const DIRECTIONS: [fn(&mut RobotPosition, robot: Robot, board: &Board); 4] = [
-    RobotPosition::move_right,
-    RobotPosition::move_left,
-    RobotPosition::move_up,
-    RobotPosition::move_down,
+const DIRECTIONS: [fn(&mut RobotPositions, robot: Color, board: &Board); 4] = [
+    RobotPositions::move_right,
+    RobotPositions::move_left,
+    RobotPositions::move_up,
+    RobotPositions::move_down,
 ];
 
 fn find_direction(
     steps: u8, // number of steps needed to reach the target
     board: &Board,
-    result_position: RobotPosition,
-    visited_pos: Vec<Vec<RobotPosition>>,
-) -> Vec<(Robot, Direction)> {
+    result_position: RobotPositions,
+    visited_pos: Vec<Vec<RobotPositions>>,
+) -> Vec<(Color, Direction)> {
     let mut path = vec![];
     let mut current_goal = result_position;
     for i in (0..(steps)).rev() {
@@ -170,11 +170,11 @@ fn find_direction(
 }
 
 fn can_reach(
-    start: RobotPosition,
-    goal: RobotPosition,
+    start: RobotPositions,
+    goal: RobotPositions,
     board: &Board,
-) -> Option<(Robot, Direction)> {
-    for &robot in [Robot::Red, Robot::Green, Robot::Blue, Robot::Yellow].iter() {
+) -> Option<(Color, Direction)> {
+    for &robot in [Color::Red, Color::Blue, Color::Green, Color::Yellow].iter() {
         for (j, dir) in DIRECTIONS.iter().enumerate() {
             let mut start = start;
             dir(&mut start, robot, board);
@@ -189,21 +189,21 @@ fn can_reach(
 /// calculates all new possible positions starting from a startposition
 fn eval(
     board: &Board,
-    start: RobotPosition,
+    start: RobotPositions,
     database: &mut Database,
     target_col: usize,
     target_row: usize,
     steps: u8,
     target: Target,
-    visited_pos: &mut Vec<Vec<RobotPosition>>,
-) -> Option<RobotPosition> {
+    visited_pos: &mut Vec<Vec<RobotPositions>>,
+) -> Option<RobotPositions> {
     let mut new = [[start; 4]; 4];
-    let mut vec: Vec<RobotPosition> = Vec::new();
+    let mut vec: Vec<RobotPositions> = Vec::new();
 
     if visited_pos.len() == steps as usize + 1 {
         visited_pos.push(vec![]);
     }
-    for (i, &robot) in [Robot::Red, Robot::Green, Robot::Blue, Robot::Yellow]
+    for (i, &robot) in [Color::Red, Color::Blue, Color::Green, Color::Yellow]
         .iter()
         .enumerate()
     {
@@ -220,22 +220,22 @@ fn eval(
                     }
                 }
                 Target::Red(_) => {
-                    if robot == Robot::Red && new[i][j].contains_red(target_col, target_row) {
-                        return Some(new[i][j]);
-                    }
-                }
-                Target::Green(_) => {
-                    if robot == Robot::Green && new[i][j].contains_green(target_col, target_row) {
+                    if robot == Color::Red && new[i][j].contains_red(target_col, target_row) {
                         return Some(new[i][j]);
                     }
                 }
                 Target::Blue(_) => {
-                    if robot == Robot::Blue && new[i][j].contains_blue(target_col, target_row) {
+                    if robot == Color::Blue && new[i][j].contains_blue(target_col, target_row) {
+                        return Some(new[i][j]);
+                    }
+                }
+                Target::Green(_) => {
+                    if robot == Color::Green && new[i][j].contains_green(target_col, target_row) {
                         return Some(new[i][j]);
                     }
                 }
                 Target::Yellow(_) => {
-                    if robot == Robot::Yellow && new[i][j].contains_yellow(target_col, target_row) {
+                    if robot == Color::Yellow && new[i][j].contains_yellow(target_col, target_row) {
                         return Some(new[i][j]);
                     }
                 }

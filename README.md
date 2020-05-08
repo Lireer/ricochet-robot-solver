@@ -1,11 +1,12 @@
-# ricochet-robot-solver
-Solver for ricochet robots written in rust
+# Ricochet Robots Solver
 
-board editor written in elm hosted here: https://lireer.github.io/ricochet-robot-solver/
+Solver for ricochet robots written in rust.
 
-# setup
+Board editor written in elm hosted here: https://lireer.github.io/ricochet-robot-solver/
 
-requires rust nightly:
+## Setup
+
+Building from source requires a nightly rust compiler:
 
 * `rustup update nightly`
 * `rustup set override nightly`

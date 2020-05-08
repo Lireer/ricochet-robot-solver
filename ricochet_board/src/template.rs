@@ -64,15 +64,15 @@ impl fmt::Display for TempColor {
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum WallDirection {
-    Bottom,
+    Down,
     Right,
 }
 
 impl WallDirection {
     fn rotate(self) -> Self {
         match self {
-            WallDirection::Bottom => WallDirection::Right,
-            WallDirection::Right => WallDirection::Bottom,
+            WallDirection::Down => WallDirection::Right,
+            WallDirection::Right => WallDirection::Down,
         }
     }
 }
@@ -115,7 +115,7 @@ impl BoardTemplate {
             .iter()
             .map(|&((c, r), dir)| match dir {
                 WallDirection::Right => (((BOARDSIZE / 2) as isize - r - 1, c), dir.rotate()),
-                WallDirection::Bottom => (((BOARDSIZE / 2 - 1) as isize - r - 1, c), dir.rotate()),
+                WallDirection::Down => (((BOARDSIZE / 2 - 1) as isize - r - 1, c), dir.rotate()),
             })
             .collect();
 
@@ -161,7 +161,7 @@ impl fmt::Display for BoardTemplate {
         for ((c, r), d) in &self.walls {
             let field = &mut print[(c + 1) as usize][(r + 1) as usize];
             match d {
-                WallDirection::Bottom => field.bottom = true,
+                WallDirection::Down => field.down = true,
                 WallDirection::Right => field.right = true,
             }
         }
@@ -178,7 +178,7 @@ pub fn gen_templates() -> Vec<BoardTemplate> {
     temps.push(
         BoardTemplate::default_template(TempColor::Blue)
             .set_walls(
-                WallDirection::Bottom,
+                WallDirection::Down,
                 vec![(0, 3), (2, 3), (3, 1), (4, 5), (5, 3)],
             )
             .set_walls(
@@ -193,7 +193,7 @@ pub fn gen_templates() -> Vec<BoardTemplate> {
     temps.push(
         BoardTemplate::default_template(TempColor::Blue)
             .set_walls(
-                WallDirection::Bottom,
+                WallDirection::Down,
                 vec![(0, 3), (1, 2), (2, 5), (5, 1), (6, 3)],
             )
             .set_walls(
@@ -208,7 +208,7 @@ pub fn gen_templates() -> Vec<BoardTemplate> {
     temps.push(
         BoardTemplate::default_template(TempColor::Blue)
             .set_walls(
-                WallDirection::Bottom,
+                WallDirection::Down,
                 vec![(0, 4), (1, 6), (2, 0), (4, 4), (6, 3)],
             )
             .set_walls(
@@ -225,7 +225,7 @@ pub fn gen_templates() -> Vec<BoardTemplate> {
     temps.push(
         BoardTemplate::default_template(TempColor::Yellow)
             .set_walls(
-                WallDirection::Bottom,
+                WallDirection::Down,
                 vec![(0, 3), (1, 5), (3, 4), (5, 1), (6, 4), (7, 2)],
             )
             .set_walls(
@@ -241,7 +241,7 @@ pub fn gen_templates() -> Vec<BoardTemplate> {
     temps.push(
         BoardTemplate::default_template(TempColor::Yellow)
             .set_walls(
-                WallDirection::Bottom,
+                WallDirection::Down,
                 vec![(0, 4), (1, 3), (2, 1), (3, 7), (5, 5), (6, 3)],
             )
             .set_walls(
@@ -257,7 +257,7 @@ pub fn gen_templates() -> Vec<BoardTemplate> {
     temps.push(
         BoardTemplate::default_template(TempColor::Yellow)
             .set_walls(
-                WallDirection::Bottom,
+                WallDirection::Down,
                 vec![(0, 6), (1, 2), (2, 5), (5, 3), (6, 1), (7, 5)],
             )
             .set_walls(
@@ -275,7 +275,7 @@ pub fn gen_templates() -> Vec<BoardTemplate> {
     temps.push(
         BoardTemplate::default_template(TempColor::Red)
             .set_walls(
-                WallDirection::Bottom,
+                WallDirection::Down,
                 vec![(0, 5), (1, 3), (3, 6), (4, 0), (5, 4)],
             )
             .set_walls(
@@ -290,7 +290,7 @@ pub fn gen_templates() -> Vec<BoardTemplate> {
     temps.push(
         BoardTemplate::default_template(TempColor::Red)
             .set_walls(
-                WallDirection::Bottom,
+                WallDirection::Down,
                 vec![(0, 5), (1, 1), (2, 4), (6, 1), (7, 4)],
             )
             .set_walls(
@@ -305,7 +305,7 @@ pub fn gen_templates() -> Vec<BoardTemplate> {
     temps.push(
         BoardTemplate::default_template(TempColor::Red)
             .set_walls(
-                WallDirection::Bottom,
+                WallDirection::Down,
                 vec![(0, 4), (1, 5), (2, 3), (5, 2), (7, 5)],
             )
             .set_walls(
@@ -322,7 +322,7 @@ pub fn gen_templates() -> Vec<BoardTemplate> {
     temps.push(
         BoardTemplate::default_template(TempColor::Green)
             .set_walls(
-                WallDirection::Bottom,
+                WallDirection::Down,
                 vec![(0, 6), (1, 4), (3, 0), (4, 5), (6, 3)],
             )
             .set_walls(
@@ -337,7 +337,7 @@ pub fn gen_templates() -> Vec<BoardTemplate> {
     temps.push(
         BoardTemplate::default_template(TempColor::Green)
             .set_walls(
-                WallDirection::Bottom,
+                WallDirection::Down,
                 vec![(0, 5), (1, 1), (3, 6), (4, 0), (6, 3)],
             )
             .set_walls(
@@ -352,7 +352,7 @@ pub fn gen_templates() -> Vec<BoardTemplate> {
     temps.push(
         BoardTemplate::default_template(TempColor::Green)
             .set_walls(
-                WallDirection::Bottom,
+                WallDirection::Down,
                 vec![(0, 5), (1, 1), (3, 6), (6, 1), (6, 4)],
             )
             .set_walls(
