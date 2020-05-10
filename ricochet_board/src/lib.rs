@@ -2,7 +2,7 @@
 
 pub mod template;
 
-use std::collections::BTreeSet;
+use std::collections::BTreeMap;
 use std::{fmt, mem};
 use template::{BoardTemplate, Orientation, WallDirection};
 
@@ -26,11 +26,11 @@ impl Default for Field {
 #[derive(RustcDecodable, RustcEncodable)]
 pub struct Board {
     pub fields: [[Field; BOARDSIZE]; BOARDSIZE],
-    pub targets: BTreeSet<(Target, (usize, usize))>,
+    pub targets: BTreeMap<Target, (usize, usize)>,
 }
 
 // using an u64 we could encode a 256x256 board and a 65536x65536 board using an u128
-type PositionEncoding = u8;
+pub type PositionEncoding = u8;
 
 /// A position on the board.
 ///
@@ -195,7 +195,7 @@ impl Board {
         for ((c, r), target) in temp.targets() {
             let c = (c + col_add) as usize;
             let r = (r + row_add) as usize;
-            self.targets.insert((*target, (c, r)));
+            self.targets.insert(*target, (c, r));
         }
     }
 

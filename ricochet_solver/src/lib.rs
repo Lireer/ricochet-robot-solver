@@ -2,7 +2,7 @@ use enum_primitive::*;
 use num::FromPrimitive;
 use std::fmt;
 
-use ricochet_board::{Board, Color, RobotPositions, Target};
+use ricochet_board::{Board, PositionEncoding, Color, Position, RobotPositions, Target};
 
 /// the u32 position in the database vec encodes the robot positions like follows:
 ///
@@ -49,7 +49,9 @@ pub fn solve(
     target: Target,
     mut database: Database,
 ) -> (RobotPositions, Vec<(Color, Direction)>) {
-    let (target_col, target_row) = board.targets.iter().find(|&&(t, _)| t == target).unwrap().1;
+    let pos = Position::from_tuple(
+        board.targets.get(&target).unwrap() as (PositionEncoding, PositionEncoding)
+    );
     match target {
         Target::Spiral => {
             if positions.contains_any_robot(target_col, target_row) {
