@@ -156,7 +156,8 @@ impl BoardTemplate {
 
 impl fmt::Display for BoardTemplate {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        let mut print = [[Field::default(); BOARDSIZE / 2 + 1]; BOARDSIZE / 2 + 1];
+        const SIZE: usize = (BOARDSIZE / 2 + 1) as usize;
+        let mut print = [[Field::default(); SIZE]; SIZE];
 
         for ((c, r), d) in &self.walls {
             let field = &mut print[(c + 1) as usize][(r + 1) as usize];

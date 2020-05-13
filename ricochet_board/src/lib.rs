@@ -3,10 +3,16 @@
 pub mod template;
 
 use std::collections::BTreeMap;
-use std::{fmt, mem};
+use std::{
+    convert::{TryFrom, TryInto},
+    fmt, mem,
+};
 use template::{BoardTemplate, Orientation, WallDirection};
 
-pub const BOARDSIZE: usize = 16;
+// using an u64 we could encode a 2^32x2^32 board, see `Position`
+pub type PositionEncoding = u32;
+
+pub const BOARDSIZE: PositionEncoding = 16;
 
 #[derive(RustcDecodable, RustcEncodable, Copy, Clone)]
 pub struct Field {
@@ -25,18 +31,15 @@ impl Default for Field {
 
 #[derive(RustcDecodable, RustcEncodable)]
 pub struct Board {
-    pub fields: [[Field; BOARDSIZE]; BOARDSIZE],
-    pub targets: BTreeMap<Target, (usize, usize)>,
+    pub fields: [[Field; BOARDSIZE as usize]; BOARDSIZE as usize],
+    pub targets: BTreeMap<Target, Position>,
 }
-
-// using an u64 we could encode a 256x256 board and a 65536x65536 board using an u128
-pub type PositionEncoding = u8;
 
 /// A position on the board.
 ///
 /// |x   |y   |
 /// |0000|0000|
-#[derive(RustcDecodable, RustcEncodable, Copy, Clone, Debug, PartialEq, Eq)]
+#[derive(RustcDecodable, RustcEncodable, Copy, Clone, Hash, PartialEq, Eq)]
 pub struct Position {
     encoded_position: PositionEncoding,
 }
@@ -48,6 +51,7 @@ impl Position {
     /// The first half of the bits is `0` the rest `1`. This would be `0000_1111` for `u8`
     /// or `0000_0000_1111_1111` for `u16`.
     const ROW_FLAG: PositionEncoding = (2 as PositionEncoding).pow((Position::SIZE / 2) as u32) - 1;
+    const COLUMN_FLAG: PositionEncoding = Self::ROW_FLAG ^ PositionEncoding::MAX;
 
     /// Creates a new position.
     ///
@@ -64,29 +68,44 @@ impl Position {
     }
 
     #[inline(always)]
-    pub fn column(&self) -> usize {
-        (self.encoded_position >> (Self::SIZE / 2)) as usize
+    pub fn column(&self) -> PositionEncoding {
+        self.encoded_position >> (Self::SIZE / 2)
     }
 
     #[inline(always)]
-    pub fn row(&self) -> usize {
-        (self.encoded_position & Self::ROW_FLAG) as usize
+    pub fn row(&self) -> PositionEncoding {
+        self.encoded_position & Self::ROW_FLAG
+    }
+
+    fn set_column(&mut self, column: PositionEncoding) {
+        self.encoded_position = (column << (Self::SIZE / 2)) ^ self.row() as PositionEncoding;
+    }
+
+    fn set_row(&mut self, row: PositionEncoding) {
+        // get the column of the current position and add the new row information
+        self.encoded_position = (self.encoded_position & Self::COLUMN_FLAG) ^ row;
     }
 
     /// Creates a new `Position` in the given direction.
     /// Wraps around at the edge of the board.
-    fn to_direction(&self, direction: Direction) -> Position {
-        let (col, row) = match direction {
-            Direction::Right => ((self.column() + 1) % BOARDSIZE, self.row()),
-            Direction::Left => ((self.column() + BOARDSIZE - 1) % BOARDSIZE, self.row()),
-            Direction::Up => (self.column(), (self.row() + BOARDSIZE - 1) % BOARDSIZE),
-            Direction::Down => (self.column(), (self.row() + 1) % BOARDSIZE),
+    fn to_direction(mut self, direction: Direction) -> Position {
+        match direction {
+            Direction::Right => self.set_column((self.column() + 1) % BOARDSIZE),
+            Direction::Left => self.set_column((self.column() + BOARDSIZE - 1) % BOARDSIZE),
+            Direction::Up => self.set_row((self.row() + BOARDSIZE - 1) % BOARDSIZE),
+            Direction::Down => self.set_row((self.row() + 1) % BOARDSIZE),
         };
-        Position::new(col as PositionEncoding, row as PositionEncoding)
+        self
     }
 }
 
-#[derive(RustcDecodable, RustcEncodable, Copy, Clone, PartialEq, Eq)]
+impl fmt::Debug for Position {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{},{}", self.column(), self.row())
+    }
+}
+
+#[derive(RustcDecodable, RustcEncodable, Clone, Hash, PartialEq, Eq)]
 pub struct RobotPositions {
     red: Position,
     blue: Position,
@@ -127,6 +146,13 @@ pub enum Direction {
     Left,
 }
 
+impl fmt::Display for Direction {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let string = format!("{:?}", &self);
+        f.pad(&string)
+    }
+}
+
 impl fmt::Display for Target {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let string = match *self {
@@ -140,6 +166,20 @@ impl fmt::Display for Target {
     }
 }
 
+impl TryFrom<Target> for Color {
+    type Error = &'static str;
+
+    fn try_from(value: Target) -> Result<Self, Self::Error> {
+        match value {
+            Target::Red(_) => Ok(Color::Red),
+            Target::Blue(_) => Ok(Color::Blue),
+            Target::Green(_) => Ok(Color::Green),
+            Target::Yellow(_) => Ok(Color::Yellow),
+            Target::Spiral => Err("Conversion of target spiral to color is not possible"),
+        }
+    }
+}
+
 impl fmt::Display for Color {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let string = format!("{:?}", &self);
@@ -147,21 +187,47 @@ impl fmt::Display for Color {
     }
 }
 
-impl Default for Board {
-    fn default() -> Self {
-        let board = Board {
-            fields: [[Field {
-                down: false,
-                right: false,
-            }; BOARDSIZE]; BOARDSIZE],
-            targets: Default::default(),
-        };
-        board
-            .wall_enclosure() // Set outer walls
-            .set_center_walls() // Set walls around the four center fields
+impl Board {
+    /// Check if `pos` is next to a wall in the given `direction`
+    pub fn adjacent_to_wall(&self, pos: Position, direction: Direction) -> bool {
+        match direction {
+            Direction::Right => self.fields[pos.column() as usize][pos.row() as usize].right,
+            Direction::Down => self.fields[pos.column() as usize][pos.row() as usize].down,
+            Direction::Left => {
+                let pos = pos.to_direction(Direction::Left);
+                self.fields[pos.column() as usize][pos.row() as usize].right
+            }
+            Direction::Up => {
+                let pos = pos.to_direction(Direction::Up);
+                self.fields[pos.column() as usize][pos.row() as usize].down
+            }
+        }
+    }
+
+    /// Check if the robot has reached the target
+    ///
+    /// # Panics
+    /// Panics if `target` is not present on `self`.
+    pub fn target_reached(&self, target: Target, positions: &RobotPositions) -> bool {
+        let target_position = *self
+            .targets
+            .get(&target)
+            .expect("Trying to reach a target not on the board");
+
+        // Check if the robot has already reached the target
+        match target {
+            Target::Spiral => positions.contains_any_robot(target_position),
+            _ => positions.contains_colored_robot(
+                target
+                    .try_into()
+                    .expect("Unknown Target to Color conversion"),
+                target_position,
+            ),
+        }
     }
 }
 
+/// Handling of templates
 impl Board {
     pub fn from_templates(temps: &[BoardTemplate]) -> Self {
         let mut board = Board::default();
@@ -193,9 +259,9 @@ impl Board {
 
         // set the targets
         for ((c, r), target) in temp.targets() {
-            let c = (c + col_add) as usize;
-            let r = (r + row_add) as usize;
-            self.targets.insert(*target, (c, r));
+            let c = (c + col_add) as PositionEncoding;
+            let r = (r + row_add) as PositionEncoding;
+            self.targets.insert(*target, Position::new(c, r));
         }
     }
 
@@ -208,11 +274,18 @@ impl Board {
         self.enclose_lengths(7, 7, 2, 2)
     }
 
-    /// Encloses a rectangle defined by the left upper corner and its width and length.
+    /// Encloses a rectangle defined by the left upper corner and its width and height.
     /// The field [col, row] is inside the enclosure. Wraps around at the end of the board.
+    ///
     /// # Panics
     /// - Panics if [col, row] is out of bounds.
-    pub fn enclose_lengths(self, col: usize, row: usize, len: usize, width: usize) -> Self {
+    pub fn enclose_lengths(
+        self,
+        col: PositionEncoding,
+        row: PositionEncoding,
+        len: PositionEncoding,
+        width: PositionEncoding,
+    ) -> Self {
         let top_row = if row == 0 { BOARDSIZE - 1 } else { row - 1 };
         let bottom_row = if row + len > BOARDSIZE {
             BOARDSIZE - 1
@@ -235,35 +308,45 @@ impl Board {
 
     /// Starts from `[col, row]` and sets `len` fields below to have a wall on the right side
     #[inline]
-    fn set_vertical_line(mut self, col: usize, row: usize, len: usize) -> Self {
+    fn set_vertical_line(
+        mut self,
+        col: PositionEncoding,
+        row: PositionEncoding,
+        len: PositionEncoding,
+    ) -> Self {
         for row in row..(row + len) {
-            self.fields[col][row].right = true;
+            self.fields[col as usize][row as usize].right = true;
         }
         self
     }
 
     /// Starts from `[col, row]` and sets `len` fields to the right to have a wall on the bottom side
     #[inline]
-    fn set_horizontal_line(mut self, col: usize, row: usize, width: usize) -> Self {
+    fn set_horizontal_line(
+        mut self,
+        col: PositionEncoding,
+        row: PositionEncoding,
+        width: PositionEncoding,
+    ) -> Self {
         for col in col..(col + width) {
-            self.fields[col][row].down = true;
+            self.fields[col as usize][row as usize].down = true;
         }
         self
     }
+}
 
-    pub fn adjacent_to_wall(&self, pos: Position, direction: Direction) -> bool {
-        match direction {
-            Direction::Right => self.fields[pos.column()][pos.row()].right,
-            Direction::Down => self.fields[pos.column()][pos.row()].down,
-            Direction::Left => {
-                let pos = pos.to_direction(Direction::Left);
-                self.fields[pos.column()][pos.row()].right
-            }
-            Direction::Up => {
-                let pos = pos.to_direction(Direction::Up);
-                self.fields[pos.column()][pos.row()].down
-            }
-        }
+impl Default for Board {
+    fn default() -> Self {
+        let board = Board {
+            fields: [[Field {
+                down: false,
+                right: false,
+            }; BOARDSIZE as usize]; BOARDSIZE as usize],
+            targets: Default::default(),
+        };
+        board
+            .wall_enclosure() // Set outer walls
+            .set_center_walls() // Set walls around the four center fields
     }
 }
 
@@ -276,12 +359,12 @@ impl fmt::Debug for Board {
 
 impl RobotPositions {
     #[inline(always)]
-    pub fn contains_any_robot(self, pos: Position) -> bool {
+    pub fn contains_any_robot(&self, pos: Position) -> bool {
         pos == self.red || pos == self.blue || pos == self.green || pos == self.yellow
     }
 
     #[inline(always)]
-    pub fn contains_colored_robot(self, color: Color, pos: Position) -> bool {
+    pub fn contains_colored_robot(&self, color: Color, pos: Position) -> bool {
         match color {
             Color::Red => pos == self.red,
             Color::Blue => pos == self.blue,
@@ -292,13 +375,11 @@ impl RobotPositions {
 
     /// Checks if the adjacent field in the direction is reachable, i.e. no wall
     /// inbetween and not already occupied.
-    fn adjacent_reachable(self, board: &Board, pos: Position, direction: Direction) -> bool {
+    fn adjacent_reachable(&self, board: &Board, pos: Position, direction: Direction) -> bool {
         !board.adjacent_to_wall(pos, direction)
             && !self.contains_any_robot(pos.to_direction(direction))
     }
-}
 
-impl RobotPositions {
     /// Move `robot` as far in the given `direction` as possible.
     pub fn move_in_direction(&mut self, board: &Board, robot: Color, direction: Direction) {
         // start form the current position
@@ -309,7 +390,7 @@ impl RobotPositions {
             temp_pos = temp_pos.to_direction(direction);
         }
 
-        // return the last possible position
+        // set the robot to the last possible position
         self.set_robot(robot, temp_pos);
     }
 }
@@ -334,7 +415,7 @@ impl RobotPositions {
         } = new_position;
     }
 
-    fn get_robot(self, color: Color) -> Position {
+    fn get_robot(&self, color: Color) -> Position {
         match color {
             Color::Red => self.red,
             Color::Blue => self.blue,
@@ -343,19 +424,19 @@ impl RobotPositions {
         }
     }
 
-    pub fn red(self) -> Position {
+    pub fn red(&self) -> Position {
         self.red
     }
 
-    pub fn blue(self) -> Position {
+    pub fn blue(&self) -> Position {
         self.blue
     }
 
-    pub fn green(self) -> Position {
+    pub fn green(&self) -> Position {
         self.green
     }
 
-    pub fn yellow(self) -> Position {
+    pub fn yellow(&self) -> Position {
         self.yellow
     }
 }
