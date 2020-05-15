@@ -64,15 +64,15 @@ impl fmt::Display for TempColor {
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum WallDirection {
-    Bottom,
+    Down,
     Right,
 }
 
 impl WallDirection {
     fn rotate(self) -> Self {
         match self {
-            WallDirection::Bottom => WallDirection::Right,
-            WallDirection::Right => WallDirection::Bottom,
+            WallDirection::Down => WallDirection::Right,
+            WallDirection::Right => WallDirection::Down,
         }
     }
 }
@@ -115,7 +115,7 @@ impl BoardTemplate {
             .iter()
             .map(|&((c, r), dir)| match dir {
                 WallDirection::Right => (((BOARDSIZE / 2) as isize - r - 1, c), dir.rotate()),
-                WallDirection::Bottom => (((BOARDSIZE / 2 - 1) as isize - r - 1, c), dir.rotate()),
+                WallDirection::Down => (((BOARDSIZE / 2 - 1) as isize - r - 1, c), dir.rotate()),
             })
             .collect();
 
@@ -156,12 +156,13 @@ impl BoardTemplate {
 
 impl fmt::Display for BoardTemplate {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        let mut print = [[Field::default(); BOARDSIZE / 2 + 1]; BOARDSIZE / 2 + 1];
+        const SIZE: usize = (BOARDSIZE / 2 + 1) as usize;
+        let mut print = [[Field::default(); SIZE]; SIZE];
 
         for ((c, r), d) in &self.walls {
             let field = &mut print[(c + 1) as usize][(r + 1) as usize];
             match d {
-                WallDirection::Bottom => field.bottom = true,
+                WallDirection::Down => field.down = true,
                 WallDirection::Right => field.right = true,
             }
         }
@@ -174,11 +175,58 @@ impl fmt::Display for BoardTemplate {
 pub fn gen_templates() -> Vec<BoardTemplate> {
     let mut temps = Vec::with_capacity(12);
 
+    // Add red boards
+    temps.push(
+        BoardTemplate::default_template(TempColor::Red)
+            .set_walls(
+                WallDirection::Down,
+                vec![(0, 5), (1, 3), (3, 6), (4, 0), (5, 4)],
+            )
+            .set_walls(
+                WallDirection::Right,
+                vec![(0, 3), (1, 0), (3, 6), (4, 1), (4, 5)],
+            )
+            .set_target((1, 3), Target::Red(Triangle))
+            .set_target((3, 6), Target::Blue(Hexagon))
+            .set_target((4, 1), Target::Green(Circle))
+            .set_target((5, 5), Target::Yellow(Square)),
+    );
+    temps.push(
+        BoardTemplate::default_template(TempColor::Red)
+            .set_walls(
+                WallDirection::Down,
+                vec![(0, 5), (1, 1), (2, 4), (6, 1), (7, 4)],
+            )
+            .set_walls(
+                WallDirection::Right,
+                vec![(0, 1), (2, 4), (3, 0), (6, 2), (6, 5)],
+            )
+            .set_target((1, 1), Target::Red(Triangle))
+            .set_target((2, 4), Target::Blue(Hexagon))
+            .set_target((6, 2), Target::Green(Circle))
+            .set_target((7, 5), Target::Yellow(Square)),
+    );
+    temps.push(
+        BoardTemplate::default_template(TempColor::Red)
+            .set_walls(
+                WallDirection::Down,
+                vec![(0, 4), (1, 5), (2, 3), (5, 2), (7, 5)],
+            )
+            .set_walls(
+                WallDirection::Right,
+                vec![(0, 6), (2, 4), (3, 0), (5, 2), (6, 5)],
+            )
+            .set_target((1, 6), Target::Yellow(Square))
+            .set_target((2, 4), Target::Green(Circle))
+            .set_target((5, 2), Target::Blue(Hexagon))
+            .set_target((7, 5), Target::Red(Triangle)),
+    );
+
     // Add blue boards
     temps.push(
         BoardTemplate::default_template(TempColor::Blue)
             .set_walls(
-                WallDirection::Bottom,
+                WallDirection::Down,
                 vec![(0, 3), (2, 3), (3, 1), (4, 5), (5, 3)],
             )
             .set_walls(
@@ -193,7 +241,7 @@ pub fn gen_templates() -> Vec<BoardTemplate> {
     temps.push(
         BoardTemplate::default_template(TempColor::Blue)
             .set_walls(
-                WallDirection::Bottom,
+                WallDirection::Down,
                 vec![(0, 3), (1, 2), (2, 5), (5, 1), (6, 3)],
             )
             .set_walls(
@@ -208,7 +256,7 @@ pub fn gen_templates() -> Vec<BoardTemplate> {
     temps.push(
         BoardTemplate::default_template(TempColor::Blue)
             .set_walls(
-                WallDirection::Bottom,
+                WallDirection::Down,
                 vec![(0, 4), (1, 6), (2, 0), (4, 4), (6, 3)],
             )
             .set_walls(
@@ -221,11 +269,58 @@ pub fn gen_templates() -> Vec<BoardTemplate> {
             .set_target((6, 3), Target::Blue(Triangle)),
     );
 
+    // Add green boards
+    temps.push(
+        BoardTemplate::default_template(TempColor::Green)
+            .set_walls(
+                WallDirection::Down,
+                vec![(0, 6), (1, 4), (3, 0), (4, 5), (6, 3)],
+            )
+            .set_walls(
+                WallDirection::Right,
+                vec![(0, 4), (1, 0), (2, 1), (4, 6), (6, 3)],
+            )
+            .set_target((1, 4), Target::Red(Circle))
+            .set_target((3, 1), Target::Green(Triangle))
+            .set_target((4, 6), Target::Blue(Square))
+            .set_target((6, 3), Target::Yellow(Hexagon)),
+    );
+    temps.push(
+        BoardTemplate::default_template(TempColor::Green)
+            .set_walls(
+                WallDirection::Down,
+                vec![(0, 5), (1, 1), (3, 6), (4, 0), (6, 3)],
+            )
+            .set_walls(
+                WallDirection::Right,
+                vec![(1, 0), (1, 2), (2, 6), (3, 1), (6, 3)],
+            )
+            .set_target((1, 2), Target::Green(Triangle))
+            .set_target((3, 6), Target::Blue(Square))
+            .set_target((4, 1), Target::Red(Circle))
+            .set_target((6, 3), Target::Yellow(Hexagon)),
+    );
+    temps.push(
+        BoardTemplate::default_template(TempColor::Green)
+            .set_walls(
+                WallDirection::Down,
+                vec![(0, 5), (1, 1), (3, 6), (6, 1), (6, 4)],
+            )
+            .set_walls(
+                WallDirection::Right,
+                vec![(0, 2), (2, 6), (4, 0), (6, 1), (6, 5)],
+            )
+            .set_target((1, 2), Target::Green(Triangle))
+            .set_target((3, 6), Target::Red(Circle))
+            .set_target((6, 1), Target::Yellow(Hexagon))
+            .set_target((6, 5), Target::Blue(Square)),
+    );
+
     // Add yellow boards
     temps.push(
         BoardTemplate::default_template(TempColor::Yellow)
             .set_walls(
-                WallDirection::Bottom,
+                WallDirection::Down,
                 vec![(0, 3), (1, 5), (3, 4), (5, 1), (6, 4), (7, 2)],
             )
             .set_walls(
@@ -241,7 +336,7 @@ pub fn gen_templates() -> Vec<BoardTemplate> {
     temps.push(
         BoardTemplate::default_template(TempColor::Yellow)
             .set_walls(
-                WallDirection::Bottom,
+                WallDirection::Down,
                 vec![(0, 4), (1, 3), (2, 1), (3, 7), (5, 5), (6, 3)],
             )
             .set_walls(
@@ -257,7 +352,7 @@ pub fn gen_templates() -> Vec<BoardTemplate> {
     temps.push(
         BoardTemplate::default_template(TempColor::Yellow)
             .set_walls(
-                WallDirection::Bottom,
+                WallDirection::Down,
                 vec![(0, 6), (1, 2), (2, 5), (5, 3), (6, 1), (7, 5)],
             )
             .set_walls(
@@ -269,100 +364,6 @@ pub fn gen_templates() -> Vec<BoardTemplate> {
             .set_target((5, 4), Target::Green(Square))
             .set_target((6, 1), Target::Blue(Circle))
             .set_target((7, 5), Target::Spiral),
-    );
-
-    // Add red boards
-    temps.push(
-        BoardTemplate::default_template(TempColor::Red)
-            .set_walls(
-                WallDirection::Bottom,
-                vec![(0, 5), (1, 3), (3, 6), (4, 0), (5, 4)],
-            )
-            .set_walls(
-                WallDirection::Right,
-                vec![(0, 3), (1, 0), (3, 6), (4, 1), (4, 5)],
-            )
-            .set_target((1, 3), Target::Red(Triangle))
-            .set_target((3, 6), Target::Blue(Hexagon))
-            .set_target((4, 1), Target::Green(Circle))
-            .set_target((5, 5), Target::Yellow(Square)),
-    );
-    temps.push(
-        BoardTemplate::default_template(TempColor::Red)
-            .set_walls(
-                WallDirection::Bottom,
-                vec![(0, 5), (1, 1), (2, 4), (6, 1), (7, 4)],
-            )
-            .set_walls(
-                WallDirection::Right,
-                vec![(0, 1), (2, 4), (3, 0), (6, 2), (6, 5)],
-            )
-            .set_target((1, 1), Target::Red(Triangle))
-            .set_target((2, 4), Target::Blue(Hexagon))
-            .set_target((6, 2), Target::Green(Circle))
-            .set_target((7, 5), Target::Yellow(Square)),
-    );
-    temps.push(
-        BoardTemplate::default_template(TempColor::Red)
-            .set_walls(
-                WallDirection::Bottom,
-                vec![(0, 4), (1, 5), (2, 3), (5, 2), (7, 5)],
-            )
-            .set_walls(
-                WallDirection::Right,
-                vec![(0, 6), (2, 4), (3, 0), (5, 2), (6, 5)],
-            )
-            .set_target((1, 6), Target::Yellow(Square))
-            .set_target((2, 4), Target::Green(Circle))
-            .set_target((5, 2), Target::Blue(Hexagon))
-            .set_target((7, 5), Target::Red(Triangle)),
-    );
-
-    // Add green boards
-    temps.push(
-        BoardTemplate::default_template(TempColor::Green)
-            .set_walls(
-                WallDirection::Bottom,
-                vec![(0, 6), (1, 4), (3, 0), (4, 5), (6, 3)],
-            )
-            .set_walls(
-                WallDirection::Right,
-                vec![(0, 4), (1, 0), (2, 1), (4, 6), (6, 3)],
-            )
-            .set_target((1, 4), Target::Red(Circle))
-            .set_target((3, 1), Target::Green(Triangle))
-            .set_target((4, 6), Target::Blue(Square))
-            .set_target((6, 3), Target::Yellow(Hexagon)),
-    );
-    temps.push(
-        BoardTemplate::default_template(TempColor::Green)
-            .set_walls(
-                WallDirection::Bottom,
-                vec![(0, 5), (1, 1), (3, 6), (4, 0), (6, 3)],
-            )
-            .set_walls(
-                WallDirection::Right,
-                vec![(1, 0), (1, 2), (2, 6), (3, 1), (6, 3)],
-            )
-            .set_target((1, 2), Target::Green(Triangle))
-            .set_target((3, 6), Target::Blue(Square))
-            .set_target((4, 1), Target::Red(Circle))
-            .set_target((6, 3), Target::Yellow(Hexagon)),
-    );
-    temps.push(
-        BoardTemplate::default_template(TempColor::Green)
-            .set_walls(
-                WallDirection::Bottom,
-                vec![(0, 5), (1, 1), (3, 6), (6, 1), (6, 4)],
-            )
-            .set_walls(
-                WallDirection::Right,
-                vec![(0, 2), (2, 6), (4, 0), (6, 1), (6, 5)],
-            )
-            .set_target((1, 2), Target::Green(Triangle))
-            .set_target((3, 6), Target::Red(Circle))
-            .set_target((6, 1), Target::Yellow(Hexagon))
-            .set_target((6, 5), Target::Blue(Square)),
     );
 
     temps

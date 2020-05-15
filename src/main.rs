@@ -1,9 +1,11 @@
 use std::collections::HashSet;
 use std::iter::FromIterator;
-use text_io::{read, try_read, try_scan};
+use text_io::{read, try_scan};
 
-use ricochet_board::{template, Board, Robot, RobotPosition, Symbol, Target, BOARDSIZE};
-use ricochet_solver::{solve, Database};
+use ricochet_board::{
+    template, Board, Color, PositionEncoding, RobotPositions, Symbol, Target, BOARDSIZE,
+};
+use ricochet_solver::solve;
 
 fn main() {
     // Create the board
@@ -21,8 +23,6 @@ fn main() {
         }
     };
 
-    let mut database = Database::new();
-
     // Erzeugung der Positionen
     let mut positions = ask_for_robot_positions();
     // let mut save = File::create("test.json").expect("Create test.json");
@@ -31,7 +31,7 @@ fn main() {
     'game: loop {
         let target = ask_for_target();
         println!("Solving...");
-        let solve = solve(&board, positions, target, database);
+        let solve = solve(&board, positions, target);
         let path = solve.1;
         println!("Steps needed to reach target: {}", path.len());
         println!("Press enter to show path.");
@@ -51,7 +51,6 @@ fn main() {
             }
         }
 
-        database = Database::new();
         println!("Is the end position the new starting position? (Y/n)");
         loop {
             let input: String = read!("{}\n");
@@ -75,8 +74,7 @@ fn ask_for_target() -> Target {
     println!("What color is the target?");
     loop {
         println!(
-            "Accepted input: \"red\"(r), \"green\"(g), \"blue\"(b), \"yellow\"(y), \
-             \"spiral\"(s)"
+            "Accepted input: \"red\"(r), \"blue\"(b), \"green\"(g), \"yellow\"(y), \"spiral\"(s)"
         );
         loop {
             let color: String = read!("{}\n");
@@ -85,12 +83,12 @@ fn ask_for_target() -> Target {
                     target = Target::Red(ask_for_symbol());
                     break;
                 }
-                "green" | "g" => {
-                    target = Target::Green(ask_for_symbol());
-                    break;
-                }
                 "blue" | "b" => {
                     target = Target::Blue(ask_for_symbol());
+                    break;
+                }
+                "green" | "g" => {
+                    target = Target::Green(ask_for_symbol());
                     break;
                 }
                 "yellow" | "y" => {
@@ -132,14 +130,14 @@ fn ask_for_symbol() -> Symbol {
     }
 }
 
-fn ask_for_robot_positions() -> RobotPosition {
+fn ask_for_robot_positions() -> RobotPositions {
     let mut positions = [(0, 0); 4];
     'outer: loop {
         println!(
             "Please input the coordinates of the Robots.\nPlease write in this format: \
              \"column,row\""
         );
-        for (i, &robot) in [Robot::Red, Robot::Green, Robot::Blue, Robot::Yellow]
+        for (i, &robot) in [Color::Red, Color::Blue, Color::Green, Color::Yellow]
             .iter()
             .enumerate()
         {
@@ -147,15 +145,15 @@ fn ask_for_robot_positions() -> RobotPosition {
             loop {
                 let pos: String = read!("{}\n");
                 match parse_robot_position(pos) {
-                    Ok((a, b)) if (a as usize) < BOARDSIZE || (b as usize) < BOARDSIZE => {
-                        positions[i] = (a, b);
+                    Ok((col, row)) if col < BOARDSIZE || row < BOARDSIZE => {
+                        positions[i] = (col, row);
                         break;
                     }
                     _ => println!("Input invalid"),
                 }
             }
         }
-        let robopos = RobotPosition::from_array(positions);
+        let robopos = RobotPositions::from_array(&positions);
         println!("Please confirm your input.");
         println!("{}", robopos);
         println!("Is this correct? (Y/n)");
@@ -168,14 +166,16 @@ fn ask_for_robot_positions() -> RobotPosition {
             }
         }
     }
-    RobotPosition::from_array(positions)
+    RobotPositions::from_array(&positions)
 }
 
-fn parse_robot_position(pos: String) -> Result<(u8, u8), text_io::Error> {
-    let a: u8;
-    let b: u8;
-    try_scan!(pos.trim().bytes() => "{},{}", a, b);
-    Ok((a, b))
+fn parse_robot_position(
+    pos: String,
+) -> Result<(PositionEncoding, PositionEncoding), text_io::Error> {
+    let col: PositionEncoding;
+    let row: PositionEncoding;
+    try_scan!(pos.trim().bytes() => "{},{}", col, row);
+    Ok((col, row))
 }
 
 fn build_board_from_parts() -> Board {
