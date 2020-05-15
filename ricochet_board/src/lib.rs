@@ -459,10 +459,10 @@ impl fmt::Display for RobotPositions {
         write!(
             fmt,
             "Red: {}\nBlue: {}\nGreen: {}\nYellow: {}",
-            format!("{},{}", self.red.column(), self.red.row()),
-            format!("{},{}", self.blue.column(), self.blue.row()),
-            format!("{},{}", self.green.column(), self.green.row()),
-            format!("{},{}", self.yellow.column(), self.yellow.row()),
+            format!("{},{}", self.red.column() + 1, self.red.row() + 1),
+            format!("{},{}", self.blue.column() + 1, self.blue.row() + 1),
+            format!("{},{}", self.green.column() + 1, self.green.row() + 1),
+            format!("{},{}", self.yellow.column() + 1, self.yellow.row() + 1),
         )
     }
 }

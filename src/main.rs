@@ -23,10 +23,8 @@ fn main() {
         }
     };
 
-    // Erzeugung der Positionen
+    // Ask the user where the robots are positioned
     let mut positions = ask_for_robot_positions();
-    // let mut save = File::create("test.json").expect("Create test.json");
-    // write!(save, "{}", as_pretty_json(&(&positions, &board))).expect("Write into test.json");
 
     'game: loop {
         let target = ask_for_target();
@@ -145,8 +143,10 @@ fn ask_for_robot_positions() -> RobotPositions {
             loop {
                 let pos: String = read!("{}\n");
                 match parse_robot_position(pos) {
-                    Ok((col, row)) if col < BOARDSIZE || row < BOARDSIZE => {
-                        positions[i] = (col, row);
+                    Ok((col, row))
+                        if (1..=BOARDSIZE).contains(&col) || (1..=BOARDSIZE).contains(&row) =>
+                    {
+                        positions[i] = (col - 1, row - 1);
                         break;
                     }
                     _ => println!("Input invalid"),
