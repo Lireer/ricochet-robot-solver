@@ -9,8 +9,8 @@ use std::{
 };
 use template::{BoardTemplate, Orientation, WallDirection};
 
-// using an u64 we could encode a 2^32x2^32 board, see `Position`
-pub type PositionEncoding = u32;
+// using an u64 we could encode a 2^32x2^32 board, see `Position` for more information
+pub type PositionEncoding = u8;
 
 pub const BOARDSIZE: PositionEncoding = 16;
 
@@ -113,12 +113,12 @@ pub struct RobotPositions {
     yellow: Position,
 }
 
-#[derive(Debug, PartialEq, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum Color {
-    Red = 0,
-    Blue = 1,
-    Green = 2,
-    Yellow = 3,
+    Red,
+    Blue,
+    Green,
+    Yellow,
 }
 
 #[derive(Debug, RustcDecodable, RustcEncodable, Clone, Copy, Ord, PartialOrd, Eq, PartialEq)]
@@ -396,7 +396,7 @@ impl RobotPositions {
 }
 
 impl RobotPositions {
-    pub fn from_array(positions: [(PositionEncoding, PositionEncoding); 4]) -> Self {
+    pub fn from_array(positions: &[(PositionEncoding, PositionEncoding); 4]) -> Self {
         RobotPositions {
             red: Position::from_tuple(positions[0]),
             blue: Position::from_tuple(positions[1]),
@@ -445,7 +445,7 @@ impl fmt::Debug for RobotPositions {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         write!(
             fmt,
-            "[{:?}, {:?}, {:?}, {:?}]",
+            "[{:?} | {:?} | {:?} | {:?}]",
             self.red(),
             self.blue(),
             self.green(),

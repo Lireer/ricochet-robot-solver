@@ -25,7 +25,7 @@ fn create_board() -> (RobotPositions, Board) {
     })
     .collect::<Vec<template::BoardTemplate>>();
 
-    let pos = RobotPositions::from_array([(0, 1), (5, 4), (7, 1), (7, 15)]);
+    let pos = RobotPositions::from_array(&[(0, 1), (5, 4), (7, 1), (7, 15)]);
     (pos, Board::from_templates(&templates))
 }
 
@@ -39,7 +39,7 @@ fn move_right() {
     let (mut positions, board) = create_board();
     assert_eq!(positions.green(), Position::from_tuple((7, 1)));
     positions.move_in_direction(&board, Color::Green, Direction::Right);
-    assert_eq!(positions.green(), Position::from_tuple((9, 1)));
+    assert_eq!(positions.green(), Position::from_tuple((15, 1)));
 }
 
 #[test]
@@ -47,7 +47,7 @@ fn move_left() {
     let (mut positions, board) = create_board();
     assert_eq!(positions.green(), Position::from_tuple((7, 1)));
     positions.move_in_direction(&board, Color::Green, Direction::Left);
-    assert_eq!(positions.green(), Position::from_tuple((1, 1)));
+    assert_eq!(positions.green(), Position::from_tuple((5, 1)));
 }
 
 #[test]
