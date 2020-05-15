@@ -14,7 +14,7 @@ pub type PositionEncoding = u8;
 
 pub const BOARDSIZE: PositionEncoding = 16;
 
-#[derive(RustcDecodable, RustcEncodable, Copy, Clone)]
+#[derive(Copy, Clone)]
 pub struct Field {
     pub down: bool,
     pub right: bool,
@@ -29,7 +29,6 @@ impl Default for Field {
     }
 }
 
-#[derive(RustcDecodable, RustcEncodable)]
 pub struct Board {
     pub fields: [[Field; BOARDSIZE as usize]; BOARDSIZE as usize],
     pub targets: BTreeMap<Target, Position>,
@@ -39,7 +38,7 @@ pub struct Board {
 ///
 /// |x   |y   |
 /// |0000|0000|
-#[derive(RustcDecodable, RustcEncodable, Copy, Clone, Hash, PartialEq, Eq)]
+#[derive(Copy, Clone, Hash, PartialEq, Eq)]
 pub struct Position {
     encoded_position: PositionEncoding,
 }
@@ -105,7 +104,7 @@ impl fmt::Debug for Position {
     }
 }
 
-#[derive(RustcDecodable, RustcEncodable, Clone, Hash, PartialEq, Eq)]
+#[derive(Clone, Hash, PartialEq, Eq)]
 pub struct RobotPositions {
     red: Position,
     blue: Position,
@@ -121,7 +120,7 @@ pub enum Color {
     Yellow,
 }
 
-#[derive(Debug, RustcDecodable, RustcEncodable, Clone, Copy, Ord, PartialOrd, Eq, PartialEq)]
+#[derive(Debug, Clone, Copy, Ord, PartialOrd, Eq, PartialEq)]
 pub enum Target {
     Red(Symbol),
     Blue(Symbol),
@@ -130,7 +129,7 @@ pub enum Target {
     Spiral,
 }
 
-#[derive(Debug, RustcDecodable, RustcEncodable, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Symbol {
     Circle,
     Triangle,
@@ -138,7 +137,7 @@ pub enum Symbol {
     Hexagon,
 }
 
-#[derive(Debug, RustcDecodable, RustcEncodable, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Direction {
     Up,
     Down,

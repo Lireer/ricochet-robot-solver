@@ -6,7 +6,6 @@ edition = "2018"
 
 [dependencies]
 ricochet_board = { path = "../ricochet_board" }
-rustc-serialize = "0.3.24"
 fnv = "1.0.7"
 
 [dev-dependencies]
