@@ -1,40 +1,228 @@
-use rustc_serialize::json::*;
-use rustc_serialize::Decodable;
+use chrono::prelude::*;
+use itertools::Itertools;
+use rand::distributions::{Distribution, Uniform};
+use rand::SeedableRng;
+use rayon::prelude::*;
+use std::convert::TryInto;
+use std::fmt;
 
 use ricochet_board::*;
-use ricochet_solver::*;
-use std::fs::File;
 
-fn read() -> (RobotPosition, Board) {
-    let mut file = File::open("tests/test.json").expect("test.json not found");
-    let json = Json::from_reader(&mut file).expect("invalid json");
-    let mut decoder = Decoder::new(json);
-    Decodable::decode(&mut decoder).expect("json does not match (RobotPosition, Board)")
+fn create_board() -> (RobotPositions, Board) {
+    const ORIENTATIONS: [template::Orientation; 4] = [
+        template::Orientation::UpperLeft,
+        template::Orientation::UpperRight,
+        template::Orientation::BottomRight,
+        template::Orientation::BottomLeft,
+    ];
+    const TEMPS_PER_COLOR: usize = 3;
+
+    let templates = template::gen_templates();
+    let templates = [
+        templates[0 * TEMPS_PER_COLOR].clone(),
+        templates[1 * TEMPS_PER_COLOR].clone(),
+        templates[2 * TEMPS_PER_COLOR].clone(),
+        templates[3 * TEMPS_PER_COLOR].clone(),
+    ]
+    .iter()
+    .cloned()
+    .enumerate()
+    .map(|(i, mut temp)| {
+        temp.rotate_to(ORIENTATIONS[i]);
+        temp
+    })
+    .collect::<Vec<template::BoardTemplate>>();
+
+    let pos = RobotPositions::from_array(&[(0, 1), (5, 4), (7, 1), (7, 15)]);
+    (pos, Board::from_templates(&templates))
 }
 
 #[test]
-fn read_test_json() {
-    read();
+fn board_creation() {
+    create_board();
 }
 
+// Test robot already on target
+#[test]
+fn on_target() {
+    let (_, board) = create_board();
+
+    let start = RobotPositions::from_array(&[(0, 1), (5, 4), (12, 14), (7, 15)]);
+    let end = start.clone();
+
+    assert_eq!(
+        ricochet_solver::solve(&board, start, Target::Green(Symbol::Triangle)),
+        (end, vec![])
+    );
+}
+
+// Test short path
 #[test]
 fn solve() {
-    let (positions, board) = read();
-    let database = Database::new();
+    let (pos, board) = create_board();
+
     assert_eq!(
-        ricochet_solver::solve(&board, positions, Target::Red(Symbol::Square), database),
+        ricochet_solver::solve(&board, pos, Target::Yellow(Symbol::Hexagon)),
         (
-            RobotPosition(3980809343 as u32),
+            RobotPositions::from_array(&[(10, 15), (9, 11), (7, 1), (9, 12)]),
             vec![
-                (Robot::Red, Direction::Right),
-                (Robot::Red, Direction::Down),
-                (Robot::Green, Direction::Down),
-                (Robot::Green, Direction::Left),
-                (Robot::Red, Direction::Up),
-                (Robot::Red, Direction::Right),
-                (Robot::Red, Direction::Down),
-                (Robot::Red, Direction::Right)
+                (Color::Red, Direction::Right),
+                (Color::Red, Direction::Down),
+                (Color::Red, Direction::Right),
+                (Color::Blue, Direction::Right),
+                (Color::Blue, Direction::Down),
+                (Color::Red, Direction::Left),
+                (Color::Red, Direction::Down),
+                (Color::Yellow, Direction::Right),
+                (Color::Yellow, Direction::Up)
             ]
         )
     );
+}
+
+#[test]
+#[ignore]
+fn solve_many() {
+    let (_, board) = create_board();
+
+    let targets: Vec<_> = board.targets.iter().map(|(target, _)| target).collect();
+
+    let uniform = Uniform::from(0..16);
+    let rng = rand::rngs::StdRng::seed_from_u64(1);
+
+    let n_starting_positions = 500;
+
+    println!("Starting operations at {}", Local::now());
+    println!("{}> Generating starting positions", Local::now());
+
+    let samples = uniform
+        .sample_iter(rng)
+        .tuples()
+        .filter(|(c, r)| !((7..=8).contains(c) && (7..=8).contains(r)))
+        .take(4 * n_starting_positions)
+        .batching(|it| {
+            let vec = it
+                .take(4)
+                .collect::<Vec<(PositionEncoding, PositionEncoding)>>();
+            if vec.len() < 4 {
+                return None;
+            }
+            match vec[..4].try_into() {
+                Ok(a) => Some(RobotPositions::from_array(a)),
+                Err(_) => None,
+            }
+        })
+        .cartesian_product(targets)
+        .collect::<Vec<_>>();
+
+    println!(
+        "{}> Generated {} starting positions",
+        Local::now(),
+        n_starting_positions
+    );
+    println!(
+        "{}> Calculating {} solutions...",
+        Local::now(),
+        samples.len()
+    );
+
+    let mut tests = samples
+        .par_iter()
+        .map(|(pos, &target)| {
+            // .map(|pos| {
+            PositionTest::new(
+                pos.clone(),
+                target,
+                ricochet_solver::solve(&board, pos.clone(), target),
+            )
+        })
+        .collect::<Vec<_>>();
+
+    println!("{}> Finished calculations", Local::now());
+    println!("{}> Sorting solutions...", Local::now());
+
+    tests.sort_unstable_by_key(|test| (test.length, test.unique));
+    tests.reverse();
+
+    println!("{}>", Local::now());
+    println!("{:#?}", &tests[..3]);
+    println!("{}>", Local::now());
+    println!(
+        "{:?}",
+        tests
+            .iter()
+            .filter(|t| t.unique == 4)
+            .take(3)
+            .collect::<Vec<_>>()
+    );
+
+    assert_eq!(
+        tests[0],
+        PositionTest::new(
+            RobotPositions::from_array(&[(3, 2), (4, 12), (14, 0), (12, 9)]),
+            Target::Yellow(Symbol::Square),
+            (
+                RobotPositions::from_array(&[(0, 6), (6, 7), (14, 0), (5, 5)]),
+                vec![
+                    (Color::Red, Direction::Down),
+                    (Color::Red, Direction::Left),
+                    (Color::Blue, Direction::Left),
+                    (Color::Blue, Direction::Up),
+                    (Color::Blue, Direction::Right),
+                    (Color::Yellow, Direction::Right),
+                    (Color::Yellow, Direction::Down),
+                    (Color::Yellow, Direction::Left),
+                    (Color::Yellow, Direction::Up),
+                    (Color::Yellow, Direction::Left),
+                    (Color::Yellow, Direction::Up),
+                    (Color::Yellow, Direction::Right),
+                    (Color::Yellow, Direction::Up),
+                ]
+            ),
+        )
+    )
+}
+
+#[derive(PartialEq)]
+struct PositionTest {
+    pub start_pos: RobotPositions,
+    pub target: Target,
+    pub solution: RobotPositions,
+    pub length: usize,
+    pub unique: usize,
+    pub path: Vec<(Color, Direction)>,
+}
+
+impl PositionTest {
+    pub fn new(
+        start_pos: RobotPositions,
+        target: Target,
+        (solution, path): (RobotPositions, Vec<(Color, Direction)>),
+    ) -> Self {
+        Self {
+            start_pos,
+            target,
+            solution,
+            length: path.len(),
+            unique: path.iter().map(|&(c, _)| c).unique().count(),
+            path: path,
+        }
+    }
+}
+
+impl fmt::Debug for PositionTest {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            fmt,
+            r#"PositionTest {{
+                start_pos: {:?},
+                solution:  {:?},
+                target: {},
+                length: {},
+                unique: {},
+                path: {:?},
+            }}"#,
+            self.start_pos, self.solution, self.target, self.length, self.unique, self.path,
+        )
+    }
 }
