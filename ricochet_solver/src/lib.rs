@@ -72,21 +72,18 @@ fn mem_solve(
     // in `position_store`, which is used in the backwards path creation.
     'outer: for step in 0.. {
         for pos in &current_step_positions {
-            //0..visited_positions[step].len() {
             if let Some(reached) = eval(
                 board,
                 target,
                 pos,
                 step,
                 &mut position_store,
-                // &mut next_step_positions,
                 &mut |pos: &RobotPositions| next_step_positions.push(pos.clone()),
             ) {
                 solution = reached;
                 break 'outer;
             };
         }
-        // visited_positions.push(next_step_positions);
         current_step_positions.clear();
         std::mem::swap(&mut current_step_positions, &mut next_step_positions)
     }
@@ -129,7 +126,6 @@ fn eval<F: FnMut(&RobotPositions)>(
     initial_pos: &RobotPositions,
     steps: usize,
     pos_store: &mut FnvHashMap<RobotPositions, VisitInformation>,
-    // next_step_pos: &mut Vec<RobotPositions>,
     add_pos: &mut F,
 ) -> Option<RobotPositions> {
     for &robot in ROBOTS.iter() {
@@ -157,7 +153,6 @@ fn eval<F: FnMut(&RobotPositions)>(
             }
 
             // Add new_pos to the already visited positions
-            // next_step_pos.push(new_pos);
             add_pos(&new_pos);
         }
     }
