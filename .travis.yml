@@ -14,8 +14,7 @@ install:
 script:
  - set -e
  - cargo build
- - cd ricochet_board && cargo test && cd ..
- - cd ricochet_solver && cargo test && cd ..
+ - cargo test
  - elm-make editor/Main.elm --yes
  - set +e
 
