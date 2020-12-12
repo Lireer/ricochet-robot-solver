@@ -1,13 +1,5 @@
-[package]
-name = "ricochet"
-version = "0.1.0"
-authors = ["carl"]
-edition = "2018"
-
-[dependencies]
-ricochet_board = {path="ricochet_board"}
-ricochet_solver = {path="ricochet_solver"}
-text_io = "0.1.8"
+[workspace]
+members = [ "ricochet_board", "ricochet_solver", "ricli" ]
 
 [profile.release]
 opt-level = 3

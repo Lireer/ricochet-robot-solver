@@ -1,12 +1,26 @@
 # Ricochet Robots Solver
 
-Solver for ricochet robots written in rust.
+A collection of crates for solving the board game ricochet robots.
 
-Board editor written in elm hosted here: https://lireer.github.io/ricochet-robot-solver/
+## Usage
 
-## Setup
+Use `cargo run` to use the cli tool and solve a game.
+You will first have to select the board quarters which make up the board, starting from the upper left and rotating clockwise. They are assigned colors depending on their actual board game counterparts.
 
-Building from source requires a nightly rust compiler:
+See [Installation](#installation) for getting cargo.
 
-* `rustup update nightly`
-* `rustup set override nightly`
+## Structure
+
+This project is split into three parts:
+
+- `ricochet_board` contains the implementation of the board and game rules.
+- `ricochet_solver` contains everything concerning solvers.
+- `ricli` is a cli tool to use the other parts.
+
+## Installation
+
+Building from source requires a stable rust compiler which can be installed using [rustup](https://rustup.rs/).
+
+## Board editor
+
+Board editor written in elm hosted [here](https://lireer.github.io/ricochet-robot-solver/), but right now it's not really usable for anything other than moving pieces around.
