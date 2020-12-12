@@ -1,5 +1,3 @@
-#![feature(const_int_pow)]
-
 pub mod template;
 
 use std::collections::BTreeMap;
@@ -9,9 +7,10 @@ use std::{
 };
 use template::{BoardTemplate, Orientation, WallDirection};
 
-// using an u64 we could encode a 2^32x2^32 board, see `Position` for more information
-pub type PositionEncoding = u8;
+// Using an u64 we could encode a 2^32x2^32 board, see `Position` for more information.
+pub type PositionEncoding = u16;
 
+/// The size of the board, assuming a square board.
 pub const BOARDSIZE: PositionEncoding = 16;
 
 #[derive(Copy, Clone)]
@@ -46,10 +45,26 @@ pub struct Position {
 impl Position {
     /// Size of the encoded value in bits.
     const SIZE: PositionEncoding = mem::size_of::<PositionEncoding>() as PositionEncoding * 8;
+
     /// Bitflag used to extract the row information of a position by removing the column bits.
     /// The first half of the bits is `0` the rest `1`. This would be `0000_1111` for `u8`
     /// or `0000_0000_1111_1111` for `u16`.
-    const ROW_FLAG: PositionEncoding = (2 as PositionEncoding).pow((Position::SIZE / 2) as u32) - 1;
+    const ROW_FLAG: PositionEncoding = {
+        // When 1.50 is stablized, then this will be possible
+        // currently needs the `const_int_pow` feature
+        // (2 as PositionEncoding).pow((Position::SIZE / 2) as u32) - 1
+
+        let mut flag: PositionEncoding = 1;
+        // Add more ones until half the bits are ones.
+        while flag.count_ones() < mem::size_of::<PositionEncoding>() as u32 * 8 / 2 {
+            flag = (flag << 1) + 1;
+        }
+        flag
+    };
+
+    /// Bitflag used to extract the column information of a position by removing the row bits.
+    /// The first half of the bits is `1` the rest `0`. This would be `1111_0000` for `u8`
+    /// or `1111_1111_0000_0000` for `u16`.
     const COLUMN_FLAG: PositionEncoding = Self::ROW_FLAG ^ PositionEncoding::MAX;
 
     /// Creates a new position.
@@ -485,4 +500,16 @@ pub fn board_string(board: Vec<Vec<Field>>) -> String {
         print += "\n";
     }
     print
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{Position, PositionEncoding};
+
+    #[test]
+    fn check_flags() {
+        let row_flag = (2 as PositionEncoding).pow((Position::SIZE / 2) as u32) - 1;
+        assert_eq!(row_flag, Position::ROW_FLAG);
+        assert_eq!(!row_flag, Position::COLUMN_FLAG);
+    }
 }
