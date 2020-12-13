@@ -1,7 +1,7 @@
 use chrono::prelude::*;
 use itertools::Itertools;
 use rand::distributions::{Distribution, Uniform};
-use rand::SeedableRng;
+use rand::{Rng, SeedableRng};
 use rayon::prelude::*;
 use std::convert::TryInto;
 use std::fmt;
@@ -15,16 +15,10 @@ fn create_board() -> (RobotPositions, Board) {
         template::Orientation::BottomRight,
         template::Orientation::BottomLeft,
     ];
-    const TEMPS_PER_COLOR: usize = 3;
 
-    let templates = template::gen_templates();
-    let templates = [
-        templates[0 * TEMPS_PER_COLOR].clone(),
-        templates[1 * TEMPS_PER_COLOR].clone(),
-        templates[2 * TEMPS_PER_COLOR].clone(),
-        templates[3 * TEMPS_PER_COLOR].clone(),
-    ]
+    let templates = template::gen_templates()
     .iter()
+    .step_by(3)
     .cloned()
     .enumerate()
     .map(|(i, mut temp)| {
@@ -77,6 +71,58 @@ fn solve() {
                 (Color::Yellow, Direction::Up)
             ]
         )
+    );
+}
+
+#[test]
+fn monte_carlo_solve() {
+    let mut rng = rand::rngs::StdRng::seed_from_u64(10);
+
+    let (pos, board) = create_board();
+    let target = Target::Red(Symbol::Triangle);
+
+    const ROBOTS: [Color; 4] = [Color::Blue, Color::Red, Color::Green, Color::Yellow];
+    const DIRECTIONS: [Direction; 4] = [
+        Direction::Up,
+        Direction::Right,
+        Direction::Down,
+        Direction::Left,
+    ];
+
+    let mut tries = 0;
+    let mut total_steps: u64 = 0;
+    let mut path;
+    loop {
+        path = Vec::new();
+        let mut current_pos = pos.clone();
+        tries += 1;
+
+        loop {
+            let robot = ROBOTS[rng.gen_range(0, 4)];
+            let direction = DIRECTIONS[rng.gen_range(0, 4)];
+            path.push((robot, direction));
+
+            total_steps += 1;
+            current_pos.move_in_direction(&board, robot, direction);
+            if board.target_reached(target, &current_pos) {
+                break;
+            }
+        }
+
+        if path.len() <= 3 {
+            break;
+        }
+    }
+    
+    assert_eq!(tries, 124);
+    assert_eq!(total_steps, 49036);
+    assert_eq!(
+        path,
+        vec![
+            (Color::Red, Direction::Up),
+            (Color::Red, Direction::Right),
+            (Color::Red, Direction::Down)
+        ]
     );
 }
 

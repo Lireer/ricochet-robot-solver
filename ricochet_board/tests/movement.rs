@@ -7,16 +7,10 @@ fn create_board() -> (RobotPositions, Board) {
         template::Orientation::BottomRight,
         template::Orientation::BottomLeft,
     ];
-    const TEMPS_PER_COLOR: usize = 3;
 
-    let templates = template::gen_templates();
-    let templates = [
-        templates[0 * TEMPS_PER_COLOR].clone(),
-        templates[1 * TEMPS_PER_COLOR].clone(),
-        templates[2 * TEMPS_PER_COLOR].clone(),
-        templates[3 * TEMPS_PER_COLOR].clone(),
-    ]
+    let templates = template::gen_templates()
     .iter()
+    .step_by(3)
     .cloned()
     .enumerate()
     .map(|(i, mut temp)| {
