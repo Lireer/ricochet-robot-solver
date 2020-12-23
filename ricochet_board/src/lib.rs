@@ -504,12 +504,72 @@ pub fn board_string(board: Vec<Vec<Field>>) -> String {
 
 #[cfg(test)]
 mod tests {
-    use crate::{Position, PositionEncoding};
+    use crate::{template, Board, Color, Direction, Position, PositionEncoding, RobotPositions};
 
     #[test]
     fn check_flags() {
         let row_flag = (2 as PositionEncoding).pow((Position::SIZE / 2) as u32) - 1;
         assert_eq!(row_flag, Position::ROW_FLAG);
         assert_eq!(!row_flag, Position::COLUMN_FLAG);
+    }
+
+    fn create_board() -> (RobotPositions, Board) {
+        const ORIENTATIONS: [template::Orientation; 4] = [
+            template::Orientation::UpperLeft,
+            template::Orientation::UpperRight,
+            template::Orientation::BottomRight,
+            template::Orientation::BottomLeft,
+        ];
+
+        let templates = template::gen_templates()
+            .iter()
+            .step_by(3)
+            .cloned()
+            .enumerate()
+            .map(|(i, mut temp)| {
+                temp.rotate_to(ORIENTATIONS[i]);
+                temp
+            })
+            .collect::<Vec<template::BoardTemplate>>();
+
+        let pos = RobotPositions::from_array(&[(0, 1), (5, 4), (7, 1), (7, 15)]);
+        (pos, Board::from_templates(&templates))
+    }
+
+    #[test]
+    fn board_creation() {
+        create_board();
+    }
+
+    #[test]
+    fn move_right() {
+        let (mut positions, board) = create_board();
+        assert_eq!(positions.green(), Position::from_tuple((7, 1)));
+        positions.move_in_direction(&board, Color::Green, Direction::Right);
+        assert_eq!(positions.green(), Position::from_tuple((15, 1)));
+    }
+
+    #[test]
+    fn move_left() {
+        let (mut positions, board) = create_board();
+        assert_eq!(positions.green(), Position::from_tuple((7, 1)));
+        positions.move_in_direction(&board, Color::Green, Direction::Left);
+        assert_eq!(positions.green(), Position::from_tuple((5, 1)));
+    }
+
+    #[test]
+    fn move_up() {
+        let (mut positions, board) = create_board();
+        assert_eq!(positions.green(), Position::from_tuple((7, 1)));
+        positions.move_in_direction(&board, Color::Green, Direction::Up);
+        assert_eq!(positions.green(), Position::from_tuple((7, 0)));
+    }
+
+    #[test]
+    fn move_down() {
+        let (mut positions, board) = create_board();
+        assert_eq!(positions.green(), Position::from_tuple((7, 1)));
+        positions.move_in_direction(&board, Color::Green, Direction::Down);
+        assert_eq!(positions.green(), Position::from_tuple((7, 6)));
     }
 }
