@@ -28,7 +28,7 @@ This project is split into three parts:
 pip install maturin
 ```
 
-Navigate to the rust package that is to be built. Use `maturin develop` to build and install it in the environment.
+Navigate to the rust package that is to be built. Use `maturin develop --release` to build and install it in the environment.
 
 ## Board editor
 
