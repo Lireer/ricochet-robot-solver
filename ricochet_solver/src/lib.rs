@@ -1,7 +1,7 @@
 use fnv::FnvHashMap;
 use std::collections::hash_map::Entry;
 
-use ricochet_board::{Board, Color, Direction, RobotPositions, Target};
+use ricochet_board::{Color, Direction, RobotPositions, Round};
 
 struct VisitInformation {
     steps_needed: usize,
@@ -39,22 +39,20 @@ impl VisitInformation {
 }
 
 pub fn solve(
-    board: &Board,
+    round: &Round,
     positions: RobotPositions,
-    target: Target,
 ) -> (RobotPositions, Vec<(Color, Direction)>) {
     // Check if the robot has already reached the target
-    if board.target_reached(target, &positions) {
+    if round.target_reached(&positions) {
         return (positions, vec![]);
     }
 
-    mem_solve(board, positions, target)
+    mem_solve(round, positions)
 }
 
 fn mem_solve(
-    board: &Board,
+    round: &Round,
     start_pos: RobotPositions,
-    target: Target,
 ) -> (RobotPositions, Vec<(Color, Direction)>) {
     // contains all positions from which the positions in
     let mut current_step_positions: Vec<RobotPositions> = Vec::with_capacity(256);
@@ -73,8 +71,7 @@ fn mem_solve(
     'outer: for step in 0.. {
         for pos in &current_step_positions {
             if let Some(reached) = eval(
-                board,
-                target,
+                round,
                 pos,
                 step,
                 &mut position_store,
@@ -121,8 +118,7 @@ const ROBOTS: [Color; 4] = [Color::Red, Color::Blue, Color::Green, Color::Yellow
 /// `steps` is the number of steps needed to reach `initial_pos`.
 /// The calculated postions are inserted into `visited_pos` and `pos_store`.
 fn eval<F: FnMut(&RobotPositions)>(
-    board: &Board,
-    target: Target,
+    round: &Round,
     initial_pos: &RobotPositions,
     steps: usize,
     pos_store: &mut FnvHashMap<RobotPositions, VisitInformation>,
@@ -131,8 +127,14 @@ fn eval<F: FnMut(&RobotPositions)>(
     for &robot in ROBOTS.iter() {
         for &dir in DIRECTIONS.iter() {
             // create a position starting from the initial position
-            let mut new_pos = initial_pos.clone();
-            new_pos.move_in_direction(board, robot, dir);
+            let new_pos = initial_pos
+                .clone()
+                .move_in_direction(round.board(), robot, dir);
+
+            // if nothing changed, do nothing
+            if *initial_pos == new_pos {
+                continue;
+            }
 
             let entry = pos_store.entry(new_pos.clone());
             match entry {
@@ -148,7 +150,7 @@ fn eval<F: FnMut(&RobotPositions)>(
             };
 
             // Check if the target has been reached
-            if board.target_reached(target, &new_pos) {
+            if round.target_reached(&new_pos) {
                 return Some(new_pos);
             }
 
@@ -170,7 +172,7 @@ mod tests {
     use std::convert::TryInto;
     use std::fmt;
 
-    fn create_board() -> (RobotPositions, Board) {
+    fn create_board() -> (RobotPositions, Game) {
         const ORIENTATIONS: [template::Orientation; 4] = [
             template::Orientation::UpperLeft,
             template::Orientation::UpperRight,
@@ -190,7 +192,7 @@ mod tests {
             .collect::<Vec<template::BoardTemplate>>();
 
         let pos = RobotPositions::from_array(&[(0, 1), (5, 4), (7, 1), (7, 15)]);
-        (pos, Board::from_templates(&templates))
+        (pos, Game::from_templates(&templates))
     }
 
     #[test]
@@ -201,24 +203,32 @@ mod tests {
     // Test robot already on target
     #[test]
     fn on_target() {
-        let (_, board) = create_board();
+        let (_, game) = create_board();
+        let target = Target::Green(Symbol::Triangle);
+        let target_position = game.get_target_position(&target).unwrap();
 
-        let start = RobotPositions::from_array(&[(0, 1), (5, 4), (12, 14), (7, 15)]);
+        let start = RobotPositions::from_array(&[(0, 1), (5, 4), target_position.into(), (7, 15)]);
         let end = start.clone();
 
-        assert_eq!(
-            super::solve(&board, start, Target::Green(Symbol::Triangle)),
-            (end, vec![])
-        );
+        let round = Round::new(game.board().clone(), target, target_position);
+
+        assert_eq!(super::solve(&round, start), (end, vec![]));
     }
 
     // Test short path
     #[test]
     fn solve() {
-        let (pos, board) = create_board();
+        let (pos, game) = create_board();
+        let target = Target::Yellow(Symbol::Hexagon);
+
+        let round = Round::new(
+            game.board().clone(),
+            target,
+            game.get_target_position(&target).unwrap(),
+        );
 
         assert_eq!(
-            super::solve(&board, pos, Target::Yellow(Symbol::Hexagon)),
+            super::solve(&round, pos),
             (
                 RobotPositions::from_array(&[(10, 15), (9, 11), (7, 1), (9, 12)]),
                 vec![
@@ -240,8 +250,13 @@ mod tests {
     fn monte_carlo_solve() {
         let mut rng = rand::rngs::StdRng::seed_from_u64(10);
 
-        let (pos, board) = create_board();
+        let (pos, game) = create_board();
         let target = Target::Red(Symbol::Triangle);
+        let round = Round::new(
+            game.board().clone(),
+            target,
+            game.get_target_position(&target).unwrap(),
+        );
 
         const ROBOTS: [Color; 4] = [Color::Blue, Color::Red, Color::Green, Color::Yellow];
         const DIRECTIONS: [Direction; 4] = [
@@ -265,8 +280,8 @@ mod tests {
                 path.push((robot, direction));
 
                 total_steps += 1;
-                current_pos.move_in_direction(&board, robot, direction);
-                if board.target_reached(target, &current_pos) {
+                current_pos = current_pos.move_in_direction(&round.board(), robot, direction);
+                if round.target_reached(&current_pos) {
                     break;
                 }
             }
@@ -291,9 +306,9 @@ mod tests {
     #[test]
     #[ignore]
     fn solve_many() {
-        let (_, board) = create_board();
+        let (_, game) = create_board();
 
-        let targets: Vec<_> = board.targets.iter().map(|(target, _)| target).collect();
+        let targets: Vec<_> = game.targets().iter().map(|(target, _)| target).collect();
 
         let uniform = Uniform::from(0..16);
         let rng = rand::rngs::StdRng::seed_from_u64(1);
@@ -337,12 +352,9 @@ mod tests {
         let mut tests = samples
             .par_iter()
             .map(|(pos, &target)| {
-                // .map(|pos| {
-                PositionTest::new(
-                    pos.clone(),
-                    target,
-                    super::solve(&board, pos.clone(), target),
-                )
+                let target_position = game.get_target_position(&target).expect("unknown target");
+                let round = Round::new(game.board().clone(), target, target_position);
+                PositionTest::new(pos.clone(), target, super::solve(&round, pos.clone()))
             })
             .collect::<Vec<_>>();
 
@@ -413,7 +425,7 @@ mod tests {
                 solution,
                 length: path.len(),
                 unique: path.iter().map(|&(c, _)| c).unique().count(),
-                path: path,
+                path,
             }
         }
     }

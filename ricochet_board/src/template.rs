@@ -1,16 +1,26 @@
+//! Create a [`Game`](super::Game) from templates.
+//!
+//! These templates are the same as the quarters used to build the actual board game.
+
 use std::fmt;
 
 use crate::{Field, Symbol::*, Target, BOARDSIZE};
 
+/// The orientation of a template.
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum Orientation {
+    /// Indicates a template rotated so it fits in the upper left.
     UpperLeft,
+    /// Indicates a template rotated so it fits in the upper right.
     UpperRight,
+    /// Indicates a template rotated so it fits in the bottom right.
     BottomRight,
+    /// Indicates a template rotated so it fits in the bottom left.
     BottomLeft,
 }
 
 impl Orientation {
+    /// Returns the number of clockwise rotations needed to rotate a template to `orient`.
     pub fn right_rotations_to(self, orient: Orientation) -> usize {
         let all = [
             Orientation::UpperLeft,
@@ -39,11 +49,16 @@ impl fmt::Display for Orientation {
     }
 }
 
+/// The color of a template which is given by the physical counterpart.
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub enum TempColor {
+    /// Indicates a green template.
     Green,
+    /// Indicates a red template.
     Red,
+    /// Indicates a blue template.
     Blue,
+    /// Indicates a yellow template.
     Yellow,
 }
 
@@ -62,13 +77,17 @@ impl fmt::Display for TempColor {
     }
 }
 
+/// The directions a [`Field`](super::Field) stores walls for.
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum WallDirection {
+    /// Indicates a wall at the bottom of a field.
     Down,
+    /// Indicates a wall to the right of a field.
     Right,
 }
 
 impl WallDirection {
+    /// Changes the direction of a wall when rotating a template.
     fn rotate(self) -> Self {
         match self {
             WallDirection::Down => WallDirection::Right,
@@ -77,6 +96,10 @@ impl WallDirection {
     }
 }
 
+/// A template representing a quarter of the ricochet board.
+///
+/// The physical board is built from four 8x8 pieces. Each of these pieces is assigned a color and
+/// can be rotated in four different ways.
 #[derive(Clone, Debug, PartialEq)]
 pub struct BoardTemplate {
     orientation: Orientation,
@@ -86,22 +109,27 @@ pub struct BoardTemplate {
 }
 
 impl BoardTemplate {
+    /// Returns the color of the template.
     pub fn color(&self) -> TempColor {
         self.color
     }
 
+    /// Returns the orientation of the template.
     pub fn orientation(&self) -> Orientation {
         self.orientation
     }
 
+    /// Returns the walls on the template.
     pub fn walls(&self) -> &Vec<((isize, isize), WallDirection)> {
         &self.walls
     }
 
+    /// Returns the targets on the template.
     pub fn targets(&self) -> &Vec<((isize, isize), Target)> {
         &self.targets
     }
 
+    /// Rotates the template clockwise.
     pub fn rotate_right(&mut self) {
         self.orientation = match self.orientation {
             Orientation::UpperLeft => Orientation::UpperRight,
@@ -126,12 +154,14 @@ impl BoardTemplate {
             .collect();
     }
 
+    /// Rotates the template to the given orientation.
     pub fn rotate_to(&mut self, orient: Orientation) {
         for _ in 0..self.orientation.right_rotations_to(orient) {
             self.rotate_right();
         }
     }
 
+    /// Creates a default template with `color` in the upper left with no walls or targets.
     fn default_template(color: TempColor) -> Self {
         BoardTemplate {
             orientation: Orientation::UpperLeft,
@@ -141,6 +171,7 @@ impl BoardTemplate {
         }
     }
 
+    /// Sets multiple walls in the given direction.
     fn set_walls(mut self, dir: WallDirection, walls: Vec<(isize, isize)>) -> Self {
         for (c, r) in walls {
             self.walls.push(((c, r), dir));
@@ -148,6 +179,7 @@ impl BoardTemplate {
         self
     }
 
+    /// Adds `target` at `pos` to the template.
     fn set_target(mut self, pos: (isize, isize), target: Target) -> Self {
         self.targets.push((pos, target));
         self
@@ -172,6 +204,9 @@ impl fmt::Display for BoardTemplate {
     }
 }
 
+/// Creates a vec containing all known templates.
+///
+/// Each color has three templates and the vec contains them in the order red, blue, green, yellow.
 pub fn gen_templates() -> Vec<BoardTemplate> {
     let mut temps = Vec::with_capacity(12);
 

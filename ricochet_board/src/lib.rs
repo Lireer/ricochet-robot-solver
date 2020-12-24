@@ -1,57 +1,79 @@
+#[deny(missing_docs)]
 pub mod template;
 
 use std::collections::BTreeMap;
-use std::{
-    convert::{TryFrom, TryInto},
-    fmt, mem,
-};
-use template::{BoardTemplate, Orientation, WallDirection};
+use std::convert::{TryFrom, TryInto};
+use std::{fmt, mem};
 
-// Using an u64 we could encode a 2^32x2^32 board, see `Position` for more information.
+use crate::template::{BoardTemplate, Orientation, WallDirection};
+
+/// The type a position is encoded as.
+///
+/// Depending on the number of bits in a value, different positions on a board can be encoded. A u8
+/// is sufficient to encode any position on the standard board. Using u64 would allow encoding
+/// positions on a 2^32x2^32 board, see [Position] for more information.
 pub type PositionEncoding = u16;
+
+/// The type used to store the walls on a board.
+pub type Walls = [[Field; BOARDSIZE as usize]; BOARDSIZE as usize];
 
 /// The size of the board, assuming a square board.
 pub const BOARDSIZE: PositionEncoding = 16;
 
-#[derive(Copy, Clone)]
+/// A field on the board.
+///
+/// Contains information regarding walls to the right and bottom of the field.
+#[derive(Copy, Clone, Default)]
 pub struct Field {
     pub down: bool,
     pub right: bool,
 }
 
-impl Default for Field {
-    fn default() -> Self {
-        Field {
-            down: false,
-            right: false,
-        }
-    }
+/// A game of ricochet on one board with a set of targets.
+#[derive(Clone)]
+pub struct Game {
+    board: Board,
+    targets: BTreeMap<Target, Position>,
 }
 
+/// One round of a ricochet game.
+///
+/// Represents the problem of finding a path from a starting position on a board to a given target.
+#[derive(Clone)]
+pub struct Round {
+    board: Board,
+    target: Target,
+    target_position: Position,
+}
+
+/// A ricochet robots board containing walls, but no targets.
+#[derive(Clone, Default)]
 pub struct Board {
-    pub fields: [[Field; BOARDSIZE as usize]; BOARDSIZE as usize],
-    pub targets: BTreeMap<Target, Position>,
+    walls: Walls,
 }
 
 /// A position on the board.
 ///
+/// ```txt
 /// |x   |y   |
 /// |0000|0000|
+/// ```
 #[derive(Copy, Clone, Hash, PartialEq, Eq)]
 pub struct Position {
     encoded_position: PositionEncoding,
 }
 
 impl Position {
-    /// Size of the encoded value in bits.
-    const SIZE: PositionEncoding = mem::size_of::<PositionEncoding>() as PositionEncoding * 8;
+    /// Number of bits used for the encoding.
+    const BIT_COUNT: PositionEncoding = mem::size_of::<PositionEncoding>() as PositionEncoding * 8;
 
     /// Bitflag used to extract the row information of a position by removing the column bits.
+    ///
     /// The first half of the bits is `0` the rest `1`. This would be `0000_1111` for `u8`
     /// or `0000_0000_1111_1111` for `u16`.
     const ROW_FLAG: PositionEncoding = {
-        // When 1.50 is stablized, then this will be possible
-        // currently needs the `const_int_pow` feature
+        // When 1.50 is stablized, this will be possible.
+        // Currently requires the `const_int_pow` feature.
         // (2 as PositionEncoding).pow((Position::SIZE / 2) as u32) - 1
 
         let mut flag: PositionEncoding = 1;
@@ -63,6 +85,7 @@ impl Position {
     };
 
     /// Bitflag used to extract the column information of a position by removing the row bits.
+    ///
     /// The first half of the bits is `1` the rest `0`. This would be `1111_0000` for `u8`
     /// or `1111_1111_0000_0000` for `u16`.
     const COLUMN_FLAG: PositionEncoding = Self::ROW_FLAG ^ PositionEncoding::MAX;
@@ -72,7 +95,7 @@ impl Position {
     /// The caller has to make sure, that the given coordinates are within the bounds of the board.
     pub fn new(column: PositionEncoding, row: PositionEncoding) -> Self {
         Position {
-            encoded_position: (column << (Self::SIZE / 2)) ^ row,
+            encoded_position: (column << (Self::BIT_COUNT / 2)) ^ row,
         }
     }
 
@@ -81,28 +104,33 @@ impl Position {
         Position::new(column, row)
     }
 
+    /// Returns the column the robot is in.
     #[inline(always)]
     pub fn column(&self) -> PositionEncoding {
-        self.encoded_position >> (Self::SIZE / 2)
+        self.encoded_position >> (Self::BIT_COUNT / 2)
     }
 
+    /// Returns the row the robot is in.
     #[inline(always)]
     pub fn row(&self) -> PositionEncoding {
         self.encoded_position & Self::ROW_FLAG
     }
 
+    /// Sets `column` as the new column value.
     fn set_column(&mut self, column: PositionEncoding) {
-        self.encoded_position = (column << (Self::SIZE / 2)) ^ self.row() as PositionEncoding;
+        self.encoded_position = (column << (Self::BIT_COUNT / 2)) ^ self.row() as PositionEncoding;
     }
 
+    /// Sets `row` as the new row value.
     fn set_row(&mut self, row: PositionEncoding) {
         // get the column of the current position and add the new row information
         self.encoded_position = (self.encoded_position & Self::COLUMN_FLAG) ^ row;
     }
 
     /// Creates a new `Position` in the given direction.
-    /// Wraps around at the edge of the board.
-    fn to_direction(mut self, direction: Direction) -> Position {
+    ///
+    /// Wraps around at the edge of the board given by [BOARDSIZE].
+    fn to_direction(mut self, direction: Direction) -> Self {
         match direction {
             Direction::Right => self.set_column((self.column() + 1) % BOARDSIZE),
             Direction::Left => self.set_column((self.column() + BOARDSIZE - 1) % BOARDSIZE),
@@ -119,6 +147,13 @@ impl fmt::Debug for Position {
     }
 }
 
+impl Into<(PositionEncoding, PositionEncoding)> for Position {
+    fn into(self) -> (PositionEncoding, PositionEncoding) {
+        (self.column(), self.row())
+    }
+}
+
+/// Positions of all robots on the board.
 #[derive(Clone, Hash, PartialEq, Eq)]
 pub struct RobotPositions {
     red: Position,
@@ -127,6 +162,7 @@ pub struct RobotPositions {
     yellow: Position,
 }
 
+/// The colors used to identify frobots.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum Color {
     Red,
@@ -135,6 +171,11 @@ pub enum Color {
     Yellow,
 }
 
+/// The different targets to reach.
+///
+/// The spiral can be reached by any robot, the others have to be reached by the robot of the
+/// respective color. Different targets of the same color can be differentiated by looking at the
+/// contained [Symbol].
 #[derive(Debug, Clone, Copy, Ord, PartialOrd, Eq, PartialEq)]
 pub enum Target {
     Red(Symbol),
@@ -144,6 +185,7 @@ pub enum Target {
     Spiral,
 }
 
+/// Symbols used with colored targets to differentiate between targets of the same color.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Symbol {
     Circle,
@@ -152,6 +194,7 @@ pub enum Symbol {
     Hexagon,
 }
 
+/// The directions a robot can be moved in.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Direction {
     Up,
@@ -201,98 +244,31 @@ impl fmt::Display for Color {
     }
 }
 
+/// Board impl containing code to create or change a board.
 impl Board {
-    /// Check if `pos` is next to a wall in the given `direction`
-    pub fn adjacent_to_wall(&self, pos: Position, direction: Direction) -> bool {
-        match direction {
-            Direction::Right => self.fields[pos.column() as usize][pos.row() as usize].right,
-            Direction::Down => self.fields[pos.column() as usize][pos.row() as usize].down,
-            Direction::Left => {
-                let pos = pos.to_direction(Direction::Left);
-                self.fields[pos.column() as usize][pos.row() as usize].right
-            }
-            Direction::Up => {
-                let pos = pos.to_direction(Direction::Up);
-                self.fields[pos.column() as usize][pos.row() as usize].down
-            }
-        }
+    /// Create a new board.
+    pub fn new(walls: Walls) -> Self {
+        Self { walls }
     }
 
-    /// Check if the robot has reached the target
-    ///
-    /// # Panics
-    /// Panics if `target` is not present on `self`.
-    pub fn target_reached(&self, target: Target, positions: &RobotPositions) -> bool {
-        let target_position = *self
-            .targets
-            .get(&target)
-            .expect("Trying to reach a target not on the board");
-
-        // Check if the robot has already reached the target
-        match target {
-            Target::Spiral => positions.contains_any_robot(target_position),
-            _ => positions.contains_colored_robot(
-                target
-                    .try_into()
-                    .expect("Unknown Target to Color conversion"),
-                target_position,
-            ),
-        }
-    }
-}
-
-/// Handling of templates
-impl Board {
-    pub fn from_templates(temps: &[BoardTemplate]) -> Self {
-        let mut board = Board::default();
-        for temp in temps {
-            board.add_template(temp);
-        }
-        board
-    }
-
-    fn add_template(&mut self, temp: &BoardTemplate) {
-        // get the needed offset
-        let (col_add, row_add) = match temp.orientation() {
-            Orientation::UpperLeft => (0, 0),
-            Orientation::UpperRight => (8, 0),
-            Orientation::BottomRight => (8, 8),
-            Orientation::BottomLeft => (0, 8),
-        };
-
-        // set the walls
-        for ((c, r), dir) in temp.walls() {
-            let c = (c + col_add) as usize;
-            let r = (r + row_add) as usize;
-
-            match dir {
-                WallDirection::Down => self.fields[c][r].down = true,
-                WallDirection::Right => self.fields[c][r].right = true,
-            }
-        }
-
-        // set the targets
-        for ((c, r), target) in temp.targets() {
-            let c = (c + col_add) as PositionEncoding;
-            let r = (r + row_add) as PositionEncoding;
-            self.targets.insert(*target, Position::new(c, r));
-        }
-    }
-
+    /// Encloses the board with walls.
     pub fn wall_enclosure(self) -> Self {
         self.enclose_lengths(0, 0, BOARDSIZE, BOARDSIZE)
     }
 
-    // only useful for 16x16 board
+    /// Creates a 2x2 block enclosed by walls in the center of the board.
+    ///
+    /// Uses [BOARDSIZE] to determine the position.
     pub fn set_center_walls(self) -> Self {
-        self.enclose_lengths(7, 7, 2, 2)
+        let point = BOARDSIZE / 2 - 1;
+        self.enclose_lengths(point, point, 2, 2)
     }
 
     /// Encloses a rectangle defined by the left upper corner and its width and height.
-    /// The field [col, row] is inside the enclosure. Wraps around at the end of the board.
+    /// The field [col, row] is inside the enclosure. Wraps around at the edge of the board.
     ///
     /// # Panics
-    /// - Panics if [col, row] is out of bounds.
+    /// Panics if [col, row] is out of bounds as determined by [BOARDSIZE].
     pub fn enclose_lengths(
         self,
         col: PositionEncoding,
@@ -329,7 +305,7 @@ impl Board {
         len: PositionEncoding,
     ) -> Self {
         for row in row..(row + len) {
-            self.fields[col as usize][row as usize].right = true;
+            self.walls[col as usize][row as usize].right = true;
         }
         self
     }
@@ -343,40 +319,163 @@ impl Board {
         width: PositionEncoding,
     ) -> Self {
         for col in col..(col + width) {
-            self.fields[col as usize][row as usize].down = true;
+            self.walls[col as usize][row as usize].down = true;
         }
         self
     }
 }
 
-impl Default for Board {
+/// Board impl containing code to interact with a board.
+impl Board {
+    /// Checks if a wall is next to `pos` in the given `direction`.
+    pub fn is_adjacent_to_wall(&self, pos: Position, direction: Direction) -> bool {
+        match direction {
+            Direction::Right => self.walls[pos.column() as usize][pos.row() as usize].right,
+            Direction::Down => self.walls[pos.column() as usize][pos.row() as usize].down,
+            Direction::Left => {
+                let pos = pos.to_direction(Direction::Left);
+                self.walls[pos.column() as usize][pos.row() as usize].right
+            }
+            Direction::Up => {
+                let pos = pos.to_direction(Direction::Up);
+                self.walls[pos.column() as usize][pos.row() as usize].down
+            }
+        }
+    }
+}
+
+impl Round {
+    /// Creates a new ricochet robots round.
+    pub fn new(board: Board, target: Target, target_position: Position) -> Self {
+        Self {
+            board,
+            target,
+            target_position,
+        }
+    }
+
+    /// Returns the `Board` the robots move on.
+    pub fn board(&self) -> &Board {
+        &self.board
+    }
+
+    /// Checks if the target has been reached.
+    pub fn target_reached(&self, positions: &RobotPositions) -> bool {
+        match self.target {
+            Target::Spiral => positions.contains_any_robot(self.target_position),
+            _ => positions.contains_colored_robot(
+                self.target
+                    .try_into()
+                    .expect("Failed to extract `Color` from `Target`"),
+                self.target_position,
+            ),
+        }
+    }
+}
+
+impl Game {
+    /// Returns the board the game is being played on.
+    pub fn board(&self) -> &Board {
+        &self.board
+    }
+
+    /// Returns the targets on the board.
+    pub fn targets(&self) -> &BTreeMap<Target, Position> {
+        &self.targets
+    }
+
+    /// Returns the position of a target if it exists on the board.
+    pub fn get_target_position(&self, target: &Target) -> Option<Position> {
+        self.targets.get(target).cloned()
+    }
+
+    /// Creates a game board from a list of templates for board quarters.
+    pub fn from_templates(temps: &[BoardTemplate]) -> Self {
+        let mut game = Game::default();
+        for temp in temps {
+            game.add_template(temp);
+        }
+        game
+    }
+
+    /// Adds a template for a board quarter to the board.
+    fn add_template(&mut self, temp: &BoardTemplate) {
+        // get the needed offset
+        let (col_add, row_add) = match temp.orientation() {
+            Orientation::UpperLeft => (0, 0),
+            Orientation::UpperRight => (8, 0),
+            Orientation::BottomRight => (8, 8),
+            Orientation::BottomLeft => (0, 8),
+        };
+
+        // set the walls
+        let walls: &mut Walls = &mut self.board.walls;
+        for ((c, r), dir) in temp.walls() {
+            let c = (c + col_add) as usize;
+            let r = (r + row_add) as usize;
+
+            match dir {
+                WallDirection::Down => walls[c][r].down = true,
+                WallDirection::Right => walls[c][r].right = true,
+            }
+        }
+
+        // set the targets
+        for ((c, r), target) in temp.targets() {
+            let c = (c + col_add) as PositionEncoding;
+            let r = (r + row_add) as PositionEncoding;
+            self.targets.insert(*target, Position::new(c, r));
+        }
+    }
+}
+
+impl Default for Game {
     fn default() -> Self {
-        let board = Board {
-            fields: [[Field {
+        let board = Board::new(
+            [[Field {
                 down: false,
                 right: false,
             }; BOARDSIZE as usize]; BOARDSIZE as usize],
+        )
+        .wall_enclosure() // Set outer walls
+        .set_center_walls(); // Set walls around the four center fields
+
+        Game {
+            board,
             targets: Default::default(),
-        };
-        board
-            .wall_enclosure() // Set outer walls
-            .set_center_walls() // Set walls around the four center fields
+        }
     }
 }
 
 impl fmt::Debug for Board {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        let to_print: Vec<Vec<Field>> = self.fields.iter().map(|&a| a.to_vec()).collect();
+        let to_print: Vec<Vec<Field>> = self.walls.iter().map(|&a| a.to_vec()).collect();
+        write!(fmt, "{}", board_string(to_print))
+    }
+}
+
+impl fmt::Debug for Round {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        let to_print: Vec<Vec<Field>> = self.board.walls.iter().map(|&a| a.to_vec()).collect();
+        write!(fmt, "{}", board_string(to_print))
+    }
+}
+
+impl fmt::Debug for Game {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        let to_print: Vec<Vec<Field>> = self.board.walls.iter().map(|&a| a.to_vec()).collect();
         write!(fmt, "{}", board_string(to_print))
     }
 }
 
 impl RobotPositions {
+    /// Checks if `pos` has any robot on it.
     #[inline(always)]
     pub fn contains_any_robot(&self, pos: Position) -> bool {
         pos == self.red || pos == self.blue || pos == self.green || pos == self.yellow
     }
 
+    /// Checks if the robot with `color` is on `pos`.
     #[inline(always)]
     pub fn contains_colored_robot(&self, color: Color, pos: Position) -> bool {
         match color {
@@ -390,12 +489,12 @@ impl RobotPositions {
     /// Checks if the adjacent field in the direction is reachable, i.e. no wall
     /// inbetween and not already occupied.
     fn adjacent_reachable(&self, board: &Board, pos: Position, direction: Direction) -> bool {
-        !board.adjacent_to_wall(pos, direction)
+        !board.is_adjacent_to_wall(pos, direction)
             && !self.contains_any_robot(pos.to_direction(direction))
     }
 
-    /// Move `robot` as far in the given `direction` as possible.
-    pub fn move_in_direction(&mut self, board: &Board, robot: Color, direction: Direction) {
+    /// Moves `robot` as far in the given `direction` as possible.
+    pub fn move_in_direction(mut self, board: &Board, robot: Color, direction: Direction) -> Self {
         // start form the current position
         let mut temp_pos = self.get_robot(robot);
 
@@ -406,10 +505,15 @@ impl RobotPositions {
 
         // set the robot to the last possible position
         self.set_robot(robot, temp_pos);
+
+        self
     }
 }
 
 impl RobotPositions {
+    /// Creates a board from a slice of position tuples.
+    ///
+    /// The values in `positions` are used in the order red, blue, green, yellow.
     pub fn from_array(positions: &[(PositionEncoding, PositionEncoding); 4]) -> Self {
         RobotPositions {
             red: Position::from_tuple(positions[0]),
@@ -419,7 +523,7 @@ impl RobotPositions {
         }
     }
 
-    /// Updates self with `new_positions`.
+    /// Sets the robot with `color` to `new_position`.
     fn set_robot(&mut self, robot: Color, new_position: Position) {
         *match robot {
             Color::Red => &mut self.red,
@@ -429,6 +533,7 @@ impl RobotPositions {
         } = new_position;
     }
 
+    /// Returns the robot with `color`.
     fn get_robot(&self, color: Color) -> Position {
         match color {
             Color::Red => self.red,
@@ -481,17 +586,18 @@ impl fmt::Display for RobotPositions {
     }
 }
 
-pub fn board_string(board: Vec<Vec<Field>>) -> String {
+/// Creates a string representation of the walls of a board.
+pub fn board_string(walls: Vec<Vec<Field>>) -> String {
     let mut print = "".to_owned();
-    for row in 0..board.len() {
+    for row in 0..walls.len() {
         #[allow(clippy::needless_range_loop)]
-        for col in 0..board[row].len() {
-            if board[col][row].down {
+        for col in 0..walls[row].len() {
+            if walls[col][row].down {
                 print += "__"
             } else {
                 print += "▆▆"
             }
-            if board[col][row].right {
+            if walls[col][row].right {
                 print += "|"
             } else {
                 print += " "
@@ -504,11 +610,11 @@ pub fn board_string(board: Vec<Vec<Field>>) -> String {
 
 #[cfg(test)]
 mod tests {
-    use crate::{template, Board, Color, Direction, Position, PositionEncoding, RobotPositions};
+    use crate::{template, Board, Color, Direction, Game, Position, RobotPositions};
 
     #[test]
     fn check_flags() {
-        let row_flag = (2 as PositionEncoding).pow((Position::SIZE / 2) as u32) - 1;
+        let row_flag = 2u16.pow((Position::BIT_COUNT / 2) as u32) - 1;
         assert_eq!(row_flag, Position::ROW_FLAG);
         assert_eq!(!row_flag, Position::COLUMN_FLAG);
     }
@@ -533,7 +639,8 @@ mod tests {
             .collect::<Vec<template::BoardTemplate>>();
 
         let pos = RobotPositions::from_array(&[(0, 1), (5, 4), (7, 1), (7, 15)]);
-        (pos, Board::from_templates(&templates))
+        let board = Game::from_templates(&templates).board;
+        (pos, board)
     }
 
     #[test]
@@ -545,7 +652,7 @@ mod tests {
     fn move_right() {
         let (mut positions, board) = create_board();
         assert_eq!(positions.green(), Position::from_tuple((7, 1)));
-        positions.move_in_direction(&board, Color::Green, Direction::Right);
+        positions = positions.move_in_direction(&board, Color::Green, Direction::Right);
         assert_eq!(positions.green(), Position::from_tuple((15, 1)));
     }
 
@@ -553,7 +660,7 @@ mod tests {
     fn move_left() {
         let (mut positions, board) = create_board();
         assert_eq!(positions.green(), Position::from_tuple((7, 1)));
-        positions.move_in_direction(&board, Color::Green, Direction::Left);
+        positions = positions.move_in_direction(&board, Color::Green, Direction::Left);
         assert_eq!(positions.green(), Position::from_tuple((5, 1)));
     }
 
@@ -561,7 +668,7 @@ mod tests {
     fn move_up() {
         let (mut positions, board) = create_board();
         assert_eq!(positions.green(), Position::from_tuple((7, 1)));
-        positions.move_in_direction(&board, Color::Green, Direction::Up);
+        positions = positions.move_in_direction(&board, Color::Green, Direction::Up);
         assert_eq!(positions.green(), Position::from_tuple((7, 0)));
     }
 
@@ -569,7 +676,7 @@ mod tests {
     fn move_down() {
         let (mut positions, board) = create_board();
         assert_eq!(positions.green(), Position::from_tuple((7, 1)));
-        positions.move_in_direction(&board, Color::Green, Direction::Down);
+        positions = positions.move_in_direction(&board, Color::Green, Direction::Down);
         assert_eq!(positions.green(), Position::from_tuple((7, 6)));
     }
 }

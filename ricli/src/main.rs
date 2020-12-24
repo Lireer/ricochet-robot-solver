@@ -1,22 +1,21 @@
 use std::collections::HashSet;
-use std::iter::FromIterator;
 use text_io::{read, try_scan};
 
 use ricochet_board::{
-    template, Board, Color, PositionEncoding, RobotPositions, Symbol, Target, BOARDSIZE,
+    template, Color, Game, PositionEncoding, RobotPositions, Round, Symbol, Target, BOARDSIZE,
 };
 use ricochet_solver::solve;
 
 fn main() {
     // Create the board
-    let board = 'outer: loop {
-        let board = build_board_from_parts();
+    let game = 'outer: loop {
+        let game = build_board_from_parts();
         println!("Please confirm your input.");
-        println!("Is this the correct board? (Y/n)\n{:?}", board);
+        println!("Is this the correct board? (Y/n)\n{:?}", game.board());
         loop {
             let input: String = read!("{}\n");
             match input.to_lowercase().trim() {
-                "y" | "" => break 'outer board,
+                "y" | "" => break 'outer game,
                 "n" => break,
                 _ => println!("Input invalid! {}", input),
             }
@@ -28,8 +27,13 @@ fn main() {
 
     'game: loop {
         let target = ask_for_target();
+        let target_position = game
+            .get_target_position(&target)
+            .expect("Failed to find the position of the target on the board");
+        let round = Round::new(game.board().clone(), target, target_position);
+
         println!("Solving...");
-        let solve = solve(&board, positions, target);
+        let solve = solve(&round, positions);
         let path = solve.1;
         println!("Steps needed to reach target: {}", path.len());
         println!("Press enter to show path.");
@@ -178,7 +182,7 @@ fn parse_robot_position(
     Ok((col, row))
 }
 
-fn build_board_from_parts() -> Board {
+fn build_board_from_parts() -> Game {
     let templates = template::gen_templates();
 
     let orientation = [
@@ -188,16 +192,15 @@ fn build_board_from_parts() -> Board {
         template::Orientation::BottomLeft,
     ];
 
-    let mut possible_colors: HashSet<template::TempColor> = HashSet::from_iter(
-        [
-            template::TempColor::Red,
-            template::TempColor::Blue,
-            template::TempColor::Green,
-            template::TempColor::Yellow,
-        ]
-        .iter()
-        .cloned(),
-    );
+    let mut possible_colors: HashSet<template::TempColor> = [
+        template::TempColor::Red,
+        template::TempColor::Blue,
+        template::TempColor::Green,
+        template::TempColor::Yellow,
+    ]
+    .iter()
+    .cloned()
+    .collect();
 
     let mut board_parts = Vec::new();
 
@@ -267,5 +270,5 @@ fn build_board_from_parts() -> Board {
     }
 
     // Create a board from the parts
-    Board::from_templates(&board_parts)
+    Game::from_templates(&board_parts)
 }
