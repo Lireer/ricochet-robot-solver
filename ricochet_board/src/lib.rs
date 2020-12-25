@@ -15,10 +15,7 @@ use crate::template::{BoardTemplate, Orientation, WallDirection};
 pub type PositionEncoding = u16;
 
 /// The type used to store the walls on a board.
-pub type Walls = [[Field; BOARDSIZE as usize]; BOARDSIZE as usize];
-
-/// The size of the board, assuming a square board.
-pub const BOARDSIZE: PositionEncoding = 16;
+pub type Walls = Vec<Vec<Field>>;
 
 /// A field on the board.
 ///
@@ -74,7 +71,7 @@ impl Position {
     const ROW_FLAG: PositionEncoding = {
         // When 1.50 is stablized, this will be possible.
         // Currently requires the `const_int_pow` feature.
-        // (2 as PositionEncoding).pow((Position::SIZE / 2) as u32) - 1
+        // (2 as PositionEncoding).pow((Position::BIT_COUNT / 2) as u32) - 1
 
         let mut flag: PositionEncoding = 1;
         // Add more ones until half the bits are ones.
@@ -129,13 +126,13 @@ impl Position {
 
     /// Creates a new `Position` in the given direction.
     ///
-    /// Wraps around at the edge of the board given by [BOARDSIZE].
-    fn to_direction(mut self, direction: Direction) -> Self {
+    /// Wraps around at the edge of the board given by `board_size`.
+    fn to_direction(mut self, direction: Direction, side_length: PositionEncoding) -> Self {
         match direction {
-            Direction::Right => self.set_column((self.column() + 1) % BOARDSIZE),
-            Direction::Left => self.set_column((self.column() + BOARDSIZE - 1) % BOARDSIZE),
-            Direction::Up => self.set_row((self.row() + BOARDSIZE - 1) % BOARDSIZE),
-            Direction::Down => self.set_row((self.row() + 1) % BOARDSIZE),
+            Direction::Right => self.set_column((self.column() + 1) % side_length),
+            Direction::Left => self.set_column((self.column() + side_length - 1) % side_length),
+            Direction::Up => self.set_row((self.row() + side_length - 1) % side_length),
+            Direction::Down => self.set_row((self.row() + 1) % side_length),
         };
         self
     }
@@ -246,21 +243,41 @@ impl fmt::Display for Color {
 
 /// Board impl containing code to create or change a board.
 impl Board {
-    /// Create a new board.
+    /// Create a new board with the given `walls`.
+    ///
+    /// # Panics
+    /// Panics if not all vecs in `walls` are the same length.
     pub fn new(walls: Walls) -> Self {
+        let board_size = walls.len();
+
+        if walls.iter().any(|v| v.len() != board_size) {
+            panic!("Tried to create a non-square board.")
+        }
+
         Self { walls }
+    }
+
+    /// Create a new empty board with no walls with `side_lendth`.
+    pub fn new_empty(side_length: PositionEncoding) -> Self {
+        Self {
+            walls: vec![vec![Field::default(); side_length as usize]; side_length as usize],
+        }
+    }
+
+    /// Returns the side length of the board.
+    pub fn side_length(&self) -> PositionEncoding {
+        self.walls.len() as PositionEncoding
     }
 
     /// Encloses the board with walls.
     pub fn wall_enclosure(self) -> Self {
-        self.enclose_lengths(0, 0, BOARDSIZE, BOARDSIZE)
+        let side_length = self.side_length();
+        self.enclose_lengths(0, 0, side_length, side_length)
     }
 
     /// Creates a 2x2 block enclosed by walls in the center of the board.
-    ///
-    /// Uses [BOARDSIZE] to determine the position.
     pub fn set_center_walls(self) -> Self {
-        let point = BOARDSIZE / 2 - 1;
+        let point = self.side_length() / 2 - 1;
         self.enclose_lengths(point, point, 2, 2)
     }
 
@@ -268,7 +285,7 @@ impl Board {
     /// The field [col, row] is inside the enclosure. Wraps around at the edge of the board.
     ///
     /// # Panics
-    /// Panics if [col, row] is out of bounds as determined by [BOARDSIZE].
+    /// Panics if [col, row] is out of bounds.
     pub fn enclose_lengths(
         self,
         col: PositionEncoding,
@@ -276,16 +293,18 @@ impl Board {
         len: PositionEncoding,
         width: PositionEncoding,
     ) -> Self {
-        let top_row = if row == 0 { BOARDSIZE - 1 } else { row - 1 };
-        let bottom_row = if row + len > BOARDSIZE {
-            BOARDSIZE - 1
+        let board_size = self.side_length();
+
+        let top_row = if row == 0 { board_size - 1 } else { row - 1 };
+        let bottom_row = if row + len > board_size {
+            board_size - 1
         } else {
             row + len - 1
         };
 
-        let left_col = if col == 0 { BOARDSIZE - 1 } else { col - 1 };
-        let right_col = if col + width > BOARDSIZE {
-            BOARDSIZE - 1
+        let left_col = if col == 0 { board_size - 1 } else { col - 1 };
+        let right_col = if col + width > board_size {
+            board_size - 1
         } else {
             col + width - 1
         };
@@ -296,7 +315,7 @@ impl Board {
             .set_vertical_line(right_col, row, len)
     }
 
-    /// Starts from `[col, row]` and sets `len` fields below to have a wall on the right side
+    /// Starts from `[col, row]` and sets `len` fields below to have a wall on the right side.
     #[inline]
     fn set_vertical_line(
         mut self,
@@ -310,7 +329,7 @@ impl Board {
         self
     }
 
-    /// Starts from `[col, row]` and sets `len` fields to the right to have a wall on the bottom side
+    /// Starts from `[col, row]` and sets `len` fields to the right to have a wall on the bottom side.
     #[inline]
     fn set_horizontal_line(
         mut self,
@@ -333,11 +352,11 @@ impl Board {
             Direction::Right => self.walls[pos.column() as usize][pos.row() as usize].right,
             Direction::Down => self.walls[pos.column() as usize][pos.row() as usize].down,
             Direction::Left => {
-                let pos = pos.to_direction(Direction::Left);
+                let pos = pos.to_direction(Direction::Left, self.side_length());
                 self.walls[pos.column() as usize][pos.row() as usize].right
             }
             Direction::Up => {
-                let pos = pos.to_direction(Direction::Up);
+                let pos = pos.to_direction(Direction::Up, self.side_length());
                 self.walls[pos.column() as usize][pos.row() as usize].down
             }
         }
@@ -374,6 +393,28 @@ impl Round {
 }
 
 impl Game {
+    /// Creates a new game with an empty square board.
+    ///
+    /// No walls or targets are set.
+    pub fn new(side_length: PositionEncoding) -> Self {
+        Game {
+            board: Board::new_empty(side_length),
+            targets: Default::default(),
+        }
+    }
+
+    /// Creates a new game with an enclosed board with a enclosed 2x2 block in the center.
+    pub fn new_enclosed(side_length: PositionEncoding) -> Self {
+        let board = Board::new_empty(side_length)
+            .wall_enclosure() // Set outer walls
+            .set_center_walls(); // Set walls around the four center fields
+
+        Game {
+            board,
+            targets: Default::default(),
+        }
+    }
+
     /// Returns the board the game is being played on.
     pub fn board(&self) -> &Board {
         &self.board
@@ -388,10 +429,12 @@ impl Game {
     pub fn get_target_position(&self, target: &Target) -> Option<Position> {
         self.targets.get(target).cloned()
     }
+}
 
-    /// Creates a game board from a list of templates for board quarters.
+impl Game {
+    /// Creates a 16x16 game board from a list of templates for board quarters.
     pub fn from_templates(temps: &[BoardTemplate]) -> Self {
-        let mut game = Game::default();
+        let mut game = Game::new_enclosed(template::STANDARD_BOARD_SIZE);
         for temp in temps {
             game.add_template(temp);
         }
@@ -399,6 +442,8 @@ impl Game {
     }
 
     /// Adds a template for a board quarter to the board.
+    ///
+    /// Panics if `self.side_length() != 16`.
     fn add_template(&mut self, temp: &BoardTemplate) {
         // get the needed offset
         let (col_add, row_add) = match temp.orientation() {
@@ -429,42 +474,21 @@ impl Game {
     }
 }
 
-impl Default for Game {
-    fn default() -> Self {
-        let board = Board::new(
-            [[Field {
-                down: false,
-                right: false,
-            }; BOARDSIZE as usize]; BOARDSIZE as usize],
-        )
-        .wall_enclosure() // Set outer walls
-        .set_center_walls(); // Set walls around the four center fields
-
-        Game {
-            board,
-            targets: Default::default(),
-        }
-    }
-}
-
 impl fmt::Debug for Board {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        let to_print: Vec<Vec<Field>> = self.walls.iter().map(|&a| a.to_vec()).collect();
-        write!(fmt, "{}", board_string(to_print))
+        write!(fmt, "{}", board_string(&self.walls))
     }
 }
 
 impl fmt::Debug for Round {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        let to_print: Vec<Vec<Field>> = self.board.walls.iter().map(|&a| a.to_vec()).collect();
-        write!(fmt, "{}", board_string(to_print))
+        write!(fmt, "{}", board_string(&self.board.walls))
     }
 }
 
 impl fmt::Debug for Game {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        let to_print: Vec<Vec<Field>> = self.board.walls.iter().map(|&a| a.to_vec()).collect();
-        write!(fmt, "{}", board_string(to_print))
+        write!(fmt, "{}", board_string(&self.board.walls))
     }
 }
 
@@ -486,11 +510,11 @@ impl RobotPositions {
         }
     }
 
-    /// Checks if the adjacent field in the direction is reachable, i.e. no wall
-    /// inbetween and not already occupied.
+    /// Checks if the adjacent field in the direction is reachable, i.e. no wall inbetween and not
+    /// already occupied.
     fn adjacent_reachable(&self, board: &Board, pos: Position, direction: Direction) -> bool {
         !board.is_adjacent_to_wall(pos, direction)
-            && !self.contains_any_robot(pos.to_direction(direction))
+            && !self.contains_any_robot(pos.to_direction(direction, board.side_length()))
     }
 
     /// Moves `robot` as far in the given `direction` as possible.
@@ -500,7 +524,7 @@ impl RobotPositions {
 
         // check if the next position is reachable from the temporary position
         while self.adjacent_reachable(board, temp_pos, direction) {
-            temp_pos = temp_pos.to_direction(direction);
+            temp_pos = temp_pos.to_direction(direction, board.side_length());
         }
 
         // set the robot to the last possible position
@@ -587,7 +611,7 @@ impl fmt::Display for RobotPositions {
 }
 
 /// Creates a string representation of the walls of a board.
-pub fn board_string(walls: Vec<Vec<Field>>) -> String {
+pub fn board_string(walls: &[Vec<Field>]) -> String {
     let mut print = "".to_owned();
     for row in 0..walls.len() {
         #[allow(clippy::needless_range_loop)]

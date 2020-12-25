@@ -2,9 +2,11 @@ use std::collections::HashSet;
 use text_io::{read, try_scan};
 
 use ricochet_board::{
-    template, Color, Game, PositionEncoding, RobotPositions, Round, Symbol, Target, BOARDSIZE,
+    template, Color, Game, PositionEncoding, RobotPositions, Round, Symbol, Target,
 };
 use ricochet_solver::solve;
+
+const BOARD_SIZE: PositionEncoding = template::STANDARD_BOARD_SIZE;
 
 fn main() {
     // Create the board
@@ -148,7 +150,7 @@ fn ask_for_robot_positions() -> RobotPositions {
                 let pos: String = read!("{}\n");
                 match parse_robot_position(pos) {
                     Ok((col, row))
-                        if (1..=BOARDSIZE).contains(&col) || (1..=BOARDSIZE).contains(&row) =>
+                        if (1..=BOARD_SIZE).contains(&col) || (1..=BOARD_SIZE).contains(&row) =>
                     {
                         positions[i] = (col - 1, row - 1);
                         break;

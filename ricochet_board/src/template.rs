@@ -4,7 +4,13 @@
 
 use std::fmt;
 
-use crate::{Field, Symbol::*, Target, BOARDSIZE};
+use crate::{Field, PositionEncoding, Symbol::*, Target};
+
+/// The side length of the standard physical board.
+pub const STANDARD_BOARD_SIZE: PositionEncoding = 16;
+
+/// The side length of a template.
+const TEMPLATE_SIZE: PositionEncoding = STANDARD_BOARD_SIZE / 2 + 1;
 
 /// The orientation of a template.
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -142,15 +148,21 @@ impl BoardTemplate {
             .walls
             .iter()
             .map(|&((c, r), dir)| match dir {
-                WallDirection::Right => (((BOARDSIZE / 2) as isize - r - 1, c), dir.rotate()),
-                WallDirection::Down => (((BOARDSIZE / 2 - 1) as isize - r - 1, c), dir.rotate()),
+                WallDirection::Right => (
+                    ((STANDARD_BOARD_SIZE / 2) as isize - r - 1, c),
+                    dir.rotate(),
+                ),
+                WallDirection::Down => (
+                    ((STANDARD_BOARD_SIZE / 2 - 1) as isize - r - 1, c),
+                    dir.rotate(),
+                ),
             })
             .collect();
 
         self.targets = self
             .targets
             .iter()
-            .map(|&((c, r), t)| (((BOARDSIZE / 2) as isize - r - 1, c), t))
+            .map(|&((c, r), t)| (((STANDARD_BOARD_SIZE / 2) as isize - r - 1, c), t))
             .collect();
     }
 
@@ -188,8 +200,8 @@ impl BoardTemplate {
 
 impl fmt::Display for BoardTemplate {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        const SIZE: usize = (BOARDSIZE / 2 + 1) as usize;
-        let mut print = [[Field::default(); SIZE]; SIZE];
+        let size = TEMPLATE_SIZE as usize;
+        let mut print = vec![vec![Field::default(); size]; size];
 
         for ((c, r), d) in &self.walls {
             let field = &mut print[(c + 1) as usize][(r + 1) as usize];
@@ -199,8 +211,7 @@ impl fmt::Display for BoardTemplate {
             }
         }
 
-        let print: Vec<Vec<Field>> = print.iter().map(|&a| a.to_vec()).collect();
-        write!(fmt, "{}", crate::board_string(print))
+        write!(fmt, "{}", crate::board_string(&print))
     }
 }
 
