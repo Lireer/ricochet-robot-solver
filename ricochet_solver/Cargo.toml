@@ -5,11 +5,11 @@ authors = ["Carl Scherer"]
 edition = "2018"
 
 [dependencies]
-ricochet_board = { path = "../ricochet_board" }
 fnv = "1.0.7"
+ricochet_board = { path = "../ricochet_board" }
 
 [dev-dependencies]
+chrono = "0.4.19"
+itertools = "0.9.0"
 rand = "0.7.3"
 rayon = "1.5.0"
-itertools = "0.9.0"
-chrono = "0.4.19"
