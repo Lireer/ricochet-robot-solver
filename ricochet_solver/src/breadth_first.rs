@@ -281,8 +281,8 @@ mod tests {
             tries += 1;
 
             loop {
-                let robot = ROBOTS[rng.gen_range(0, 4)];
-                let direction = DIRECTIONS[rng.gen_range(0, 4)];
+                let robot = ROBOTS[rng.gen_range(0..4)];
+                let direction = DIRECTIONS[rng.gen_range(0..4)];
                 path.push((robot, direction));
 
                 total_steps += 1;
@@ -297,8 +297,8 @@ mod tests {
             }
         }
 
-        assert_eq!(tries, 124);
-        assert_eq!(total_steps, 49036);
+        assert_eq!(tries, 9179);
+        assert_eq!(total_steps, 3689543);
         assert_eq!(
             path,
             vec![
