@@ -11,6 +11,11 @@ ricochet_board = { path = "../ricochet_board" }
 
 [dev-dependencies]
 chrono = "0.4.19"
+criterion = "0.3"
 itertools = "0.10.0"
 rand = "0.8.0"
 rayon = "1.5.0"
+
+[[bench]]
+name = "benchmarks"
+harness = false

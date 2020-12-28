@@ -159,7 +159,7 @@ fn ask_for_robot_positions() -> RobotPositions {
                 }
             }
         }
-        let robopos = RobotPositions::from_array(&positions);
+        let robopos = RobotPositions::from_tuples(&positions);
         println!("Please confirm your input.");
         println!("{}", robopos);
         println!("Is this correct? (Y/n)");
@@ -172,7 +172,7 @@ fn ask_for_robot_positions() -> RobotPositions {
             }
         }
     }
-    RobotPositions::from_array(&positions)
+    RobotPositions::from_tuples(&positions)
 }
 
 fn parse_robot_position(

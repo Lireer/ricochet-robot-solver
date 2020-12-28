@@ -10,6 +10,10 @@ use crate::{Solution, Solver};
 /// reach them.
 #[derive(Debug, Clone)]
 pub struct BreadthFirst {
+    // /// Contains all visited nodes.
+    // ///
+    // /// All nodes in the vec at index `i` of the outer vec are reachable in `i` steps.
+    // visited_nodes: Vec<Vec<VisitedNode>>,
     /// Contains all visited nodes as a set to make finding one known node easier.
     visited_nodes: FnvHashMap<RobotPositions, VisitedNode>,
 }
@@ -62,6 +66,14 @@ impl BreadthFirst {
             visited_nodes: Default::default(),
             // visited_nodes_set: Default::default(),
         }
+    }
+
+    /// Evaluates all postitions reachable in one step starting from `positions`.
+    ///
+    /// `eval_step` is the number of steps needed to reach these new positions, which is the number
+    /// of steps needed to reach `positions` plus one.
+    fn evaluate_state(&mut self, positions: &RobotPositions, eval_step: usize) {
+        todo!()
     }
 
     fn mem_solve(&mut self, round: &Round, start_pos: RobotPositions) -> Solution {
@@ -196,7 +208,7 @@ mod tests {
             })
             .collect::<Vec<template::BoardTemplate>>();
 
-        let pos = RobotPositions::from_array(&[(0, 1), (5, 4), (7, 1), (7, 15)]);
+        let pos = RobotPositions::from_tuples(&[(0, 1), (5, 4), (7, 1), (7, 15)]);
         (pos, Game::from_templates(&templates))
     }
 
@@ -212,7 +224,7 @@ mod tests {
         let target = Target::Green(Symbol::Triangle);
         let target_position = game.get_target_position(&target).unwrap();
 
-        let start = RobotPositions::from_array(&[(0, 1), (5, 4), target_position.into(), (7, 15)]);
+        let start = RobotPositions::from_tuples(&[(0, 1), (5, 4), target_position.into(), (7, 15)]);
         let end = start.clone();
 
         let round = Round::new(game.board().clone(), target, target_position);
@@ -235,7 +247,7 @@ mod tests {
 
         let expected = Solution::new(
             pos.clone(),
-            RobotPositions::from_array(&[(10, 15), (9, 11), (7, 1), (9, 12)]),
+            RobotPositions::from_tuples(&[(10, 15), (9, 11), (7, 1), (9, 12)]),
             vec![
                 (Color::Red, Direction::Right),
                 (Color::Red, Direction::Down),
@@ -337,7 +349,7 @@ mod tests {
                     return None;
                 }
                 match vec[..4].try_into() {
-                    Ok(a) => Some(RobotPositions::from_array(a)),
+                    Ok(a) => Some(RobotPositions::from_tuples(a)),
                     Err(_) => None,
                 }
             })
@@ -386,9 +398,9 @@ mod tests {
         assert_eq!(
             tests[0],
             PositionTest::new(
-                RobotPositions::from_array(&[(3, 2), (4, 12), (14, 0), (12, 9)]),
+                RobotPositions::from_tuples(&[(3, 2), (4, 12), (14, 0), (12, 9)]),
                 Target::Yellow(Symbol::Square),
-                RobotPositions::from_array(&[(0, 6), (6, 7), (14, 0), (5, 5)]),
+                RobotPositions::from_tuples(&[(0, 6), (6, 7), (14, 0), (5, 5)]),
                 vec![
                     (Color::Red, Direction::Down),
                     (Color::Red, Direction::Left),
