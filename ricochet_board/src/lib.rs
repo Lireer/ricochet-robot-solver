@@ -3,6 +3,7 @@ pub mod template;
 
 use std::collections::BTreeMap;
 use std::convert::{TryFrom, TryInto};
+use std::ops::Index;
 use std::{fmt, mem};
 
 use crate::template::{BoardTemplate, Orientation, WallDirection};
@@ -493,6 +494,30 @@ impl fmt::Debug for Game {
 }
 
 impl RobotPositions {
+    /// Creates a board from a slice of position tuples.
+    ///
+    /// The values in `positions` are used in the order red, blue, green, yellow.
+    pub fn from_tuples(positions: &[(PositionEncoding, PositionEncoding); 4]) -> Self {
+        RobotPositions {
+            red: Position::from_tuple(positions[0]),
+            blue: Position::from_tuple(positions[1]),
+            green: Position::from_tuple(positions[2]),
+            yellow: Position::from_tuple(positions[3]),
+        }
+    }
+
+    /// Sets the robot with `color` to `new_position`.
+    fn set_robot(&mut self, robot: Color, new_position: Position) {
+        *match robot {
+            Color::Red => &mut self.red,
+            Color::Blue => &mut self.blue,
+            Color::Green => &mut self.green,
+            Color::Yellow => &mut self.yellow,
+        } = new_position;
+    }
+}
+
+impl RobotPositions {
     /// Checks if `pos` has any robot on it.
     #[inline(always)]
     pub fn contains_any_robot(&self, pos: Position) -> bool {
@@ -520,7 +545,7 @@ impl RobotPositions {
     /// Moves `robot` as far in the given `direction` as possible.
     pub fn move_in_direction(mut self, board: &Board, robot: Color, direction: Direction) -> Self {
         // start form the current position
-        let mut temp_pos = self.get_robot(robot);
+        let mut temp_pos = self[robot];
 
         // check if the next position is reachable from the temporary position
         while self.adjacent_reachable(board, temp_pos, direction) {
@@ -534,53 +559,16 @@ impl RobotPositions {
     }
 }
 
-impl RobotPositions {
-    /// Creates a board from a slice of position tuples.
-    ///
-    /// The values in `positions` are used in the order red, blue, green, yellow.
-    pub fn from_array(positions: &[(PositionEncoding, PositionEncoding); 4]) -> Self {
-        RobotPositions {
-            red: Position::from_tuple(positions[0]),
-            blue: Position::from_tuple(positions[1]),
-            green: Position::from_tuple(positions[2]),
-            yellow: Position::from_tuple(positions[3]),
+impl Index<Color> for RobotPositions {
+    type Output = Position;
+
+    fn index(&self, index: Color) -> &Self::Output {
+        match index {
+            Color::Red => &self.red,
+            Color::Blue => &self.blue,
+            Color::Green => &self.green,
+            Color::Yellow => &self.yellow,
         }
-    }
-
-    /// Sets the robot with `color` to `new_position`.
-    fn set_robot(&mut self, robot: Color, new_position: Position) {
-        *match robot {
-            Color::Red => &mut self.red,
-            Color::Blue => &mut self.blue,
-            Color::Green => &mut self.green,
-            Color::Yellow => &mut self.yellow,
-        } = new_position;
-    }
-
-    /// Returns the robot with `color`.
-    fn get_robot(&self, color: Color) -> Position {
-        match color {
-            Color::Red => self.red,
-            Color::Blue => self.blue,
-            Color::Green => self.green,
-            Color::Yellow => self.yellow,
-        }
-    }
-
-    pub fn red(&self) -> Position {
-        self.red
-    }
-
-    pub fn blue(&self) -> Position {
-        self.blue
-    }
-
-    pub fn green(&self) -> Position {
-        self.green
-    }
-
-    pub fn yellow(&self) -> Position {
-        self.yellow
     }
 }
 
@@ -589,10 +577,7 @@ impl fmt::Debug for RobotPositions {
         write!(
             fmt,
             "[{:?} | {:?} | {:?} | {:?}]",
-            self.red(),
-            self.blue(),
-            self.green(),
-            self.yellow()
+            self.red, self.blue, self.green, self.yellow
         )
     }
 }
@@ -662,7 +647,7 @@ mod tests {
             })
             .collect::<Vec<template::BoardTemplate>>();
 
-        let pos = RobotPositions::from_array(&[(0, 1), (5, 4), (7, 1), (7, 15)]);
+        let pos = RobotPositions::from_tuples(&[(0, 1), (5, 4), (7, 1), (7, 15)]);
         let board = Game::from_templates(&templates).board;
         (pos, board)
     }
@@ -675,32 +660,32 @@ mod tests {
     #[test]
     fn move_right() {
         let (mut positions, board) = create_board();
-        assert_eq!(positions.green(), Position::from_tuple((7, 1)));
+        assert_eq!(positions[Color::Green], Position::from_tuple((7, 1)));
         positions = positions.move_in_direction(&board, Color::Green, Direction::Right);
-        assert_eq!(positions.green(), Position::from_tuple((15, 1)));
+        assert_eq!(positions[Color::Green], Position::from_tuple((15, 1)));
     }
 
     #[test]
     fn move_left() {
         let (mut positions, board) = create_board();
-        assert_eq!(positions.green(), Position::from_tuple((7, 1)));
+        assert_eq!(positions[Color::Green], Position::from_tuple((7, 1)));
         positions = positions.move_in_direction(&board, Color::Green, Direction::Left);
-        assert_eq!(positions.green(), Position::from_tuple((5, 1)));
+        assert_eq!(positions[Color::Green], Position::from_tuple((5, 1)));
     }
 
     #[test]
     fn move_up() {
         let (mut positions, board) = create_board();
-        assert_eq!(positions.green(), Position::from_tuple((7, 1)));
+        assert_eq!(positions[Color::Green], Position::from_tuple((7, 1)));
         positions = positions.move_in_direction(&board, Color::Green, Direction::Up);
-        assert_eq!(positions.green(), Position::from_tuple((7, 0)));
+        assert_eq!(positions[Color::Green], Position::from_tuple((7, 0)));
     }
 
     #[test]
     fn move_down() {
         let (mut positions, board) = create_board();
-        assert_eq!(positions.green(), Position::from_tuple((7, 1)));
+        assert_eq!(positions[Color::Green], Position::from_tuple((7, 1)));
         positions = positions.move_in_direction(&board, Color::Green, Direction::Down);
-        assert_eq!(positions.green(), Position::from_tuple((7, 6)));
+        assert_eq!(positions[Color::Green], Position::from_tuple((7, 6)));
     }
 }
