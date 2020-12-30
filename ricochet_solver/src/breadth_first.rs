@@ -2,7 +2,6 @@ use fnv::FnvHashMap;
 use getset::{CopyGetters, Getters};
 use ricochet_board::{Color, Direction, RobotPositions, Round};
 use std::collections::hash_map::Entry;
-use std::todo;
 
 use crate::{Solution, Solver};
 
@@ -10,10 +9,6 @@ use crate::{Solution, Solver};
 /// reach them.
 #[derive(Debug, Clone)]
 pub struct BreadthFirst {
-    // /// Contains all visited nodes.
-    // ///
-    // /// All nodes in the vec at index `i` of the outer vec are reachable in `i` steps.
-    // visited_nodes: Vec<Vec<VisitedNode>>,
     /// Contains all visited nodes as a set to make finding one known node easier.
     visited_nodes: FnvHashMap<RobotPositions, VisitedNode>,
 }
@@ -66,14 +61,6 @@ impl BreadthFirst {
             visited_nodes: Default::default(),
             // visited_nodes_set: Default::default(),
         }
-    }
-
-    /// Evaluates all postitions reachable in one step starting from `positions`.
-    ///
-    /// `eval_step` is the number of steps needed to reach these new positions, which is the number
-    /// of steps needed to reach `positions` plus one.
-    fn evaluate_state(&mut self, positions: &RobotPositions, eval_step: usize) {
-        todo!()
     }
 
     fn mem_solve(&mut self, round: &Round, start_pos: RobotPositions) -> Solution {
