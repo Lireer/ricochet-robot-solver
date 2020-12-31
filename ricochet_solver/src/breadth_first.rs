@@ -38,7 +38,7 @@ impl VisitedNode {
         }
     }
 
-    pub fn reach_with(&self) -> (Color, Direction) {
+    pub fn reached_with(&self) -> (Color, Direction) {
         (self.robot, self.direction)
     }
 }
@@ -98,7 +98,7 @@ impl BreadthFirst {
                 .visited_nodes
                 .get(&current_pos)
                 .expect("Failed to find a supposed source position");
-            path.push(current_info.reach_with());
+            path.push(current_info.reached_with());
             if current_info.steps_to_reach() == 1 {
                 break;
             }
@@ -109,16 +109,9 @@ impl BreadthFirst {
         Solution::new(start_pos, solution, path)
     }
 
-    const DIRECTIONS: [Direction; 4] = [
-        Direction::Up,
-        Direction::Down,
-        Direction::Right,
-        Direction::Left,
-    ];
-
-    const ROBOTS: [Color; 4] = [Color::Red, Color::Blue, Color::Green, Color::Yellow];
-
-    /// Calculates all new possible positions starting from `initial_pos`.
+    /// Calculates all unseen reachable positions starting from `initial_pos` and adds them to
+    /// `self.visited_nodes`.
+    ///
     /// `steps` is the number of steps needed to reach `initial_pos`.
     /// The calculated postions are inserted into `pos_store`.
     fn eval<F: FnMut(&RobotPositions)>(
@@ -128,37 +121,25 @@ impl BreadthFirst {
         steps: usize,
         add_pos: &mut F,
     ) -> Option<RobotPositions> {
-        for &robot in Self::ROBOTS.iter() {
-            for &dir in Self::DIRECTIONS.iter() {
-                // create a position starting from the initial position
-                let new_pos = initial_pos
-                    .clone()
-                    .move_in_direction(round.board(), robot, dir);
-
-                // if nothing changed, do nothing
-                if *initial_pos == new_pos {
-                    continue;
+        for (new_pos, (robot, dir)) in initial_pos.reachable_positions(round.board()) {
+            match self.visited_nodes.entry(new_pos.clone()) {
+                // This position has already been reached
+                Entry::Occupied(_) => continue,
+                // First time this position has been reached
+                Entry::Vacant(entry) => {
+                    entry.insert(VisitedNode::new(steps + 1, initial_pos.clone(), robot, dir))
                 }
+            };
 
-                let entry = self.visited_nodes.entry(new_pos.clone());
-                match entry {
-                    // This position has already been reached
-                    Entry::Occupied(_) => continue,
-                    // First time this position has been reached
-                    Entry::Vacant(entry) => {
-                        entry.insert(VisitedNode::new(steps + 1, initial_pos.clone(), robot, dir))
-                    }
-                };
-
-                // Check if the target has been reached
-                if round.target_reached(&new_pos) {
-                    return Some(new_pos);
-                }
-
-                // Add new_pos to the already visited positions
-                add_pos(&new_pos);
+            // Check if the target has been reached
+            if round.target_reached(&new_pos) {
+                return Some(new_pos);
             }
+
+            // Add new_pos to the already visited positions
+            add_pos(&new_pos);
         }
+
         None
     }
 }
@@ -263,14 +244,6 @@ mod tests {
             game.get_target_position(&target).unwrap(),
         );
 
-        const ROBOTS: [Color; 4] = [Color::Blue, Color::Red, Color::Green, Color::Yellow];
-        const DIRECTIONS: [Direction; 4] = [
-            Direction::Up,
-            Direction::Right,
-            Direction::Down,
-            Direction::Left,
-        ];
-
         let mut tries = 0;
         let mut total_steps: u64 = 0;
         let mut path;
@@ -282,10 +255,17 @@ mod tests {
             loop {
                 let robot = ROBOTS[rng.gen_range(0..4)];
                 let direction = DIRECTIONS[rng.gen_range(0..4)];
+                let new_pos =
+                    current_pos
+                        .clone()
+                        .move_in_direction(&round.board(), robot, direction);
+                if new_pos == current_pos {
+                    continue;
+                }
+                current_pos = new_pos;
                 path.push((robot, direction));
 
                 total_steps += 1;
-                current_pos = current_pos.move_in_direction(&round.board(), robot, direction);
                 if round.target_reached(&current_pos) {
                     break;
                 }
@@ -296,8 +276,8 @@ mod tests {
             }
         }
 
-        assert_eq!(tries, 9179);
-        assert_eq!(total_steps, 3689543);
+        assert_eq!(tries, 2781);
+        assert_eq!(total_steps, 596132);
         assert_eq!(
             path,
             vec![
@@ -385,23 +365,25 @@ mod tests {
         assert_eq!(
             tests[0],
             PositionTest::new(
-                RobotPositions::from_tuples(&[(3, 2), (4, 12), (14, 0), (12, 9)]),
-                Target::Yellow(Symbol::Square),
-                RobotPositions::from_tuples(&[(0, 6), (6, 7), (14, 0), (5, 5)]),
+                RobotPositions::from_tuples(&[(1, 10), (4, 1), (3, 15), (13, 2)]),
+                Target::Yellow(Symbol::Hexagon),
+                RobotPositions::from_tuples(&[(14, 11), (13, 11), (3, 15), (9, 12)]),
                 vec![
+                    (Color::Red, Direction::Up),
+                    (Color::Red, Direction::Right),
                     (Color::Red, Direction::Down),
-                    (Color::Red, Direction::Left),
-                    (Color::Blue, Direction::Left),
-                    (Color::Blue, Direction::Up),
+                    (Color::Red, Direction::Right),
+                    (Color::Blue, Direction::Down),
                     (Color::Blue, Direction::Right),
                     (Color::Yellow, Direction::Right),
                     (Color::Yellow, Direction::Down),
                     (Color::Yellow, Direction::Left),
-                    (Color::Yellow, Direction::Up),
+                    (Color::Yellow, Direction::Down),
                     (Color::Yellow, Direction::Left),
-                    (Color::Yellow, Direction::Up),
+                    (Color::Yellow, Direction::Down),
                     (Color::Yellow, Direction::Right),
                     (Color::Yellow, Direction::Up),
+                    (Color::Yellow, Direction::Left),
                 ]
             ),
         )

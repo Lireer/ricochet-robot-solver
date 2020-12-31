@@ -1,6 +1,7 @@
+use itertools::Itertools;
 use std::{fmt, mem, ops};
 
-use crate::{Board, Color, Direction};
+use crate::{Board, Color, Direction, DIRECTIONS, ROBOTS};
 
 /// The type a position is encoded as.
 ///
@@ -166,6 +167,26 @@ impl RobotPositions {
             && !self.contains_any_robot(pos.to_direction(direction, board.side_length()))
     }
 
+    /// Creates an Iterator over all positions reachable in one step that differ from `self`.
+    pub fn reachable_positions<'a>(
+        &self,
+        board: &'a Board,
+    ) -> impl Iterator<Item = (RobotPositions, (Color, Direction))> + 'a {
+        let initial_pos = self.clone();
+        ROBOTS
+            .iter()
+            .cartesian_product(DIRECTIONS.iter())
+            .filter_map(move |(&robot, &direction)| {
+                Some(
+                    initial_pos
+                        .clone()
+                        .move_in_direction(board, robot, direction),
+                )
+                .filter(|pos| pos != &initial_pos)
+                .map(|pos| (pos, (robot, direction)))
+            })
+    }
+
     /// Moves `robot` as far in the given `direction` as possible.
     pub fn move_in_direction(mut self, board: &Board, robot: Color, direction: Direction) -> Self {
         // start form the current position
@@ -222,11 +243,42 @@ impl fmt::Display for RobotPositions {
 #[cfg(test)]
 mod tests {
     use super::Position;
+    use crate::{Board, Color, Direction, RobotPositions};
 
     #[test]
     fn check_flags() {
         let row_flag = 2u16.pow((Position::BIT_COUNT / 2) as u32) - 1;
         assert_eq!(row_flag, Position::ROW_FLAG);
         assert_eq!(!row_flag, Position::COLUMN_FLAG);
+    }
+
+    #[test]
+    fn reachable_positions() {
+        let board = Board::new_empty(16).wall_enclosure();
+        let starting_pos = RobotPositions::from_tuples(&[(0, 0), (1, 0), (0, 1), (1, 1)]);
+
+        let expected = [
+            (
+                RobotPositions::from_tuples(&[(0, 0), (15, 0), (0, 1), (1, 1)]),
+                (Color::Blue, Direction::Right),
+            ),
+            (
+                RobotPositions::from_tuples(&[(0, 0), (1, 0), (0, 15), (1, 1)]),
+                (Color::Green, Direction::Down),
+            ),
+            (
+                RobotPositions::from_tuples(&[(0, 0), (1, 0), (0, 1), (1, 15)]),
+                (Color::Yellow, Direction::Down),
+            ),
+            (
+                RobotPositions::from_tuples(&[(0, 0), (1, 0), (0, 1), (15, 1)]),
+                (Color::Yellow, Direction::Right),
+            ),
+        ];
+
+        assert_eq!(
+            &starting_pos.reachable_positions(&board).collect::<Vec<_>>(),
+            &expected
+        );
     }
 }

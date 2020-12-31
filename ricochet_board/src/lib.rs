@@ -15,12 +15,13 @@ pub type Walls = Vec<Vec<Field>>;
 /// All `Direction`s a robot can move to.
 pub const DIRECTIONS: [Direction; 4] = [
     Direction::Up,
-    Direction::Right,
     Direction::Down,
+    Direction::Right,
     Direction::Left,
 ];
 
-pub const COLORS: [Color; 4] = [Color::Red, Color::Blue, Color::Green, Color::Yellow];
+/// All robots defined by their color.
+pub const ROBOTS: [Color; 4] = [Color::Red, Color::Blue, Color::Green, Color::Yellow];
 
 /// A field on the board.
 ///
