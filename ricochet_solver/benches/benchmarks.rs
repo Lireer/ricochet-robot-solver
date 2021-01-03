@@ -2,7 +2,7 @@ use std::vec;
 
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 use ricochet_board::{template, Game, RobotPositions, Round, Symbol, Target};
-use ricochet_solver::{BreadthFirst, Solver};
+use ricochet_solver::{BreadthFirst, IterativeDeepening, Solver};
 
 fn bench_solvers(c: &mut Criterion) {
     let (pos, game) = create_board();
@@ -29,6 +29,9 @@ fn bench_solvers(c: &mut Criterion) {
         );
         group.bench_function(BenchmarkId::new("Breadth-First", target.1), |b| {
             b.iter(|| BreadthFirst::new().solve(&round, pos.clone()))
+        });
+        group.bench_function(BenchmarkId::new("IDDFS", target.1), |b| {
+            b.iter(|| IterativeDeepening::new().solve(&round, pos.clone()))
         });
         // group.bench_with_input(BenchmarkId::new("Iterative", i), i, |b, i| {
         //     b.iter(|| fibonacci_fast(*i))

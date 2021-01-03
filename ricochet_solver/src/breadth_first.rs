@@ -1,9 +1,8 @@
 use fnv::FnvHashMap;
-use getset::{CopyGetters, Getters};
-use ricochet_board::{Color, Direction, RobotPositions, Round};
+use ricochet_board::{RobotPositions, Round};
 use std::collections::hash_map::Entry;
 
-use crate::{Solution, Solver};
+use crate::{Solution, Solver, VisitedNode};
 
 /// Finds an optimal solution by visiting all possible game states in order of steps needed to
 /// reach them.
@@ -11,36 +10,6 @@ use crate::{Solution, Solver};
 pub struct BreadthFirst {
     /// Contains all visited nodes as a set to make finding one known node easier.
     visited_nodes: FnvHashMap<RobotPositions, VisitedNode>,
-}
-
-#[derive(Debug, Clone, CopyGetters, Getters)]
-struct VisitedNode {
-    #[getset(get_copy = "pub")]
-    steps_to_reach: usize,
-    #[getset(get = "pub")]
-    previous_position: RobotPositions,
-    robot: Color,
-    direction: Direction,
-}
-
-impl VisitedNode {
-    pub fn new(
-        steps: usize,
-        previous_position: RobotPositions,
-        robot: Color,
-        direction: Direction,
-    ) -> Self {
-        VisitedNode {
-            steps_to_reach: steps,
-            previous_position,
-            robot,
-            direction,
-        }
-    }
-
-    pub fn reached_with(&self) -> (Color, Direction) {
-        (self.robot, self.direction)
-    }
 }
 
 impl Solver for BreadthFirst {
@@ -58,19 +27,18 @@ impl BreadthFirst {
     /// Create a new solver which uses a breadth first search to find an optimal solution.
     pub fn new() -> Self {
         Self {
-            visited_nodes: Default::default(),
-            // visited_nodes_set: Default::default(),
+            visited_nodes: FnvHashMap::with_capacity_and_hasher(65536, Default::default()),
         }
     }
 
     fn mem_solve(&mut self, round: &Round, start_pos: RobotPositions) -> Solution {
         // contains all positions from which the positions in
-        let mut current_step_positions: Vec<RobotPositions> = Vec::with_capacity(256);
+        let mut current_step_positions: Vec<RobotPositions> = Vec::with_capacity(2usize.pow(10));
         current_step_positions.push(start_pos.clone());
-        let mut next_step_positions: Vec<RobotPositions> = Vec::with_capacity(1024);
+        let mut next_step_positions: Vec<RobotPositions> = Vec::with_capacity(2usize.pow(14));
 
         // initialize the positions which will store the solution with the starting position
-        let mut solution = start_pos.clone();
+        let mut solution = start_pos;
 
         // Forward pathing to the target.
         // Computes the min. number of steps to the target and creates a tree of reachable positions
@@ -88,9 +56,13 @@ impl BreadthFirst {
             std::mem::swap(&mut current_step_positions, &mut next_step_positions)
         }
 
-        // Backwards path creation from the final positions to the starting position.
+        self.backwards_path_creation(solution)
+    }
+
+    /// Backwards path creation from the final positions to the starting position.
+    fn backwards_path_creation(&self, final_position: RobotPositions) -> Solution {
         let mut path = Vec::with_capacity(32);
-        let mut current_pos = solution.clone();
+        let mut current_pos = final_position.clone();
 
         loop {
             // This should never panic since the position should be in `visited_nodes`.
@@ -99,14 +71,15 @@ impl BreadthFirst {
                 .get(&current_pos)
                 .expect("Failed to find a supposed source position");
             path.push(current_info.reached_with());
+            current_pos = current_info.previous_position().clone();
             if current_info.steps_to_reach() == 1 {
+                // current_pos has to be the starting position
                 break;
             }
-            current_pos = current_info.previous_position().clone();
         }
 
         path.reverse();
-        Solution::new(start_pos, solution, path)
+        Solution::new(current_pos, final_position, path)
     }
 
     /// Calculates all unseen reachable positions starting from `initial_pos` and adds them to
@@ -141,6 +114,12 @@ impl BreadthFirst {
         }
 
         None
+    }
+}
+
+impl Default for BreadthFirst {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
