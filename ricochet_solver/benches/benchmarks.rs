@@ -33,9 +33,6 @@ fn bench_solvers(c: &mut Criterion) {
         group.bench_function(BenchmarkId::new("IDDFS", target.1), |b| {
             b.iter(|| IterativeDeepening::new().solve(&round, pos.clone()))
         });
-        // group.bench_with_input(BenchmarkId::new("Iterative", i), i, |b, i| {
-        //     b.iter(|| fibonacci_fast(*i))
-        // });
     }
     group.finish();
 }
