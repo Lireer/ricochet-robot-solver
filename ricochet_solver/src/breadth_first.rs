@@ -18,7 +18,7 @@ impl Solver for BreadthFirst {
             return Solution::new(start_positions.clone(), start_positions, vec![]);
         }
 
-        self.mem_solve(round, start_positions)
+        self.start(round, start_positions)
     }
 }
 
@@ -30,23 +30,23 @@ impl BreadthFirst {
         }
     }
 
-    fn mem_solve(&mut self, round: &Round, start_pos: RobotPositions) -> Solution {
+    fn start(&mut self, round: &Round, start_pos: RobotPositions) -> Solution {
         // contains all positions from which the positions in
-        let mut current_step_positions: Vec<RobotPositions> = Vec::with_capacity(2usize.pow(10));
+        let mut current_step_positions: Vec<RobotPositions> = Vec::with_capacity(16usize.pow(3));
         current_step_positions.push(start_pos.clone());
-        let mut next_step_positions: Vec<RobotPositions> = Vec::with_capacity(2usize.pow(14));
+        let mut next_step_positions: Vec<RobotPositions> = Vec::with_capacity(16usize.pow(4));
 
         // initialize the positions which will store the solution with the starting position
         let mut solution = start_pos;
 
         // Forward pathing to the target.
         // Computes the min. number of steps to the target and creates a tree of reachable positions
-        // in `visited_nodes`, which is later used in the backwards path creation.
+        // in `visited_nodes`, which is later used in the path creation.
         'outer: for step in 0.. {
             for pos in &current_step_positions {
-                if let Some(reached) = self.eval(round, pos, step, &mut |pos: &RobotPositions| {
-                    next_step_positions.push(pos.clone())
-                }) {
+                if let Some(reached) =
+                    self.eval_robot_state(round, pos, step, &mut next_step_positions)
+                {
                     solution = reached;
                     break 'outer;
                 };
@@ -63,14 +63,16 @@ impl BreadthFirst {
     ///
     /// `steps` is the number of steps needed to reach `initial_pos`.
     /// The calculated postions are inserted into `pos_store`.
-    fn eval<F: FnMut(&RobotPositions)>(
+    fn eval_robot_state(
         &mut self,
         round: &Round,
         initial_pos: &RobotPositions,
         steps: usize,
-        add_pos: &mut F,
+        next_positions: &mut Vec<RobotPositions>,
     ) -> Option<RobotPositions> {
         for (new_pos, (robot, dir)) in initial_pos.reachable_positions(round.board()) {
+            // Mark the new positions as visited and continue with the next one, if a better path
+            // already exists.
             if !self
                 .visited_nodes
                 .add_node(new_pos.clone(), &initial_pos, steps + 1, (robot, dir))
@@ -78,13 +80,13 @@ impl BreadthFirst {
                 continue;
             }
 
-            // Check if the target has been reached
+            // Check if the target has been reached.
             if round.target_reached(&new_pos) {
                 return Some(new_pos);
             }
 
-            // Add new_pos to the already visited positions
-            add_pos(&new_pos);
+            // Add new_pos to the positions to be checked
+            next_positions.push(new_pos);
         }
 
         None
