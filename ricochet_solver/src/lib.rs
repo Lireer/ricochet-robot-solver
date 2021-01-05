@@ -1,7 +1,8 @@
 mod breadth_first;
 mod iterative_deepening;
+mod util;
 
-use getset::{CopyGetters, Getters};
+use getset::Getters;
 use ricochet_board::{Color, Direction, RobotPositions, Round};
 
 pub use breadth_first::BreadthFirst;
@@ -42,35 +43,5 @@ impl Solution {
     /// Creates a new solution in which the robot reaches the target without moving.
     pub fn new_start_on_target(start_pos: RobotPositions) -> Self {
         Self::new(start_pos.clone(), start_pos, Vec::new())
-    }
-}
-
-#[derive(Debug, Clone, CopyGetters, Getters)]
-struct VisitedNode {
-    #[getset(get_copy = "pub")]
-    steps_to_reach: usize,
-    #[getset(get = "pub")]
-    previous_position: RobotPositions,
-    robot: Color,
-    direction: Direction,
-}
-
-impl VisitedNode {
-    pub fn new(
-        steps: usize,
-        previous_position: RobotPositions,
-        robot: Color,
-        direction: Direction,
-    ) -> Self {
-        VisitedNode {
-            steps_to_reach: steps,
-            previous_position,
-            robot,
-            direction,
-        }
-    }
-
-    pub fn reached_with(&self) -> (Color, Direction) {
-        (self.robot, self.direction)
     }
 }

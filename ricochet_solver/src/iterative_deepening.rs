@@ -1,15 +1,14 @@
-use std::collections::hash_map::Entry;
-
-use fnv::FnvHashMap;
 use ricochet_board::{RobotPositions, Round};
 
-use crate::{Solution, Solver, VisitedNode};
+use crate::util::VisitedNodes;
+use crate::{Solution, Solver};
 
 // Why it is good: https://cseweb.ucsd.edu/~elkan/130/itdeep.html
+// Optimizations: https://speakerdeck.com/fogleman/ricochet-robots-solver-algorithms
 pub struct IterativeDeepening {
     /// Contains all visited robot positions and the number of steps in the shortest path found from
     /// the starting positions.
-    visited_nodes: FnvHashMap<RobotPositions, VisitedNode>,
+    visited_nodes: VisitedNodes,
 }
 
 impl Solver for IterativeDeepening {
@@ -22,7 +21,7 @@ impl Solver for IterativeDeepening {
         for i in 0.. {
             let maybe = self.depth_limited_dfs(round, start_positions.clone(), 0, i);
             if let Some(final_pos) = maybe {
-                return self.backwards_path_creation(final_pos); // Solution::new(start_positions, final_pos, self.current_path.clone());
+                return self.visited_nodes.path_to(&final_pos);
             }
             self.visited_nodes.clear();
         }
@@ -33,7 +32,7 @@ impl Solver for IterativeDeepening {
 impl IterativeDeepening {
     pub fn new() -> Self {
         Self {
-            visited_nodes: FnvHashMap::with_capacity_and_hasher(65536, Default::default()),
+            visited_nodes: VisitedNodes::with_capacity(65536),
         }
     }
 
@@ -60,21 +59,11 @@ impl IterativeDeepening {
         let calculating_step = at_step + 1;
 
         for (pos, (robot, dir)) in start_pos.reachable_positions(round.board()) {
-            match self.visited_nodes.entry(pos.clone()) {
-                Entry::Occupied(mut occupied) => {
-                    // Ignore positions if entry has less or equal steps
-                    if occupied.get().steps_to_reach() <= calculating_step {
-                        continue;
-                    }
-
-                    // A shorter path has been found, insert the new path.
-                    let visited = VisitedNode::new(calculating_step, start_pos.clone(), robot, dir);
-                    occupied.insert(visited);
-                }
-                Entry::Vacant(vacant) => {
-                    let visited = VisitedNode::new(calculating_step, start_pos.clone(), robot, dir);
-                    vacant.insert(visited);
-                }
+            if !self
+                .visited_nodes
+                .add_node(pos.clone(), &start_pos, calculating_step, (robot, dir))
+            {
+                continue;
             }
 
             if let Some(final_pos) =
@@ -84,29 +73,6 @@ impl IterativeDeepening {
             }
         }
         None
-    }
-
-    /// Backwards path creation from the final positions to the starting position.
-    fn backwards_path_creation(&self, final_position: RobotPositions) -> Solution {
-        let mut path = Vec::with_capacity(32);
-        let mut current_pos = final_position.clone();
-
-        loop {
-            // This should never panic since the position should be in `visited_nodes`.
-            let current_info = self
-                .visited_nodes
-                .get(&current_pos)
-                .expect("Failed to find a supposed source position");
-            path.push(current_info.reached_with());
-            current_pos = current_info.previous_position().clone();
-            if current_info.steps_to_reach() == 1 {
-                // current_pos has to be the starting position
-                break;
-            }
-        }
-
-        path.reverse();
-        Solution::new(current_pos, final_position, path)
     }
 }
 

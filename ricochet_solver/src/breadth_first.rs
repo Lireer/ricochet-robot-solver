@@ -1,15 +1,14 @@
-use fnv::FnvHashMap;
 use ricochet_board::{RobotPositions, Round};
-use std::collections::hash_map::Entry;
 
-use crate::{Solution, Solver, VisitedNode};
+use crate::util::VisitedNodes;
+use crate::{Solution, Solver};
 
 /// Finds an optimal solution by visiting all possible game states in order of steps needed to
 /// reach them.
 #[derive(Debug, Clone)]
 pub struct BreadthFirst {
-    /// Contains all visited nodes as a set to make finding one known node easier.
-    visited_nodes: FnvHashMap<RobotPositions, VisitedNode>,
+    /// Manages knowledge of visited nodes.
+    visited_nodes: VisitedNodes,
 }
 
 impl Solver for BreadthFirst {
@@ -27,7 +26,7 @@ impl BreadthFirst {
     /// Create a new solver which uses a breadth first search to find an optimal solution.
     pub fn new() -> Self {
         Self {
-            visited_nodes: FnvHashMap::with_capacity_and_hasher(65536, Default::default()),
+            visited_nodes: VisitedNodes::with_capacity(65536),
         }
     }
 
@@ -56,30 +55,7 @@ impl BreadthFirst {
             std::mem::swap(&mut current_step_positions, &mut next_step_positions)
         }
 
-        self.backwards_path_creation(solution)
-    }
-
-    /// Backwards path creation from the final positions to the starting position.
-    fn backwards_path_creation(&self, final_position: RobotPositions) -> Solution {
-        let mut path = Vec::with_capacity(32);
-        let mut current_pos = final_position.clone();
-
-        loop {
-            // This should never panic since the position should be in `visited_nodes`.
-            let current_info = self
-                .visited_nodes
-                .get(&current_pos)
-                .expect("Failed to find a supposed source position");
-            path.push(current_info.reached_with());
-            current_pos = current_info.previous_position().clone();
-            if current_info.steps_to_reach() == 1 {
-                // current_pos has to be the starting position
-                break;
-            }
-        }
-
-        path.reverse();
-        Solution::new(current_pos, final_position, path)
+        self.visited_nodes.path_to(&solution)
     }
 
     /// Calculates all unseen reachable positions starting from `initial_pos` and adds them to
@@ -95,14 +71,12 @@ impl BreadthFirst {
         add_pos: &mut F,
     ) -> Option<RobotPositions> {
         for (new_pos, (robot, dir)) in initial_pos.reachable_positions(round.board()) {
-            match self.visited_nodes.entry(new_pos.clone()) {
-                // This position has already been reached
-                Entry::Occupied(_) => continue,
-                // First time this position has been reached
-                Entry::Vacant(entry) => {
-                    entry.insert(VisitedNode::new(steps + 1, initial_pos.clone(), robot, dir))
-                }
-            };
+            if !self
+                .visited_nodes
+                .add_node(new_pos.clone(), &initial_pos, steps + 1, (robot, dir))
+            {
+                continue;
+            }
 
             // Check if the target has been reached
             if round.target_reached(&new_pos) {
