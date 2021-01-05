@@ -60,15 +60,12 @@ impl VisitedNodes {
     /// # Panics
     /// Panics if `positions` has yet to be visited.
     pub fn path_to(&self, positions: &RobotPositions) -> Solution {
-        let mut current_node = self
-            .get_node(positions)
-            .expect("Failed to find a supposed source position");
-        let mut path = Vec::with_capacity(current_node.steps_to_reach());
+        let mut path = Vec::with_capacity(32);
         let mut current_pos = positions.clone();
 
         // Create the path by following the nodes previous positions.
         loop {
-            current_node = self
+            let current_node = self
                 .get_node(&current_pos)
                 .expect("Failed to find a supposed source position");
             path.push(current_node.reached_with());
