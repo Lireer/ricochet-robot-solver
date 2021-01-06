@@ -5,7 +5,7 @@ use ricochet_board::{template, Color, Game, RobotPositions, Round, Symbol, Targe
 use ricochet_solver::util::LeastMovesBoard;
 use ricochet_solver::{BreadthFirst, IterativeDeepening, Solver};
 
-fn bench_solvers(c: &mut Criterion) {
+fn bench_bfs(c: &mut Criterion) {
     let (pos, bench_data) = solver_bench_setup();
 
     let mut group = c.benchmark_group("Ricochet Solver");
@@ -13,6 +13,15 @@ fn bench_solvers(c: &mut Criterion) {
         group.bench_function(BenchmarkId::new("Breadth-First", steps), |b| {
             b.iter(|| BreadthFirst::new().solve(&round, pos.clone()))
         });
+    }
+    group.finish();
+}
+
+fn bench_iddfs(c: &mut Criterion) {
+    let (pos, bench_data) = solver_bench_setup();
+
+    let mut group = c.benchmark_group("Ricochet Solver");
+    for (round, steps) in bench_data {
         group.bench_function(BenchmarkId::new("IDDFS", steps), |b| {
             b.iter(|| IterativeDeepening::new().solve(&round, pos.clone()))
         });
@@ -32,7 +41,7 @@ fn bench_util(c: &mut Criterion) {
     group.finish();
 }
 
-criterion_group!(benches, bench_solvers, bench_util);
+criterion_group!(benches, bench_bfs, bench_iddfs, bench_util);
 criterion_main!(benches);
 
 fn solver_bench_setup() -> (RobotPositions, Vec<(Round, usize)>) {
