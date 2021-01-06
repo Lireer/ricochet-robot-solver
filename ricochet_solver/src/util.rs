@@ -1,13 +1,16 @@
 use std::collections::hash_map::Entry;
+use std::ops;
 
 use fnv::FnvHashMap;
 use getset::{CopyGetters, Getters};
-use ricochet_board::{Color, Direction, RobotPositions};
+use ricochet_board::{
+    Board, Color, Direction, Position, PositionEncoding, RobotPositions, DIRECTIONS,
+};
 
 use crate::Solution;
 
 #[derive(Debug, Clone)]
-pub struct VisitedNodes {
+pub(crate) struct VisitedNodes {
     nodes: FnvHashMap<RobotPositions, VisitedNode>,
 }
 
@@ -82,7 +85,7 @@ impl VisitedNodes {
 }
 
 #[derive(Debug, Clone, CopyGetters, Getters)]
-pub struct VisitedNode {
+pub(crate) struct VisitedNode {
     #[getset(get_copy = "pub")]
     steps_to_reach: usize,
     #[getset(get = "pub")]
@@ -108,5 +111,93 @@ impl VisitedNode {
 
     pub fn reached_with(&self) -> (Color, Direction) {
         (self.robot, self.direction)
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct LeastMovesBoard {
+    board: Vec<Vec<usize>>,
+}
+
+impl LeastMovesBoard {
+    pub fn new(board: &Board, target_position: Position) -> Self {
+        let len = board.side_length() as usize;
+        let mut move_board = vec![vec![len * len; len]; len];
+
+        let mut current_steps = Vec::with_capacity(256);
+        let mut next_steps = current_steps.clone();
+
+        move_board[target_position.column() as usize][target_position.row() as usize] = 0;
+        current_steps.push(target_position);
+
+        for step in 1usize.. {
+            for &pos in &current_steps {
+                for &dir in DIRECTIONS.iter() {
+                    // Start from pos for each direction.
+                    let mut check_pos = pos;
+                    loop {
+                        if board.is_adjacent_to_wall(check_pos, dir) {
+                            break;
+                        }
+                        check_pos = check_pos.to_direction(dir, len as PositionEncoding);
+                        let current_min =
+                            &mut move_board[check_pos.column() as usize][check_pos.row() as usize];
+                        if step < *current_min {
+                            // new position found
+                            *current_min = step;
+                            next_steps.push(check_pos);
+                        }
+                    }
+                }
+            }
+
+            if next_steps.is_empty() {
+                break;
+            }
+            current_steps.clear();
+            std::mem::swap(&mut current_steps, &mut next_steps);
+        }
+
+        Self { board: move_board }
+    }
+}
+
+impl ops::Index<Position> for LeastMovesBoard {
+    type Output = usize;
+
+    fn index(&self, index: Position) -> &Self::Output {
+        &self.board[index.column() as usize][index.row() as usize]
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use ricochet_board::{Board, Position};
+
+    use super::LeastMovesBoard;
+
+    #[test]
+    fn empty_move_board() {
+        let board = Board::new_empty(2).wall_enclosure();
+        let target = Position::new(0, 0);
+        assert_eq!(
+            LeastMovesBoard::new(&board, target).board,
+            vec![vec![0, 1], vec![1, 2]]
+        );
+    }
+
+    #[test]
+    fn walled_move_board() {
+        let board = Board::new_empty(3)
+            .wall_enclosure()
+            .set_horizontal_line(0, 0, 1)
+            .set_horizontal_line(1, 1, 1)
+            .set_vertical_line(1, 1, 1);
+        let target = Position::new(0, 0);
+
+        assert_eq!(
+            LeastMovesBoard::new(&board, target).board,
+            vec![vec![0, 3, 3], vec![1, 2, 3], vec![1, 2, 2]]
+        );
     }
 }

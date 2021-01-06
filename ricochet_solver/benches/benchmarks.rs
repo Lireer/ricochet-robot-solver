@@ -1,12 +1,44 @@
 use std::vec;
 
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
-use ricochet_board::{template, Game, RobotPositions, Round, Symbol, Target};
+use ricochet_board::{template, Color, Game, RobotPositions, Round, Symbol, Target};
+use ricochet_solver::util::LeastMovesBoard;
 use ricochet_solver::{BreadthFirst, IterativeDeepening, Solver};
 
 fn bench_solvers(c: &mut Criterion) {
+    let (pos, bench_data) = solver_bench_setup();
+
+    let mut group = c.benchmark_group("Ricochet Solver");
+    for (round, steps) in bench_data {
+        group.bench_function(BenchmarkId::new("Breadth-First", steps), |b| {
+            b.iter(|| BreadthFirst::new().solve(&round, pos.clone()))
+        });
+        group.bench_function(BenchmarkId::new("IDDFS", steps), |b| {
+            b.iter(|| IterativeDeepening::new().solve(&round, pos.clone()))
+        });
+    }
+    group.finish();
+}
+
+fn bench_util(c: &mut Criterion) {
     let (pos, game) = create_board();
-    let targets = vec![
+    let target_position = pos[Color::Red];
+
+    let mut group = c.benchmark_group("Ricochet Solver Utils");
+    group.bench_function(BenchmarkId::new("LeastMovesBoard", ""), |b| {
+        b.iter(|| LeastMovesBoard::new(game.board(), target_position))
+    });
+
+    group.finish();
+}
+
+criterion_group!(benches, bench_solvers, bench_util);
+criterion_main!(benches);
+
+fn solver_bench_setup() -> (RobotPositions, Vec<(Round, usize)>) {
+    let (pos, game) = create_board();
+
+    let data = vec![
         (Target::Blue(Symbol::Triangle), 2),
         (Target::Yellow(Symbol::Circle), 3),
         (Target::Red(Symbol::Triangle), 4),
@@ -18,27 +50,20 @@ fn bench_solvers(c: &mut Criterion) {
         (Target::Yellow(Symbol::Hexagon), 11),
         (Target::Yellow(Symbol::Triangle), 12),
         (Target::Yellow(Symbol::Square), 13),
-    ];
-
-    let mut group = c.benchmark_group("Ricochet Solver");
-    for target in targets {
+    ]
+    .iter_mut()
+    .map(|(target, steps)| {
         let round = Round::new(
             game.board().clone(),
-            target.0,
-            game.get_target_position(&target.0).unwrap(),
+            *target,
+            game.get_target_position(&target).unwrap(),
         );
-        group.bench_function(BenchmarkId::new("Breadth-First", target.1), |b| {
-            b.iter(|| BreadthFirst::new().solve(&round, pos.clone()))
-        });
-        group.bench_function(BenchmarkId::new("IDDFS", target.1), |b| {
-            b.iter(|| IterativeDeepening::new().solve(&round, pos.clone()))
-        });
-    }
-    group.finish();
-}
+        (round, *steps)
+    })
+    .collect();
 
-criterion_group!(benches, bench_solvers);
-criterion_main!(benches);
+    (pos, data)
+}
 
 fn create_board() -> (RobotPositions, Game) {
     const ORIENTATIONS: [template::Orientation; 4] = [

@@ -211,9 +211,9 @@ impl Board {
             .set_vertical_line(right_col, row, len)
     }
 
-    /// Starts from `[col, row]` and sets `len` fields below to have a wall on the right side.
+    /// Starting from `[col, row]` sets `len` fields downwards to have a wall on the right side.
     #[inline]
-    fn set_vertical_line(
+    pub fn set_vertical_line(
         mut self,
         col: PositionEncoding,
         row: PositionEncoding,
@@ -225,9 +225,9 @@ impl Board {
         self
     }
 
-    /// Starts from `[col, row]` and sets `len` fields to the right to have a wall on the bottom side.
+    /// Starting from `[col, row]` sets `len` fields to the right to have a wall on the bottom side.
     #[inline]
-    fn set_horizontal_line(
+    pub fn set_horizontal_line(
         mut self,
         col: PositionEncoding,
         row: PositionEncoding,

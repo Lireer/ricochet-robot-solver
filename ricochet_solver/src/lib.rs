@@ -1,6 +1,6 @@
 mod breadth_first;
 mod iterative_deepening;
-mod util;
+pub mod util;
 
 use getset::Getters;
 use ricochet_board::{Color, Direction, RobotPositions, Round};
