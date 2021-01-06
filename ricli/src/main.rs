@@ -4,7 +4,7 @@ use text_io::{read, try_scan};
 use ricochet_board::{
     template, Color, Game, PositionEncoding, RobotPositions, Round, Symbol, Target,
 };
-use ricochet_solver::{BreadthFirst, Solver};
+use ricochet_solver::{IterativeDeepening, Solver};
 
 const BOARD_SIZE: PositionEncoding = template::STANDARD_BOARD_SIZE;
 
@@ -35,7 +35,7 @@ fn main() {
         let round = Round::new(game.board().clone(), target, target_position);
 
         println!("Solving...");
-        let solution = BreadthFirst::new().solve(&round, positions);
+        let solution = IterativeDeepening::new().solve(&round, positions);
         let path = solution.path();
         println!("Steps needed to reach target: {}", path.len());
         println!("Press enter to show path.");
