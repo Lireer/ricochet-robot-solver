@@ -274,6 +274,16 @@ impl Round {
         &self.board
     }
 
+    /// Returns the `Target` to be reached.
+    pub fn target(&self) -> Target {
+        self.target
+    }
+
+    /// Returns the targets position.
+    pub fn target_position(&self) -> Position {
+        self.target_position
+    }
+
     /// Checks if the target has been reached.
     pub fn target_reached(&self, positions: &RobotPositions) -> bool {
         match self.target {

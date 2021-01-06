@@ -1,10 +1,11 @@
 use std::collections::hash_map::Entry;
+use std::convert::TryInto;
 use std::ops;
 
 use fnv::FnvHashMap;
 use getset::{CopyGetters, Getters};
 use ricochet_board::{
-    Board, Color, Direction, Position, PositionEncoding, RobotPositions, DIRECTIONS,
+    Board, Color, Direction, Position, PositionEncoding, RobotPositions, Target, DIRECTIONS, ROBOTS,
 };
 
 use crate::Solution;
@@ -159,6 +160,20 @@ impl LeastMovesBoard {
         }
 
         Self { board: move_board }
+    }
+
+    pub fn min_steps(&self, robots: &RobotPositions, target: Target) -> usize {
+        match target.try_into() {
+            Ok(color) => self[robots[color]],
+            Err(_) => {
+                // The spiral is the target.
+                ROBOTS
+                    .iter()
+                    .map(|&color| self[robots[color]])
+                    .min()
+                    .expect("Failed to find minimum number of steps to the target.")
+            }
+        }
     }
 }
 
