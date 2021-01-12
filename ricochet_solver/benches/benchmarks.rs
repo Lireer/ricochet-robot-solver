@@ -9,11 +9,11 @@ fn bench_bfs(c: &mut Criterion) {
     let (pos, bench_data) = solver_bench_setup();
 
     let mut group = c.benchmark_group("Ricochet Solver");
-    for (round, steps) in bench_data {
-        group.bench_function(BenchmarkId::new("Breadth-First", steps), |b| {
+    for (round, moves) in bench_data {
+        group.bench_function(BenchmarkId::new("Breadth-First", moves), |b| {
             b.iter(|| BreadthFirst::new().solve(&round, pos.clone()))
         });
-        group.bench_function(BenchmarkId::new("IDDFS", steps), |b| {
+        group.bench_function(BenchmarkId::new("IDDFS", moves), |b| {
             b.iter(|| IterativeDeepening::new().solve(&round, pos.clone()))
         });
     }
@@ -52,13 +52,13 @@ fn solver_bench_setup() -> (RobotPositions, Vec<(Round, usize)>) {
         (Target::Yellow(Symbol::Square), 13),
     ]
     .iter_mut()
-    .map(|(target, steps)| {
+    .map(|(target, moves)| {
         let round = Round::new(
             game.board().clone(),
             *target,
             game.get_target_position(&target).unwrap(),
         );
-        (round, *steps)
+        (round, *moves)
     })
     .collect();
 

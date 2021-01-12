@@ -7,10 +7,10 @@ use crate::{Solution, Solver};
 // Optimizations: https://speakerdeck.com/fogleman/ricochet-robots-solver-algorithms
 #[derive(Debug)]
 pub struct IterativeDeepening {
-    /// Contains all visited robot positions and the number of steps in the shortest path found from
+    /// Contains all visited robot positions and the number of moves in the shortest path found from
     /// the starting positions.
     visited_nodes: VisitedNodes,
-    /// This board contains the minimum number of steps to reach the target for each field.
+    /// This board contains the minimum number of moves to reach the target for each field.
     ///
     /// This minimum is a lower bound and may be impossible to reach even if all other robots are
     /// positioned perfectly.
@@ -25,7 +25,7 @@ impl Solver for IterativeDeepening {
         }
 
         self.move_board = LeastMovesBoard::new(round.board(), round.target_position());
-        let start = self.move_board.min_steps(&start_positions, round.target());
+        let start = self.move_board.min_moves(&start_positions, round.target());
 
         if self
             .move_board
@@ -53,12 +53,14 @@ impl IterativeDeepening {
         }
     }
 
-    /// Performs a depth-limited DFS from the root node up to a depth of
+    /// Performs a depth-limited DFS from `start_pos` up to a depth of `max_depth`.
+    ///
+    /// `at_move` is the number of moves needed to reach `start_pos` in the context of IDDFS.
     fn depth_limited_dfs(
         &mut self,
         round: &Round,
         start_pos: RobotPositions,
-        at_step: usize,
+        at_move: usize,
         max_depth: usize,
     ) -> Option<RobotPositions> {
         // Return the final position if the target has been reached.
@@ -69,24 +71,24 @@ impl IterativeDeepening {
             return None;
         }
 
-        let calculating_step = at_step + 1;
+        let calculating_move = at_move + 1;
 
         for (pos, (robot, dir)) in start_pos.reachable_positions(round.board()) {
             // Ignore the new positions if the target can't be reached within the limit of
-            // max_depth - 1 steps.
-            if max_depth - 1 < self.move_board.min_steps(&pos, round.target()) {
+            // max_depth - 1 moves.
+            if max_depth - 1 < self.move_board.min_moves(&pos, round.target()) {
                 continue;
             }
 
             if !self
                 .visited_nodes
-                .add_node(pos.clone(), &start_pos, calculating_step, (robot, dir))
+                .add_node(pos.clone(), &start_pos, calculating_move, (robot, dir))
             {
                 continue;
             }
 
             if let Some(final_pos) =
-                self.depth_limited_dfs(round, pos, calculating_step, max_depth - 1)
+                self.depth_limited_dfs(round, pos, calculating_move, max_depth - 1)
             {
                 return Some(final_pos);
             }

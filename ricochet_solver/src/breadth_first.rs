@@ -3,7 +3,7 @@ use ricochet_board::{RobotPositions, Round};
 use crate::util::VisitedNodes;
 use crate::{Solution, Solver};
 
-/// Finds an optimal solution by visiting all possible game states in order of steps needed to
+/// Finds an optimal solution by visiting all possible game states in order of moves needed to
 /// reach them.
 #[derive(Debug, Clone)]
 pub struct BreadthFirst {
@@ -32,27 +32,27 @@ impl BreadthFirst {
 
     fn start(&mut self, round: &Round, start_pos: RobotPositions) -> Solution {
         // contains all positions from which the positions in
-        let mut current_step_positions: Vec<RobotPositions> = Vec::with_capacity(16usize.pow(3));
-        current_step_positions.push(start_pos.clone());
-        let mut next_step_positions: Vec<RobotPositions> = Vec::with_capacity(16usize.pow(4));
+        let mut current_move_positions: Vec<RobotPositions> = Vec::with_capacity(16usize.pow(3));
+        current_move_positions.push(start_pos.clone());
+        let mut next_move_positions: Vec<RobotPositions> = Vec::with_capacity(16usize.pow(4));
 
         // initialize the positions which will store the solution with the starting position
         let mut solution = start_pos;
 
         // Forward pathing to the target.
-        // Computes the min. number of steps to the target and creates a tree of reachable positions
+        // Computes the min. number of moves to the target and creates a tree of reachable positions
         // in `visited_nodes`, which is later used in the path creation.
-        'outer: for step in 0.. {
-            for pos in &current_step_positions {
+        'outer: for move_n in 0.. {
+            for pos in &current_move_positions {
                 if let Some(reached) =
-                    self.eval_robot_state(round, pos, step, &mut next_step_positions)
+                    self.eval_robot_state(round, pos, move_n, &mut next_move_positions)
                 {
                     solution = reached;
                     break 'outer;
                 };
             }
-            current_step_positions.clear();
-            std::mem::swap(&mut current_step_positions, &mut next_step_positions)
+            current_move_positions.clear();
+            std::mem::swap(&mut current_move_positions, &mut next_move_positions)
         }
 
         self.visited_nodes.path_to(&solution)
@@ -61,13 +61,13 @@ impl BreadthFirst {
     /// Calculates all unseen reachable positions starting from `initial_pos` and adds them to
     /// `self.visited_nodes`.
     ///
-    /// `steps` is the number of steps needed to reach `initial_pos`.
+    /// `moves` is the number of moves needed to reach `initial_pos`.
     /// The calculated postions are inserted into `pos_store`.
     fn eval_robot_state(
         &mut self,
         round: &Round,
         initial_pos: &RobotPositions,
-        steps: usize,
+        moves: usize,
         next_positions: &mut Vec<RobotPositions>,
     ) -> Option<RobotPositions> {
         for (new_pos, (robot, dir)) in initial_pos.reachable_positions(round.board()) {
@@ -75,7 +75,7 @@ impl BreadthFirst {
             // already exists.
             if !self
                 .visited_nodes
-                .add_node(new_pos.clone(), &initial_pos, steps + 1, (robot, dir))
+                .add_node(new_pos.clone(), &initial_pos, moves + 1, (robot, dir))
             {
                 continue;
             }
@@ -200,7 +200,7 @@ mod tests {
         );
 
         let mut tries = 0;
-        let mut total_steps: u64 = 0;
+        let mut total_moves: u64 = 0;
         let mut path;
         loop {
             path = Vec::new();
@@ -220,7 +220,7 @@ mod tests {
                 current_pos = new_pos;
                 path.push((robot, direction));
 
-                total_steps += 1;
+                total_moves += 1;
                 if round.target_reached(&current_pos) {
                     break;
                 }
@@ -232,7 +232,7 @@ mod tests {
         }
 
         assert_eq!(tries, 2781);
-        assert_eq!(total_steps, 596132);
+        assert_eq!(total_moves, 596132);
         assert_eq!(
             path,
             vec![

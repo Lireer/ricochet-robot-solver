@@ -167,7 +167,7 @@ impl RobotPositions {
             && !self.contains_any_robot(pos.to_direction(direction, board.side_length()))
     }
 
-    /// Creates an Iterator over all positions reachable in one step that differ from `self`.
+    /// Creates an Iterator over all positions reachable in one move that differ from `self`.
     pub fn reachable_positions<'a>(
         &self,
         board: &'a Board,

@@ -37,12 +37,12 @@ fn main() {
         println!("Solving...");
         let solution = IterativeDeepening::new().solve(&round, positions);
         let path = solution.path();
-        println!("Steps needed to reach target: {}", path.len());
+        println!("Movess needed to reach target: {}", path.len());
         println!("Press enter to show path.");
         let _: String = read!("{}\n");
-        println!("Step Robot   Direction");
-        for (step, (robot, dir)) in path.iter().enumerate() {
-            println!(" {:>2}  {:<8}{:<6}", step + 1, robot, dir);
+        println!("Move Robot   Direction");
+        for (move_n, (robot, dir)) in path.iter().enumerate() {
+            println!(" {:>2}  {:<8}{:<6}", move_n + 1, robot, dir);
         }
         println!("Continue? (Y/n)");
 
