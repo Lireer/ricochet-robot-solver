@@ -3,7 +3,6 @@ use std::convert::TryInto;
 use std::ops;
 
 use fnv::FnvHashMap;
-use getset::{CopyGetters, Getters};
 use ricochet_board::{
     Board, Color, Direction, Position, PositionEncoding, RobotPositions, Target, DIRECTIONS, ROBOTS,
 };
@@ -11,11 +10,11 @@ use ricochet_board::{
 use crate::Solution;
 
 #[derive(Debug, Clone)]
-pub(crate) struct VisitedNodes {
-    nodes: FnvHashMap<RobotPositions, VisitedNode>,
+pub(crate) struct VisitedNodes<N: VisitedNode> {
+    nodes: FnvHashMap<RobotPositions, N>,
 }
 
-impl VisitedNodes {
+impl<N: VisitedNode> VisitedNodes<N> {
     /// Creates a new `VisitedNodes` with the given `capacity`.
     pub fn with_capacity(capacity: usize) -> Self {
         Self {
@@ -29,30 +28,34 @@ impl VisitedNodes {
     }
 
     /// Returns the visit information of a node.
-    pub fn get_node(&self, positions: &RobotPositions) -> Option<&VisitedNode> {
+    pub fn get_node(&self, positions: &RobotPositions) -> Option<&N> {
         self.nodes.get(positions)
     }
 
-    pub fn add_node(
+    pub fn add_node<F>(
         &mut self,
         positions: RobotPositions,
         from: &RobotPositions,
         moves: usize,
         moved: (Color, Direction),
-    ) -> bool {
+        create_node: F,
+    ) -> bool
+    where
+        F: FnOnce(usize, RobotPositions, (Color, Direction)) -> N,
+    {
         match self.nodes.entry(positions) {
             Entry::Occupied(occupied) if occupied.get().moves_to_reach() <= moves => {
-                // Ignore positions if `occupied` has less or equal moves
+                // Ignore `positions` if `occupied` has less or equal moves.
                 false
             }
             Entry::Occupied(mut occupied) => {
-                // A shorter path has been found, insert the new path.
-                let visited = VisitedNode::new(moves, from.clone(), moved.0, moved.1);
+                // A shorter path has been found, insert the new node.
+                let visited = create_node(moves, from.clone(), moved);
                 occupied.insert(visited);
                 true
             }
             Entry::Vacant(vacant) => {
-                let visited = VisitedNode::new(moves, from.clone(), moved.0, moved.1);
+                let visited = create_node(moves, from.clone(), moved);
                 vacant.insert(visited);
                 true
             }
@@ -85,35 +88,58 @@ impl VisitedNodes {
     }
 }
 
-#[derive(Debug, Clone, CopyGetters, Getters)]
-pub(crate) struct VisitedNode {
-    #[getset(get_copy = "pub")]
+/// Defines the functionality and information a visited node has to provide.
+///
+/// This makes it possible to have differently optimized implementations depending on the algorithm.
+pub(crate) trait VisitedNode {
+    /// Returns the number of moves needed to reach this node.
+    fn moves_to_reach(&self) -> usize;
+
+    /// Returns the `RobotPositions` this node was reached from.
+    fn previous_position(&self) -> &RobotPositions;
+
+    /// Returns the robot and the direction it has to be moved in to reach `self` from the previous
+    /// position.
+    fn reached_with(&self) -> (Color, Direction);
+}
+
+#[derive(Debug, Clone)]
+pub(crate) struct BasicVisitedNode {
     moves_to_reach: usize,
-    #[getset(get = "pub")]
     previous_position: RobotPositions,
     robot: Color,
     direction: Direction,
 }
 
-impl VisitedNode {
+impl BasicVisitedNode {
     pub fn new(
         moves: usize,
         previous_position: RobotPositions,
-        robot: Color,
-        direction: Direction,
+        movement: (Color, Direction),
     ) -> Self {
-        VisitedNode {
+        BasicVisitedNode {
             moves_to_reach: moves,
             previous_position,
-            robot,
-            direction,
+            robot: movement.0,
+            direction: movement.1,
         }
     }
+}
 
-    pub fn reached_with(&self) -> (Color, Direction) {
+impl VisitedNode for BasicVisitedNode {
+    fn moves_to_reach(&self) -> usize {
+        self.moves_to_reach
+    }
+
+    fn previous_position(&self) -> &RobotPositions {
+        &self.previous_position
+    }
+
+    fn reached_with(&self) -> (Color, Direction) {
         (self.robot, self.direction)
     }
 }
+
 /// This board contains the minimum number of moves to reach the target for each field.
 ///
 /// This minimum is a lower bound and may be impossible to reach even if all other robots are

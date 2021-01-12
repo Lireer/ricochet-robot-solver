@@ -1,6 +1,6 @@
 use ricochet_board::{RobotPositions, Round};
 
-use crate::util::{LeastMovesBoard, VisitedNodes};
+use crate::util::{BasicVisitedNode, LeastMovesBoard, VisitedNodes};
 use crate::{Solution, Solver};
 
 // Why it's good: https://cseweb.ucsd.edu/~elkan/130/itdeep.html
@@ -9,7 +9,7 @@ use crate::{Solution, Solver};
 pub struct IterativeDeepening {
     /// Contains all visited robot positions and the number of moves in the shortest path found from
     /// the starting positions.
-    visited_nodes: VisitedNodes,
+    visited_nodes: VisitedNodes<BasicVisitedNode>,
     /// This board contains the minimum number of moves to reach the target for each field.
     ///
     /// This minimum is a lower bound and may be impossible to reach even if all other robots are
@@ -80,10 +80,13 @@ impl IterativeDeepening {
                 continue;
             }
 
-            if !self
-                .visited_nodes
-                .add_node(pos.clone(), &start_pos, calculating_move, (robot, dir))
-            {
+            if !self.visited_nodes.add_node(
+                pos.clone(),
+                &start_pos,
+                calculating_move,
+                (robot, dir),
+                BasicVisitedNode::new,
+            ) {
                 continue;
             }
 

@@ -1,6 +1,6 @@
 use ricochet_board::{RobotPositions, Round};
 
-use crate::util::VisitedNodes;
+use crate::util::{BasicVisitedNode, VisitedNodes};
 use crate::{Solution, Solver};
 
 /// Finds an optimal solution by visiting all possible game states in order of moves needed to
@@ -8,7 +8,7 @@ use crate::{Solution, Solver};
 #[derive(Debug, Clone)]
 pub struct BreadthFirst {
     /// Manages knowledge of visited nodes.
-    visited_nodes: VisitedNodes,
+    visited_nodes: VisitedNodes<BasicVisitedNode>,
 }
 
 impl Solver for BreadthFirst {
@@ -73,10 +73,13 @@ impl BreadthFirst {
         for (new_pos, (robot, dir)) in initial_pos.reachable_positions(round.board()) {
             // Mark the new positions as visited and continue with the next one, if a better path
             // already exists.
-            if !self
-                .visited_nodes
-                .add_node(new_pos.clone(), &initial_pos, moves + 1, (robot, dir))
-            {
+            if !self.visited_nodes.add_node(
+                new_pos.clone(),
+                &initial_pos,
+                moves + 1,
+                (robot, dir),
+                BasicVisitedNode::new,
+            ) {
                 continue;
             }
 
