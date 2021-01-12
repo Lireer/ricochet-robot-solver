@@ -35,13 +35,13 @@ fn main() {
         let round = Round::new(game.board().clone(), target, target_position);
 
         println!("Solving...");
-        let solution = IterativeDeepening::new().solve(&round, positions);
-        let path = solution.path();
-        println!("Moves needed to reach target: {}", path.len());
+        let path = IterativeDeepening::new().solve(&round, positions);
+        let movements = path.movements();
+        println!("Moves needed to reach target: {}", movements.len());
         println!("Press enter to show path.");
         let _: String = read!("{}\n");
         println!("Move Robot   Direction");
-        for (move_n, (robot, dir)) in path.iter().enumerate() {
+        for (move_n, (robot, dir)) in movements.iter().enumerate() {
             println!(" {:>2}  {:<8}{:<6}", move_n + 1, robot, dir);
         }
         println!("Continue? (Y/n)");
@@ -60,7 +60,7 @@ fn main() {
             let input: String = read!("{}\n");
             match input.to_lowercase().trim() {
                 "y" | "" => {
-                    positions = solution.end_pos().clone();
+                    positions = path.end_pos().clone();
                     break;
                 }
                 "n" => {

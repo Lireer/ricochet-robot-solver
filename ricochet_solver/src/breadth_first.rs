@@ -1,7 +1,7 @@
 use ricochet_board::{RobotPositions, Round};
 
 use crate::util::{BasicVisitedNode, VisitedNodes};
-use crate::{Solution, Solver};
+use crate::{Path, Solver};
 
 /// Finds an optimal solution by visiting all possible game states in order of moves needed to
 /// reach them.
@@ -12,10 +12,10 @@ pub struct BreadthFirst {
 }
 
 impl Solver for BreadthFirst {
-    fn solve(&mut self, round: &Round, start_positions: RobotPositions) -> Solution {
+    fn solve(&mut self, round: &Round, start_positions: RobotPositions) -> Path {
         // Check if the robot has already reached the target
         if round.target_reached(&start_positions) {
-            return Solution::new(start_positions.clone(), start_positions, vec![]);
+            return Path::new(start_positions.clone(), start_positions, vec![]);
         }
 
         self.start(round, start_positions)
@@ -30,14 +30,14 @@ impl BreadthFirst {
         }
     }
 
-    fn start(&mut self, round: &Round, start_pos: RobotPositions) -> Solution {
+    fn start(&mut self, round: &Round, start_pos: RobotPositions) -> Path {
         // contains all positions from which the positions in
         let mut current_move_positions: Vec<RobotPositions> = Vec::with_capacity(16usize.pow(3));
         current_move_positions.push(start_pos.clone());
         let mut next_move_positions: Vec<RobotPositions> = Vec::with_capacity(16usize.pow(4));
 
-        // initialize the positions which will store the solution with the starting position
-        let mut solution = start_pos;
+        // Initialize the positions which will store the final position.
+        let mut final_pos = start_pos;
 
         // Forward pathing to the target.
         // Computes the min. number of moves to the target and creates a tree of reachable positions
@@ -47,7 +47,7 @@ impl BreadthFirst {
                 if let Some(reached) =
                     self.eval_robot_state(round, pos, move_n, &mut next_move_positions)
                 {
-                    solution = reached;
+                    final_pos = reached;
                     break 'outer;
                 };
             }
@@ -55,7 +55,7 @@ impl BreadthFirst {
             std::mem::swap(&mut current_move_positions, &mut next_move_positions)
         }
 
-        self.visited_nodes.path_to(&solution)
+        self.visited_nodes.path_to(&final_pos)
     }
 
     /// Calculates all unseen reachable positions starting from `initial_pos` and adds them to
@@ -105,7 +105,7 @@ impl Default for BreadthFirst {
 #[cfg(test)]
 mod tests {
     use super::BreadthFirst;
-    use crate::{Solution, Solver};
+    use crate::{Path, Solver};
     use chrono::prelude::*;
     use itertools::Itertools;
     use rand::distributions::{Distribution, Uniform};
@@ -155,7 +155,7 @@ mod tests {
 
         let round = Round::new(game.board().clone(), target, target_position);
 
-        let expected = Solution::new(start.clone(), end, vec![]);
+        let expected = Path::new(start.clone(), end, vec![]);
         assert_eq!(BreadthFirst::new().solve(&round, start), expected);
     }
 
@@ -171,7 +171,7 @@ mod tests {
             game.get_target_position(&target).unwrap(),
         );
 
-        let expected = Solution::new(
+        let expected = Path::new(
             pos.clone(),
             RobotPositions::from_tuples(&[(10, 15), (9, 11), (7, 1), (9, 12)]),
             vec![
@@ -298,7 +298,7 @@ mod tests {
                 let target_position = game.get_target_position(&target).expect("unknown target");
                 let round = Round::new(game.board().clone(), target, target_position);
                 let solution = BreadthFirst::new().solve(&round, pos.clone());
-                PositionTest::new(pos.clone(), target, solution.end_pos, solution.path)
+                PositionTest::new(pos.clone(), target, solution.end_pos, solution.movements)
             })
             .collect::<Vec<_>>();
 
@@ -351,7 +351,7 @@ mod tests {
     struct PositionTest {
         pub start_pos: RobotPositions,
         pub target: Target,
-        pub solution: RobotPositions,
+        pub final_pos: RobotPositions,
         pub length: usize,
         pub unique: usize,
         pub path: Vec<(Robot, Direction)>,
@@ -361,13 +361,13 @@ mod tests {
         pub fn new(
             start_pos: RobotPositions,
             target: Target,
-            solution: RobotPositions,
+            final_pos: RobotPositions,
             path: Vec<(Robot, Direction)>,
         ) -> Self {
             Self {
                 start_pos,
                 target,
-                solution,
+                final_pos,
                 length: path.len(),
                 unique: path.iter().map(|&(c, _)| c).unique().count(),
                 path,
@@ -381,13 +381,13 @@ mod tests {
                 fmt,
                 r#"PositionTest {{
                 start_pos: {:?},
-                solution:  {:?},
+                final_pos: {:?},
                 target: {},
                 length: {},
                 unique: {},
                 path: {:?},
             }}"#,
-                self.start_pos, self.solution, self.target, self.length, self.unique, self.path,
+                self.start_pos, self.final_pos, self.target, self.length, self.unique, self.path,
             )
         }
     }

@@ -1,7 +1,7 @@
 use ricochet_board::{RobotPositions, Round};
 
 use crate::util::{BasicVisitedNode, LeastMovesBoard, VisitedNodes};
-use crate::{Solution, Solver};
+use crate::{Path, Solver};
 
 // Why it's good: https://cseweb.ucsd.edu/~elkan/130/itdeep.html
 // Optimizations: https://speakerdeck.com/fogleman/ricochet-robots-solver-algorithms
@@ -18,10 +18,10 @@ pub struct IterativeDeepening {
 }
 
 impl Solver for IterativeDeepening {
-    fn solve(&mut self, round: &Round, start_positions: RobotPositions) -> Solution {
+    fn solve(&mut self, round: &Round, start_positions: RobotPositions) -> Path {
         // Check if the robot has already reached the target
         if round.target_reached(&start_positions) {
-            return Solution::new(start_positions.clone(), start_positions, vec![]);
+            return Path::new(start_positions.clone(), start_positions, vec![]);
         }
 
         self.move_board = LeastMovesBoard::new(round.board(), round.target_position());
@@ -110,7 +110,7 @@ impl Default for IterativeDeepening {
 mod tests {
     use ricochet_board::{template, Direction, Game, Robot, RobotPositions, Round, Symbol, Target};
 
-    use crate::{IterativeDeepening, Solution, Solver};
+    use crate::{IterativeDeepening, Path, Solver};
 
     fn create_board() -> (RobotPositions, Game) {
         const ORIENTATIONS: [template::Orientation; 4] = [
@@ -152,7 +152,7 @@ mod tests {
 
         let round = Round::new(game.board().clone(), target, target_position);
 
-        let expected = Solution::new(start.clone(), end, vec![]);
+        let expected = Path::new(start.clone(), end, vec![]);
         assert_eq!(IterativeDeepening::new().solve(&round, start), expected);
     }
 
@@ -168,7 +168,7 @@ mod tests {
             game.get_target_position(&target).unwrap(),
         );
 
-        let expected = Solution::new(
+        let expected = Path::new(
             pos.clone(),
             RobotPositions::from_tuples(&[(10, 15), (9, 11), (7, 1), (9, 12)]),
             vec![

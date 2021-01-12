@@ -32,6 +32,10 @@ fn bench_util(c: &mut Criterion) {
     group.finish();
 }
 
+fn bench_22_move_problem(c: &mut Criterion) {
+    todo!()
+}
+
 criterion_group!(benches, bench_bfs, bench_util);
 criterion_main!(benches);
 

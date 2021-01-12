@@ -7,7 +7,7 @@ use ricochet_board::{
     Board, Direction, Position, PositionEncoding, Robot, RobotPositions, Target, DIRECTIONS, ROBOTS,
 };
 
-use crate::Solution;
+use crate::Path;
 
 #[derive(Debug, Clone)]
 pub(crate) struct VisitedNodes<N: VisitedNode> {
@@ -66,7 +66,7 @@ impl<N: VisitedNode> VisitedNodes<N> {
     ///
     /// # Panics
     /// Panics if `positions` has yet to be visited.
-    pub fn path_to(&self, positions: &RobotPositions) -> Solution {
+    pub fn path_to(&self, positions: &RobotPositions) -> Path {
         let mut path = Vec::with_capacity(32);
         let mut current_pos = positions.clone();
 
@@ -84,7 +84,7 @@ impl<N: VisitedNode> VisitedNodes<N> {
         }
 
         path.reverse();
-        Solution::new(current_pos, positions.clone(), path)
+        Path::new(current_pos, positions.clone(), path)
     }
 }
 
