@@ -21,7 +21,7 @@ pub const DIRECTIONS: [Direction; 4] = [
 ];
 
 /// All robots defined by their color.
-pub const ROBOTS: [Color; 4] = [Color::Red, Color::Blue, Color::Green, Color::Yellow];
+pub const ROBOTS: [Robot; 4] = [Robot::Red, Robot::Blue, Robot::Green, Robot::Yellow];
 
 /// A field on the board.
 ///
@@ -55,9 +55,9 @@ pub struct Board {
     walls: Walls,
 }
 
-/// The colors used to identify frobots.
+/// The robots identified by their color.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-pub enum Color {
+pub enum Robot {
     Red,
     Blue,
     Green,
@@ -116,21 +116,21 @@ impl fmt::Display for Target {
     }
 }
 
-impl TryFrom<Target> for Color {
+impl TryFrom<Target> for Robot {
     type Error = &'static str;
 
     fn try_from(value: Target) -> Result<Self, Self::Error> {
         match value {
-            Target::Red(_) => Ok(Color::Red),
-            Target::Blue(_) => Ok(Color::Blue),
-            Target::Green(_) => Ok(Color::Green),
-            Target::Yellow(_) => Ok(Color::Yellow),
-            Target::Spiral => Err("Conversion of target spiral to color is not possible"),
+            Target::Red(_) => Ok(Robot::Red),
+            Target::Blue(_) => Ok(Robot::Blue),
+            Target::Green(_) => Ok(Robot::Green),
+            Target::Yellow(_) => Ok(Robot::Yellow),
+            Target::Spiral => Err("Conversion of target spiral to robot color is not possible"),
         }
     }
 }
 
-impl fmt::Display for Color {
+impl fmt::Display for Robot {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let string = format!("{:?}", &self);
         f.pad(&string)
@@ -153,7 +153,7 @@ impl Board {
         Self { walls }
     }
 
-    /// Create a new empty board with no walls with `side_lendth`.
+    /// Create a new empty board with no walls with `side_length`.
     pub fn new_empty(side_length: PositionEncoding) -> Self {
         Self {
             walls: vec![vec![Field::default(); side_length as usize]; side_length as usize],
@@ -291,7 +291,7 @@ impl Round {
             _ => positions.contains_colored_robot(
                 self.target
                     .try_into()
-                    .expect("Failed to extract `Color` from `Target`"),
+                    .expect("Failed to extract the robot corresponding to the target"),
                 self.target_position,
             ),
         }
@@ -422,7 +422,7 @@ pub fn board_string(walls: &[Vec<Field>]) -> String {
 
 #[cfg(test)]
 mod tests {
-    use crate::{template, Board, Color, Direction, Game, Position, RobotPositions};
+    use crate::{template, Board, Direction, Game, Position, Robot, RobotPositions};
 
     fn create_board() -> (RobotPositions, Board) {
         const ORIENTATIONS: [template::Orientation; 4] = [
@@ -456,32 +456,32 @@ mod tests {
     #[test]
     fn move_right() {
         let (mut positions, board) = create_board();
-        assert_eq!(positions[Color::Green], Position::from_tuple((7, 1)));
-        positions = positions.move_in_direction(&board, Color::Green, Direction::Right);
-        assert_eq!(positions[Color::Green], Position::from_tuple((15, 1)));
+        assert_eq!(positions[Robot::Green], Position::from_tuple((7, 1)));
+        positions = positions.move_in_direction(&board, Robot::Green, Direction::Right);
+        assert_eq!(positions[Robot::Green], Position::from_tuple((15, 1)));
     }
 
     #[test]
     fn move_left() {
         let (mut positions, board) = create_board();
-        assert_eq!(positions[Color::Green], Position::from_tuple((7, 1)));
-        positions = positions.move_in_direction(&board, Color::Green, Direction::Left);
-        assert_eq!(positions[Color::Green], Position::from_tuple((5, 1)));
+        assert_eq!(positions[Robot::Green], Position::from_tuple((7, 1)));
+        positions = positions.move_in_direction(&board, Robot::Green, Direction::Left);
+        assert_eq!(positions[Robot::Green], Position::from_tuple((5, 1)));
     }
 
     #[test]
     fn move_up() {
         let (mut positions, board) = create_board();
-        assert_eq!(positions[Color::Green], Position::from_tuple((7, 1)));
-        positions = positions.move_in_direction(&board, Color::Green, Direction::Up);
-        assert_eq!(positions[Color::Green], Position::from_tuple((7, 0)));
+        assert_eq!(positions[Robot::Green], Position::from_tuple((7, 1)));
+        positions = positions.move_in_direction(&board, Robot::Green, Direction::Up);
+        assert_eq!(positions[Robot::Green], Position::from_tuple((7, 0)));
     }
 
     #[test]
     fn move_down() {
         let (mut positions, board) = create_board();
-        assert_eq!(positions[Color::Green], Position::from_tuple((7, 1)));
-        positions = positions.move_in_direction(&board, Color::Green, Direction::Down);
-        assert_eq!(positions[Color::Green], Position::from_tuple((7, 6)));
+        assert_eq!(positions[Robot::Green], Position::from_tuple((7, 1)));
+        positions = positions.move_in_direction(&board, Robot::Green, Direction::Down);
+        assert_eq!(positions[Robot::Green], Position::from_tuple((7, 6)));
     }
 }

@@ -3,7 +3,7 @@ mod iterative_deepening;
 pub mod util;
 
 use getset::Getters;
-use ricochet_board::{Color, Direction, RobotPositions, Round};
+use ricochet_board::{Direction, Robot, RobotPositions, Round};
 
 pub use breadth_first::BreadthFirst;
 pub use iterative_deepening::IterativeDeepening;
@@ -16,13 +16,13 @@ pub trait Solver {
 /// A solution to a ricochet robots problem.
 ///
 /// Contains the starting positions of the robots, their final positions and a path from the former
-/// to the latter. The path consists of tuples of the robot color and the direction it moved to.
+/// to the latter. The path consists of tuples of a robot and the direction it moved to.
 #[derive(Debug, Clone, PartialEq, Eq, Getters)]
 #[getset(get = "pub")]
 pub struct Solution {
     start_pos: RobotPositions,
     end_pos: RobotPositions,
-    path: Vec<(Color, Direction)>,
+    path: Vec<(Robot, Direction)>,
 }
 
 impl Solution {
@@ -31,7 +31,7 @@ impl Solution {
     pub fn new(
         start_pos: RobotPositions,
         end_pos: RobotPositions,
-        path: Vec<(Color, Direction)>,
+        path: Vec<(Robot, Direction)>,
     ) -> Self {
         Self {
             start_pos,

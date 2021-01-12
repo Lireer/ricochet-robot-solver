@@ -4,7 +4,7 @@ use std::ops;
 
 use fnv::FnvHashMap;
 use ricochet_board::{
-    Board, Color, Direction, Position, PositionEncoding, RobotPositions, Target, DIRECTIONS, ROBOTS,
+    Board, Direction, Position, PositionEncoding, Robot, RobotPositions, Target, DIRECTIONS, ROBOTS,
 };
 
 use crate::Solution;
@@ -37,11 +37,11 @@ impl<N: VisitedNode> VisitedNodes<N> {
         positions: RobotPositions,
         from: &RobotPositions,
         moves: usize,
-        moved: (Color, Direction),
+        moved: (Robot, Direction),
         create_node: F,
     ) -> bool
     where
-        F: FnOnce(usize, RobotPositions, (Color, Direction)) -> N,
+        F: FnOnce(usize, RobotPositions, (Robot, Direction)) -> N,
     {
         match self.nodes.entry(positions) {
             Entry::Occupied(occupied) if occupied.get().moves_to_reach() <= moves => {
@@ -100,14 +100,14 @@ pub(crate) trait VisitedNode {
 
     /// Returns the robot and the direction it has to be moved in to reach `self` from the previous
     /// position.
-    fn reached_with(&self) -> (Color, Direction);
+    fn reached_with(&self) -> (Robot, Direction);
 }
 
 #[derive(Debug, Clone)]
 pub(crate) struct BasicVisitedNode {
     moves_to_reach: usize,
     previous_position: RobotPositions,
-    robot: Color,
+    robot: Robot,
     direction: Direction,
 }
 
@@ -115,7 +115,7 @@ impl BasicVisitedNode {
     pub fn new(
         moves: usize,
         previous_position: RobotPositions,
-        movement: (Color, Direction),
+        movement: (Robot, Direction),
     ) -> Self {
         BasicVisitedNode {
             moves_to_reach: moves,
@@ -135,7 +135,7 @@ impl VisitedNode for BasicVisitedNode {
         &self.previous_position
     }
 
-    fn reached_with(&self) -> (Color, Direction) {
+    fn reached_with(&self) -> (Robot, Direction) {
         (self.robot, self.direction)
     }
 }
@@ -210,7 +210,7 @@ impl LeastMovesBoard {
 
     /// Returns the lower bound of the number of moves needed to reach the `target` with `robots`.
     ///
-    /// The lower bound is chosen depending on the robot color and in case of the spiral target the
+    /// The lower bound is chosen depending on the robot and in case of the spiral target the
     /// minimum of any of the four robots is returned.
     pub fn min_moves(&self, robots: &RobotPositions, target: Target) -> usize {
         match target.try_into() {

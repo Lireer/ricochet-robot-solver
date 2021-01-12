@@ -2,7 +2,7 @@ use std::collections::HashSet;
 use text_io::{read, try_scan};
 
 use ricochet_board::{
-    template, Color, Game, PositionEncoding, RobotPositions, Round, Symbol, Target,
+    template, Game, PositionEncoding, Robot, RobotPositions, Round, Symbol, Target,
 };
 use ricochet_solver::{IterativeDeepening, Solver};
 
@@ -37,7 +37,7 @@ fn main() {
         println!("Solving...");
         let solution = IterativeDeepening::new().solve(&round, positions);
         let path = solution.path();
-        println!("Movess needed to reach target: {}", path.len());
+        println!("Moves needed to reach target: {}", path.len());
         println!("Press enter to show path.");
         let _: String = read!("{}\n");
         println!("Move Robot   Direction");
@@ -141,7 +141,7 @@ fn ask_for_robot_positions() -> RobotPositions {
             "Please input the coordinates of the Robots.\nPlease write in this format: \
              \"column,row\""
         );
-        for (i, &robot) in [Color::Red, Color::Blue, Color::Green, Color::Yellow]
+        for (i, &robot) in [Robot::Red, Robot::Blue, Robot::Green, Robot::Yellow]
             .iter()
             .enumerate()
         {

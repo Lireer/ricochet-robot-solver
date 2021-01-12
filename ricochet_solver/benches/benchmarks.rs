@@ -1,7 +1,7 @@
 use std::vec;
 
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
-use ricochet_board::{template, Color, Game, RobotPositions, Round, Symbol, Target};
+use ricochet_board::{template, Game, Robot, RobotPositions, Round, Symbol, Target};
 use ricochet_solver::util::LeastMovesBoard;
 use ricochet_solver::{BreadthFirst, IterativeDeepening, Solver};
 
@@ -22,7 +22,7 @@ fn bench_bfs(c: &mut Criterion) {
 
 fn bench_util(c: &mut Criterion) {
     let (pos, game) = create_board();
-    let target_position = pos[Color::Red];
+    let target_position = pos[Robot::Red];
 
     let mut group = c.benchmark_group("Ricochet Solver Utils");
     group.bench_function(BenchmarkId::new("LeastMovesBoard", ""), |b| {

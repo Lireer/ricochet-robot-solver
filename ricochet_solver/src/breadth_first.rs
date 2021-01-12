@@ -62,7 +62,7 @@ impl BreadthFirst {
     /// `self.visited_nodes`.
     ///
     /// `moves` is the number of moves needed to reach `initial_pos`.
-    /// The calculated postions are inserted into `pos_store`.
+    /// The calculated positions are inserted into `pos_store`.
     fn eval_robot_state(
         &mut self,
         round: &Round,
@@ -175,15 +175,15 @@ mod tests {
             pos.clone(),
             RobotPositions::from_tuples(&[(10, 15), (9, 11), (7, 1), (9, 12)]),
             vec![
-                (Color::Red, Direction::Right),
-                (Color::Red, Direction::Down),
-                (Color::Red, Direction::Right),
-                (Color::Blue, Direction::Right),
-                (Color::Blue, Direction::Down),
-                (Color::Red, Direction::Left),
-                (Color::Red, Direction::Down),
-                (Color::Yellow, Direction::Right),
-                (Color::Yellow, Direction::Up),
+                (Robot::Red, Direction::Right),
+                (Robot::Red, Direction::Down),
+                (Robot::Red, Direction::Right),
+                (Robot::Blue, Direction::Right),
+                (Robot::Blue, Direction::Down),
+                (Robot::Red, Direction::Left),
+                (Robot::Red, Direction::Down),
+                (Robot::Yellow, Direction::Right),
+                (Robot::Yellow, Direction::Up),
             ],
         );
 
@@ -239,9 +239,9 @@ mod tests {
         assert_eq!(
             path,
             vec![
-                (Color::Red, Direction::Up),
-                (Color::Red, Direction::Right),
-                (Color::Red, Direction::Down)
+                (Robot::Red, Direction::Up),
+                (Robot::Red, Direction::Right),
+                (Robot::Red, Direction::Down)
             ]
         );
     }
@@ -327,21 +327,21 @@ mod tests {
                 Target::Yellow(Symbol::Hexagon),
                 RobotPositions::from_tuples(&[(14, 11), (13, 11), (3, 15), (9, 12)]),
                 vec![
-                    (Color::Red, Direction::Up),
-                    (Color::Red, Direction::Right),
-                    (Color::Red, Direction::Down),
-                    (Color::Red, Direction::Right),
-                    (Color::Blue, Direction::Down),
-                    (Color::Blue, Direction::Right),
-                    (Color::Yellow, Direction::Right),
-                    (Color::Yellow, Direction::Down),
-                    (Color::Yellow, Direction::Left),
-                    (Color::Yellow, Direction::Down),
-                    (Color::Yellow, Direction::Left),
-                    (Color::Yellow, Direction::Down),
-                    (Color::Yellow, Direction::Right),
-                    (Color::Yellow, Direction::Up),
-                    (Color::Yellow, Direction::Left),
+                    (Robot::Red, Direction::Up),
+                    (Robot::Red, Direction::Right),
+                    (Robot::Red, Direction::Down),
+                    (Robot::Red, Direction::Right),
+                    (Robot::Blue, Direction::Down),
+                    (Robot::Blue, Direction::Right),
+                    (Robot::Yellow, Direction::Right),
+                    (Robot::Yellow, Direction::Down),
+                    (Robot::Yellow, Direction::Left),
+                    (Robot::Yellow, Direction::Down),
+                    (Robot::Yellow, Direction::Left),
+                    (Robot::Yellow, Direction::Down),
+                    (Robot::Yellow, Direction::Right),
+                    (Robot::Yellow, Direction::Up),
+                    (Robot::Yellow, Direction::Left),
                 ]
             ),
         )
@@ -354,7 +354,7 @@ mod tests {
         pub solution: RobotPositions,
         pub length: usize,
         pub unique: usize,
-        pub path: Vec<(Color, Direction)>,
+        pub path: Vec<(Robot, Direction)>,
     }
 
     impl PositionTest {
@@ -362,7 +362,7 @@ mod tests {
             start_pos: RobotPositions,
             target: Target,
             solution: RobotPositions,
-            path: Vec<(Color, Direction)>,
+            path: Vec<(Robot, Direction)>,
         ) -> Self {
             Self {
                 start_pos,

@@ -1,7 +1,7 @@
 use itertools::Itertools;
 use std::{fmt, mem, ops};
 
-use crate::{Board, Color, Direction, DIRECTIONS, ROBOTS};
+use crate::{Board, Direction, Robot, DIRECTIONS, ROBOTS};
 
 /// The type a position is encoded as.
 ///
@@ -39,7 +39,7 @@ impl Position {
     /// The first half of the bits is `0` the rest `1`. This would be `0000_1111` for `u8`
     /// or `0000_0000_1111_1111` for `u16`.
     const ROW_FLAG: PositionEncoding = {
-        // When 1.50 is stablized, this will be possible.
+        // When 1.50 is stabilized, this will be possible.
         // Currently requires the `const_int_pow` feature.
         // (2 as PositionEncoding).pow((Position::BIT_COUNT / 2) as u32) - 1
 
@@ -133,13 +133,13 @@ impl RobotPositions {
         }
     }
 
-    /// Sets the robot with `color` to `new_position`.
-    fn set_robot(&mut self, robot: Color, new_position: Position) {
+    /// Sets the `robot` to `new_position`.
+    fn set_robot(&mut self, robot: Robot, new_position: Position) {
         *match robot {
-            Color::Red => &mut self.red,
-            Color::Blue => &mut self.blue,
-            Color::Green => &mut self.green,
-            Color::Yellow => &mut self.yellow,
+            Robot::Red => &mut self.red,
+            Robot::Blue => &mut self.blue,
+            Robot::Green => &mut self.green,
+            Robot::Yellow => &mut self.yellow,
         } = new_position;
     }
 
@@ -149,18 +149,18 @@ impl RobotPositions {
         pos == self.red || pos == self.blue || pos == self.green || pos == self.yellow
     }
 
-    /// Checks if the robot with `color` is on `pos`.
+    /// Checks if the `robot` is on `pos`.
     #[inline(always)]
-    pub fn contains_colored_robot(&self, color: Color, pos: Position) -> bool {
-        match color {
-            Color::Red => pos == self.red,
-            Color::Blue => pos == self.blue,
-            Color::Green => pos == self.green,
-            Color::Yellow => pos == self.yellow,
+    pub fn contains_colored_robot(&self, robot: Robot, pos: Position) -> bool {
+        match robot {
+            Robot::Red => pos == self.red,
+            Robot::Blue => pos == self.blue,
+            Robot::Green => pos == self.green,
+            Robot::Yellow => pos == self.yellow,
         }
     }
 
-    /// Checks if the adjacent field in the direction is reachable, i.e. no wall inbetween and not
+    /// Checks if the adjacent field in the direction is reachable, i.e. no wall in between and not
     /// already occupied.
     fn adjacent_reachable(&self, board: &Board, pos: Position, direction: Direction) -> bool {
         !board.is_adjacent_to_wall(pos, direction)
@@ -171,7 +171,7 @@ impl RobotPositions {
     pub fn reachable_positions<'a>(
         &self,
         board: &'a Board,
-    ) -> impl Iterator<Item = (RobotPositions, (Color, Direction))> + 'a {
+    ) -> impl Iterator<Item = (RobotPositions, (Robot, Direction))> + 'a {
         let initial_pos = self.clone();
         ROBOTS
             .iter()
@@ -188,7 +188,7 @@ impl RobotPositions {
     }
 
     /// Moves `robot` as far in the given `direction` as possible.
-    pub fn move_in_direction(mut self, board: &Board, robot: Color, direction: Direction) -> Self {
+    pub fn move_in_direction(mut self, board: &Board, robot: Robot, direction: Direction) -> Self {
         // start form the current position
         let mut temp_pos = self[robot];
 
@@ -204,15 +204,15 @@ impl RobotPositions {
     }
 }
 
-impl ops::Index<Color> for RobotPositions {
+impl ops::Index<Robot> for RobotPositions {
     type Output = Position;
 
-    fn index(&self, index: Color) -> &Self::Output {
+    fn index(&self, index: Robot) -> &Self::Output {
         match index {
-            Color::Red => &self.red,
-            Color::Blue => &self.blue,
-            Color::Green => &self.green,
-            Color::Yellow => &self.yellow,
+            Robot::Red => &self.red,
+            Robot::Blue => &self.blue,
+            Robot::Green => &self.green,
+            Robot::Yellow => &self.yellow,
         }
     }
 }
@@ -243,7 +243,7 @@ impl fmt::Display for RobotPositions {
 #[cfg(test)]
 mod tests {
     use super::Position;
-    use crate::{Board, Color, Direction, RobotPositions};
+    use crate::{Board, Direction, Robot, RobotPositions};
 
     #[test]
     fn check_flags() {
@@ -260,19 +260,19 @@ mod tests {
         let expected = [
             (
                 RobotPositions::from_tuples(&[(0, 0), (15, 0), (0, 1), (1, 1)]),
-                (Color::Blue, Direction::Right),
+                (Robot::Blue, Direction::Right),
             ),
             (
                 RobotPositions::from_tuples(&[(0, 0), (1, 0), (0, 15), (1, 1)]),
-                (Color::Green, Direction::Down),
+                (Robot::Green, Direction::Down),
             ),
             (
                 RobotPositions::from_tuples(&[(0, 0), (1, 0), (0, 1), (1, 15)]),
-                (Color::Yellow, Direction::Down),
+                (Robot::Yellow, Direction::Down),
             ),
             (
                 RobotPositions::from_tuples(&[(0, 0), (1, 0), (0, 1), (15, 1)]),
-                (Color::Yellow, Direction::Right),
+                (Robot::Yellow, Direction::Right),
             ),
         ];
 

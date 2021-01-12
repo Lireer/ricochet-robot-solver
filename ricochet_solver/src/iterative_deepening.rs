@@ -108,7 +108,7 @@ impl Default for IterativeDeepening {
 
 #[cfg(test)]
 mod tests {
-    use ricochet_board::{template, Color, Direction, Game, RobotPositions, Round, Symbol, Target};
+    use ricochet_board::{template, Direction, Game, Robot, RobotPositions, Round, Symbol, Target};
 
     use crate::{IterativeDeepening, Solution, Solver};
 
@@ -172,15 +172,15 @@ mod tests {
             pos.clone(),
             RobotPositions::from_tuples(&[(10, 15), (9, 11), (7, 1), (9, 12)]),
             vec![
-                (Color::Red, Direction::Right),
-                (Color::Red, Direction::Down),
-                (Color::Red, Direction::Right),
-                (Color::Blue, Direction::Right),
-                (Color::Blue, Direction::Down),
-                (Color::Red, Direction::Left),
-                (Color::Red, Direction::Down),
-                (Color::Yellow, Direction::Right),
-                (Color::Yellow, Direction::Up),
+                (Robot::Red, Direction::Right),
+                (Robot::Red, Direction::Down),
+                (Robot::Red, Direction::Right),
+                (Robot::Blue, Direction::Right),
+                (Robot::Blue, Direction::Down),
+                (Robot::Red, Direction::Left),
+                (Robot::Red, Direction::Down),
+                (Robot::Yellow, Direction::Right),
+                (Robot::Yellow, Direction::Up),
             ],
         );
 
