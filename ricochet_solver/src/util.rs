@@ -114,13 +114,30 @@ impl VisitedNode {
         (self.robot, self.direction)
     }
 }
-
-#[derive(Debug, Clone)]
+/// This board contains the minimum number of steps to reach the target for each field.
+///
+/// This minimum is a lower bound and may be impossible to reach even if all other robots are
+/// positioned perfectly. If the lower bound of a position is the square of the side_length of the
+/// board or the number of fields plus one, then the target is impossible to reach from that field.
+///
+/// `LeastMovesBoard` implements `Index<Position>` which makes getting the calculated minimum of a
+/// positon easy.
+#[derive(Debug, Clone, Default)]
 pub struct LeastMovesBoard {
     board: Vec<Vec<usize>>,
+    target_position: Position,
 }
 
 impl LeastMovesBoard {
+    /// Creates a new board and calculates the minimum number of steps needed to reach the target
+    /// from each field.
+    ///
+    /// The board is created by starting from the target position and going through all fields from
+    /// which the target can be reached in one step. These fields are assigned a lower bound of 1
+    /// and are added to the list of next positons to be expanded. This repeats until only a subset
+    /// of the positions from which the target can never be reached are left. Those positions are
+    /// marked with a lower bound of `board.side_length().pow(2)`, a bound longer than possible on a
+    /// square board.
     pub fn new(board: &Board, target_position: Position) -> Self {
         let len = board.side_length() as usize;
         let mut move_board = vec![vec![len * len; len]; len];
@@ -159,9 +176,16 @@ impl LeastMovesBoard {
             std::mem::swap(&mut current_steps, &mut next_steps);
         }
 
-        Self { board: move_board }
+        Self {
+            board: move_board,
+            target_position,
+        }
     }
 
+    /// Returns the lower bound of the number of steps needed to reach the `target` with `robots`.
+    ///
+    /// The lower bound is chosen depending on the robot color and in case of the spiral target the
+    /// minimum of any of the four robots is returned.
     pub fn min_steps(&self, robots: &RobotPositions, target: Target) -> usize {
         match target.try_into() {
             Ok(color) => self[robots[color]],
@@ -174,6 +198,12 @@ impl LeastMovesBoard {
                     .expect("Failed to find minimum number of steps to the target.")
             }
         }
+    }
+
+    /// Checks whether the `target` is impossible to reach by checking if the lower bound returned
+    /// by [`min_steps`](Self::min_steps) is greater than the number of fields on the board.
+    pub fn is_unsolvable(&self, robots: &RobotPositions, target: Target) -> bool {
+        self.min_steps(robots, target) > self.board.len().pow(2)
     }
 }
 

@@ -16,7 +16,7 @@ pub type PositionEncoding = u16;
 /// |x   |y   |
 /// |0000|0000|
 /// ```
-#[derive(Copy, Clone, Hash, PartialEq, Eq)]
+#[derive(Copy, Clone, Default, Hash, PartialEq, Eq)]
 pub struct Position {
     encoded_position: PositionEncoding,
 }

@@ -5,10 +5,16 @@ use crate::{Solution, Solver};
 
 // Why it's good: https://cseweb.ucsd.edu/~elkan/130/itdeep.html
 // Optimizations: https://speakerdeck.com/fogleman/ricochet-robots-solver-algorithms
+#[derive(Debug)]
 pub struct IterativeDeepening {
     /// Contains all visited robot positions and the number of steps in the shortest path found from
     /// the starting positions.
     visited_nodes: VisitedNodes,
+    /// This board contains the minimum number of steps to reach the target for each field.
+    ///
+    /// This minimum is a lower bound and may be impossible to reach even if all other robots are
+    /// positioned perfectly.
+    move_board: LeastMovesBoard,
 }
 
 impl Solver for IterativeDeepening {
@@ -18,12 +24,18 @@ impl Solver for IterativeDeepening {
             return Solution::new(start_positions.clone(), start_positions, vec![]);
         }
 
-        let move_board = LeastMovesBoard::new(round.board(), round.target_position());
-        let start = move_board.min_steps(&start_positions, round.target());
+        self.move_board = LeastMovesBoard::new(round.board(), round.target_position());
+        let start = self.move_board.min_steps(&start_positions, round.target());
+
+        if self
+            .move_board
+            .is_unsolvable(&start_positions, round.target())
+        {
+            panic!("It's not possible to reach the target starting from this robot configuration");
+        }
 
         for i in start.. {
-            let maybe =
-                self.depth_limited_dfs(round, start_positions.clone(), 0, i, i, &move_board);
+            let maybe = self.depth_limited_dfs(round, start_positions.clone(), 0, i);
             if let Some(final_pos) = maybe {
                 return self.visited_nodes.path_to(&final_pos);
             }
@@ -37,6 +49,7 @@ impl IterativeDeepening {
     pub fn new() -> Self {
         Self {
             visited_nodes: VisitedNodes::with_capacity(65536),
+            move_board: Default::default(),
         }
     }
 
@@ -47,8 +60,6 @@ impl IterativeDeepening {
         start_pos: RobotPositions,
         at_step: usize,
         max_depth: usize,
-        iddfs_depth: usize,
-        move_board: &LeastMovesBoard,
     ) -> Option<RobotPositions> {
         // Return the final position if the target has been reached.
         if max_depth == 0 {
@@ -61,8 +72,9 @@ impl IterativeDeepening {
         let calculating_step = at_step + 1;
 
         for (pos, (robot, dir)) in start_pos.reachable_positions(round.board()) {
-            // Ignore the new positions if the target can't be reached within the iddfs_depth limit.
-            if iddfs_depth - calculating_step < move_board.min_steps(&pos, round.target()) {
+            // Ignore the new positions if the target can't be reached within the limit of
+            // max_depth - 1 steps.
+            if max_depth - 1 < self.move_board.min_steps(&pos, round.target()) {
                 continue;
             }
 
@@ -73,14 +85,9 @@ impl IterativeDeepening {
                 continue;
             }
 
-            if let Some(final_pos) = self.depth_limited_dfs(
-                round,
-                pos,
-                calculating_step,
-                max_depth - 1,
-                iddfs_depth,
-                move_board,
-            ) {
+            if let Some(final_pos) =
+                self.depth_limited_dfs(round, pos, calculating_step, max_depth - 1)
+            {
                 return Some(final_pos);
             }
         }
