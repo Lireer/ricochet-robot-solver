@@ -73,13 +73,17 @@ impl BreadthFirst {
         for (new_pos, (robot, dir)) in initial_pos.reachable_positions(round.board()) {
             // Mark the new positions as visited and continue with the next one, if a better path
             // already exists.
-            if !self.visited_nodes.add_node(
-                new_pos.clone(),
-                &initial_pos,
-                moves + 1,
-                (robot, dir),
-                BasicVisitedNode::new,
-            ) {
+            if self
+                .visited_nodes
+                .add_node(
+                    new_pos.clone(),
+                    &initial_pos,
+                    moves + 1,
+                    (robot, dir),
+                    &BasicVisitedNode::new,
+                )
+                .was_discarded()
+            {
                 continue;
             }
 

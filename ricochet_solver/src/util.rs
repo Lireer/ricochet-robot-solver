@@ -1,13 +1,44 @@
-use std::collections::hash_map::Entry;
-use std::convert::TryInto;
-use std::ops;
 use fxhash::FxHashMap;
 use ricochet_board::{
     Board, Direction, Position, PositionEncoding, Robot, RobotPositions, Target, DIRECTIONS, ROBOTS,
 };
+use std::collections::hash_map::Entry;
+use std::convert::TryInto;
+use std::ops;
 
 use crate::Path;
 
+/// The possible outcomes when trying to add a node to [`VisitedNodes`](VisitedNodes).
+pub(crate) enum AddNodeOutcome {
+    /// The added node was previously unknown and has been added.
+    New,
+    /// The node has been seen before but is worse than the newly added one.
+    WorseKnown,
+    /// The node has been seen before and can be reached with fewer moves. The new node has been
+    /// discarded.
+    BetterKnown,
+}
+
+impl AddNodeOutcome {
+    /// Returns `true` if the node has been added to `VisitedNodes`.
+    pub fn was_added(&self) -> bool {
+        match self {
+            AddNodeOutcome::New => true,
+            AddNodeOutcome::WorseKnown => true,
+            AddNodeOutcome::BetterKnown => false,
+        }
+    }
+
+    /// Returns `true` if the node has been discarded.
+    pub fn was_discarded(&self) -> bool {
+        !self.was_added()
+    }
+}
+
+/// Stores `RobotPositions` and information regarding the positions like nodes in a tree.
+///
+/// This just wraps a map from `RobotPositions` to a `VisitedNode` and provides convenience methods
+/// like [`add_node`](VisitedNodes::add_node) or [`path_to`](VisitedNodes::path_to).
 #[derive(Debug, Clone)]
 pub(crate) struct VisitedNodes<N: VisitedNode> {
     nodes: FxHashMap<RobotPositions, N>,
@@ -31,32 +62,38 @@ impl<N: VisitedNode> VisitedNodes<N> {
         self.nodes.get(positions)
     }
 
+    /// Adds a node at `positions`.
+    ///
+    /// If there's already a node at `positions` that can be reached with fewer `moves`, no new node
+    /// is created and the function returns.
+    /// But if no node already exists or if the new node can be reached in fewer `moves`, the new
+    /// node is added using `create_nodes`.
     pub fn add_node<F>(
         &mut self,
         positions: RobotPositions,
         from: &RobotPositions,
         moves: usize,
         moved: (Robot, Direction),
-        create_node: F,
-    ) -> bool
+        create_node: &F,
+    ) -> AddNodeOutcome
     where
-        F: FnOnce(usize, RobotPositions, (Robot, Direction)) -> N,
+        F: Fn(usize, RobotPositions, (Robot, Direction)) -> N,
     {
         match self.nodes.entry(positions) {
             Entry::Occupied(occupied) if occupied.get().moves_to_reach() <= moves => {
                 // Ignore `positions` if `occupied` has less or equal moves.
-                false
+                AddNodeOutcome::BetterKnown
             }
             Entry::Occupied(mut occupied) => {
                 // A shorter path has been found, insert the new node.
                 let visited = create_node(moves, from.clone(), moved);
                 occupied.insert(visited);
-                true
+                AddNodeOutcome::WorseKnown
             }
             Entry::Vacant(vacant) => {
                 let visited = create_node(moves, from.clone(), moved);
                 vacant.insert(visited);
-                true
+                AddNodeOutcome::New
             }
         }
     }
@@ -102,15 +139,21 @@ pub(crate) trait VisitedNode {
     fn reached_with(&self) -> (Robot, Direction);
 }
 
+/// A node containing the most basic information needed to work with [`VisitedNodes`](VisitedNodes).
 #[derive(Debug, Clone)]
 pub(crate) struct BasicVisitedNode {
+    /// The number of moves needed to reach this node.
     moves_to_reach: usize,
+    /// From where can this node be reached.
     previous_position: RobotPositions,
+    /// The robot that was moved to arrive from the previous positions.
     robot: Robot,
+    /// The direction the robot was moved to.
     direction: Direction,
 }
 
 impl BasicVisitedNode {
+    /// Creates a new node.
     pub fn new(
         moves: usize,
         previous_position: RobotPositions,

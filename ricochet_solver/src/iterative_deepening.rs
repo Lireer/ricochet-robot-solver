@@ -80,13 +80,17 @@ impl IdaStar {
                 continue;
             }
 
-            if !self.visited_nodes.add_node(
-                pos.clone(),
-                &start_pos,
-                calculating_move,
-                (robot, dir),
-                BasicVisitedNode::new,
-            ) {
+            if self
+                .visited_nodes
+                .add_node(
+                    pos.clone(),
+                    &start_pos,
+                    calculating_move,
+                    (robot, dir),
+                    &BasicVisitedNode::new,
+                )
+                .was_discarded()
+            {
                 continue;
             }
 

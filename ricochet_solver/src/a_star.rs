@@ -39,8 +39,8 @@ impl Solver for AStar {
         }
 
         // Use the least moves board as an admissable heuristic (never overestimates the moves needed).
-        let move_board = &self.move_board;
-        let moves_to_target = |pos: &RobotPositions| move_board.min_moves(pos, round.target());
+        let move_board_ref = &self.move_board;
+        let moves_to_target = |pos: &RobotPositions| move_board_ref.min_moves(pos, round.target());
 
         // Create a queue holding the not yet expanded nodes.
         let mut open_list =
@@ -69,13 +69,17 @@ impl Solver for AStar {
                 let moves_from_start = prio.from_start() + 1;
                 let moves_to_target = moves_to_target(&pos);
 
-                if !self.visited_nodes.add_node(
-                    pos.clone(),
-                    &from_pos,
-                    moves_from_start,
-                    movement,
-                    BasicVisitedNode::new,
-                ) {
+                if self
+                    .visited_nodes
+                    .add_node(
+                        pos.clone(),
+                        &from_pos,
+                        moves_from_start,
+                        movement,
+                        &BasicVisitedNode::new,
+                    )
+                    .was_discarded()
+                {
                     // This position has already been found with a shorter path.
                     continue;
                 }
