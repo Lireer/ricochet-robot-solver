@@ -3,7 +3,7 @@ use std::vec;
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 use ricochet_board::{template, Game, Robot, RobotPositions, Round, Symbol, Target};
 use ricochet_solver::util::LeastMovesBoard;
-use ricochet_solver::{BreadthFirst, IterativeDeepening, Solver};
+use ricochet_solver::{AStar, BreadthFirst, IterativeDeepening, Solver};
 
 fn bench_bfs(c: &mut Criterion) {
     let (pos, bench_data) = solver_bench_setup();
@@ -15,6 +15,9 @@ fn bench_bfs(c: &mut Criterion) {
         });
         group.bench_function(BenchmarkId::new("IDDFS", moves), |b| {
             b.iter(|| IterativeDeepening::new().solve(&round, pos.clone()))
+        });
+        group.bench_function(BenchmarkId::new("A*", moves), |b| {
+            b.iter(|| AStar::new().solve(&round, pos.clone()))
         });
     }
     group.finish();
@@ -32,11 +35,26 @@ fn bench_util(c: &mut Criterion) {
     group.finish();
 }
 
+/// Needs more than 20 minutes on a Ryzen 3600
 fn bench_22_move_problem(c: &mut Criterion) {
-    todo!()
+    let (pos, round) = create_22_move_problem();
+
+    let mut group = c.benchmark_group("22 move problem");
+    group.sample_size(10);
+    group.bench_function(BenchmarkId::new("A*", 22), |b| {
+        b.iter(|| AStar::new().solve(&round, pos.clone()))
+    });
+    group.bench_function(BenchmarkId::new("IDDFS", 22), |b| {
+        b.iter(|| IterativeDeepening::new().solve(&round, pos.clone()))
+    });
+    group.bench_function(BenchmarkId::new("Breadth-First", 22), |b| {
+        b.iter(|| BreadthFirst::new().solve(&round, pos.clone()))
+    });
+
+    group.finish();
 }
 
-criterion_group!(benches, bench_bfs, bench_util);
+criterion_group!(benches, bench_bfs, bench_util, bench_22_move_problem);
 criterion_main!(benches);
 
 fn solver_bench_setup() -> (RobotPositions, Vec<(Round, usize)>) {
@@ -90,4 +108,39 @@ fn create_board() -> (RobotPositions, Game) {
 
     let pos = RobotPositions::from_tuples(&[(15, 15), (15, 0), (0, 15), (0, 0)]);
     (pos, Game::from_templates(&templates))
+}
+
+fn create_22_move_problem() -> (RobotPositions, Round) {
+    const ORIENTATIONS: [template::Orientation; 4] = [
+        template::Orientation::UpperLeft,
+        template::Orientation::UpperRight,
+        template::Orientation::BottomRight,
+        template::Orientation::BottomLeft,
+    ];
+
+    let templates = template::gen_templates();
+    let templates = [
+        templates[11].clone(),
+        templates[1].clone(),
+        templates[5].clone(),
+        templates[7].clone(),
+    ]
+    .iter()
+    .cloned()
+    .enumerate()
+    .map(|(i, mut temp)| {
+        temp.rotate_to(ORIENTATIONS[i]);
+        temp
+    })
+    .collect::<Vec<template::BoardTemplate>>();
+
+    let pos = RobotPositions::from_tuples(&[(15, 6), (14, 0), (13, 0), (0, 14)]);
+    let target = Target::Blue(Symbol::Triangle);
+    let game = Game::from_templates(&templates);
+    let round = Round::new(
+        game.board().clone(),
+        target,
+        game.get_target_position(&target).unwrap(),
+    );
+    (pos, round)
 }

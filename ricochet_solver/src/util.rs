@@ -27,8 +27,8 @@ impl<N: VisitedNode> VisitedNodes<N> {
         self.nodes.clear()
     }
 
-    /// Returns the visit information of a node.
-    pub fn get_node(&self, positions: &RobotPositions) -> Option<&N> {
+    /// Returns the visit information of a node if it has been visited before.
+    pub fn get(&self, positions: &RobotPositions) -> Option<&N> {
         self.nodes.get(positions)
     }
 
@@ -73,7 +73,7 @@ impl<N: VisitedNode> VisitedNodes<N> {
         // Create the path by following the nodes previous positions.
         loop {
             let current_node = self
-                .get_node(&current_pos)
+                .get(&current_pos)
                 .expect("Failed to find a supposed source position");
             path.push(current_node.reached_with());
             current_pos = current_node.previous_position().clone();

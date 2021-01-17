@@ -7,6 +7,7 @@ edition = "2018"
 [dependencies]
 fnv = "1.0.7"
 getset = "0.1.1"
+priority-queue = "1.0.5"
 ricochet_board = { path = "../ricochet_board" }
 
 [dev-dependencies]

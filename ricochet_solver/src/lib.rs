@@ -1,3 +1,4 @@
+mod a_star;
 mod breadth_first;
 mod iterative_deepening;
 pub mod util;
@@ -5,11 +6,12 @@ pub mod util;
 use getset::Getters;
 use ricochet_board::{Direction, Robot, RobotPositions, Round};
 
+pub use a_star::AStar;
 pub use breadth_first::BreadthFirst;
 pub use iterative_deepening::IterativeDeepening;
 
 pub trait Solver {
-    /// Find a solution to get from the `start_positions` to a target position.
+    /// Find a solution to get from the `start_positions` to a target.
     fn solve(&mut self, round: &Round, start_positions: RobotPositions) -> Path;
 }
 
@@ -31,17 +33,28 @@ impl Path {
     pub fn new(
         start_pos: RobotPositions,
         end_pos: RobotPositions,
-        path: Vec<(Robot, Direction)>,
+        movements: Vec<(Robot, Direction)>,
     ) -> Self {
+        debug_assert!(!movements.is_empty() || start_pos == end_pos);
         Self {
             start_pos,
             end_pos,
-            movements: path,
+            movements,
         }
     }
 
     /// Creates a new path which ends on the starting position.
     pub fn new_start_on_target(start_pos: RobotPositions) -> Self {
         Self::new(start_pos.clone(), start_pos, Vec::new())
+    }
+
+    /// Returns the number of moves in the path.
+    pub fn len(&self) -> usize {
+        self.movements.len()
+    }
+
+    /// Checks if the path has a length of 0.
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
     }
 }

@@ -21,7 +21,7 @@ impl Solver for IterativeDeepening {
     fn solve(&mut self, round: &Round, start_positions: RobotPositions) -> Path {
         // Check if the robot has already reached the target
         if round.target_reached(&start_positions) {
-            return Path::new(start_positions.clone(), start_positions, vec![]);
+            return Path::new_start_on_target(start_positions);
         }
 
         self.move_board = LeastMovesBoard::new(round.board(), round.target_position());
