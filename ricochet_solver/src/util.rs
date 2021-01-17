@@ -1,8 +1,7 @@
 use std::collections::hash_map::Entry;
 use std::convert::TryInto;
 use std::ops;
-
-use fnv::FnvHashMap;
+use fxhash::FxHashMap;
 use ricochet_board::{
     Board, Direction, Position, PositionEncoding, Robot, RobotPositions, Target, DIRECTIONS, ROBOTS,
 };
@@ -11,14 +10,14 @@ use crate::Path;
 
 #[derive(Debug, Clone)]
 pub(crate) struct VisitedNodes<N: VisitedNode> {
-    nodes: FnvHashMap<RobotPositions, N>,
+    nodes: FxHashMap<RobotPositions, N>,
 }
 
 impl<N: VisitedNode> VisitedNodes<N> {
     /// Creates a new `VisitedNodes` with the given `capacity`.
     pub fn with_capacity(capacity: usize) -> Self {
         Self {
-            nodes: FnvHashMap::with_capacity_and_hasher(capacity, Default::default()),
+            nodes: FxHashMap::with_capacity_and_hasher(capacity, Default::default()),
         }
     }
 

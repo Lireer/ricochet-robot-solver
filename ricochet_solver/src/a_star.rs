@@ -1,4 +1,4 @@
-use fnv::FnvBuildHasher;
+use fxhash::FxBuildHasher;
 use priority_queue::PriorityQueue;
 use ricochet_board::{RobotPositions, Round};
 use std::cmp::Reverse;
@@ -42,9 +42,9 @@ impl Solver for AStar {
         let move_board = &self.move_board;
         let moves_to_target = |pos: &RobotPositions| move_board.min_moves(pos, round.target());
 
-        //
+        // Create a queue holding the not yet expanded nodes.
         let mut open_list =
-            PriorityQueue::<RobotPositions, MoveCounter, FnvBuildHasher>::with_capacity_and_hasher(
+            PriorityQueue::<RobotPositions, MoveCounter, FxBuildHasher>::with_capacity_and_hasher(
                 65536,
                 Default::default(),
             );
