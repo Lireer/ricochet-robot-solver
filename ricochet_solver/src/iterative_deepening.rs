@@ -6,7 +6,7 @@ use crate::{Path, Solver};
 // Why it's good: https://cseweb.ucsd.edu/~elkan/130/itdeep.html
 // Optimizations: https://speakerdeck.com/fogleman/ricochet-robots-solver-algorithms
 #[derive(Debug)]
-pub struct IterativeDeepening {
+pub struct IdaStar {
     /// Contains all visited robot positions and the number of moves in the shortest path found from
     /// the starting positions.
     visited_nodes: VisitedNodes<BasicVisitedNode>,
@@ -17,7 +17,7 @@ pub struct IterativeDeepening {
     move_board: LeastMovesBoard,
 }
 
-impl Solver for IterativeDeepening {
+impl Solver for IdaStar {
     fn solve(&mut self, round: &Round, start_positions: RobotPositions) -> Path {
         // Check if the robot has already reached the target
         if round.target_reached(&start_positions) {
@@ -45,7 +45,7 @@ impl Solver for IterativeDeepening {
     }
 }
 
-impl IterativeDeepening {
+impl IdaStar {
     pub fn new() -> Self {
         Self {
             visited_nodes: VisitedNodes::with_capacity(65536),
@@ -55,7 +55,7 @@ impl IterativeDeepening {
 
     /// Performs a depth-limited DFS from `start_pos` up to a depth of `max_depth`.
     ///
-    /// `at_move` is the number of moves needed to reach `start_pos` in the context of IDDFS.
+    /// `at_move` is the number of moves needed to reach `start_pos` in the context of IDA*.
     fn depth_limited_dfs(
         &mut self,
         round: &Round,
@@ -100,7 +100,7 @@ impl IterativeDeepening {
     }
 }
 
-impl Default for IterativeDeepening {
+impl Default for IdaStar {
     fn default() -> Self {
         Self::new()
     }
@@ -110,7 +110,7 @@ impl Default for IterativeDeepening {
 mod tests {
     use ricochet_board::{template, Direction, Game, Robot, RobotPositions, Round, Symbol, Target};
 
-    use crate::{IterativeDeepening, Path, Solver};
+    use crate::{IdaStar, Path, Solver};
 
     fn create_board() -> (RobotPositions, Game) {
         const ORIENTATIONS: [template::Orientation; 4] = [
@@ -153,7 +153,7 @@ mod tests {
         let round = Round::new(game.board().clone(), target, target_position);
 
         let expected = Path::new(start.clone(), end, vec![]);
-        assert_eq!(IterativeDeepening::new().solve(&round, start), expected);
+        assert_eq!(IdaStar::new().solve(&round, start), expected);
     }
 
     // Test short path
@@ -184,6 +184,6 @@ mod tests {
             ],
         );
 
-        assert_eq!(IterativeDeepening::new().solve(&round, pos), expected);
+        assert_eq!(IdaStar::new().solve(&round, pos), expected);
     }
 }

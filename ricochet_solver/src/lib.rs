@@ -8,7 +8,7 @@ use ricochet_board::{Direction, Robot, RobotPositions, Round};
 
 pub use a_star::AStar;
 pub use breadth_first::BreadthFirst;
-pub use iterative_deepening::IterativeDeepening;
+pub use iterative_deepening::IdaStar;
 
 pub trait Solver {
     /// Find a solution to get from the `start_positions` to a target.

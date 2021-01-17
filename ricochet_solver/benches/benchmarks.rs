@@ -3,7 +3,7 @@ use std::vec;
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 use ricochet_board::{template, Game, Robot, RobotPositions, Round, Symbol, Target};
 use ricochet_solver::util::LeastMovesBoard;
-use ricochet_solver::{AStar, BreadthFirst, IterativeDeepening, Solver};
+use ricochet_solver::{AStar, BreadthFirst, IdaStar, Solver};
 
 fn bench_bfs(c: &mut Criterion) {
     let (pos, bench_data) = solver_bench_setup();
@@ -13,8 +13,8 @@ fn bench_bfs(c: &mut Criterion) {
         group.bench_function(BenchmarkId::new("Breadth-First", moves), |b| {
             b.iter(|| BreadthFirst::new().solve(&round, pos.clone()))
         });
-        group.bench_function(BenchmarkId::new("IDDFS", moves), |b| {
-            b.iter(|| IterativeDeepening::new().solve(&round, pos.clone()))
+        group.bench_function(BenchmarkId::new("IDA*", moves), |b| {
+            b.iter(|| IdaStar::new().solve(&round, pos.clone()))
         });
         group.bench_function(BenchmarkId::new("A*", moves), |b| {
             b.iter(|| AStar::new().solve(&round, pos.clone()))
@@ -44,8 +44,8 @@ fn bench_22_move_problem(c: &mut Criterion) {
     group.bench_function(BenchmarkId::new("A*", 22), |b| {
         b.iter(|| AStar::new().solve(&round, pos.clone()))
     });
-    group.bench_function(BenchmarkId::new("IDDFS", 22), |b| {
-        b.iter(|| IterativeDeepening::new().solve(&round, pos.clone()))
+    group.bench_function(BenchmarkId::new("IDA*", 22), |b| {
+        b.iter(|| IdaStar::new().solve(&round, pos.clone()))
     });
     group.bench_function(BenchmarkId::new("Breadth-First", 22), |b| {
         b.iter(|| BreadthFirst::new().solve(&round, pos.clone()))
