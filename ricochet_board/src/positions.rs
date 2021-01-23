@@ -152,11 +152,11 @@ impl RobotPositions {
     /// Checks if the `robot` is on `pos`.
     #[inline(always)]
     pub fn contains_colored_robot(&self, robot: Robot, pos: Position) -> bool {
-        match robot {
-            Robot::Red => pos == self.red,
-            Robot::Blue => pos == self.blue,
-            Robot::Green => pos == self.green,
-            Robot::Yellow => pos == self.yellow,
+        pos == match robot {
+            Robot::Red => self.red,
+            Robot::Blue => self.blue,
+            Robot::Green => self.green,
+            Robot::Yellow => self.yellow,
         }
     }
 
@@ -243,11 +243,12 @@ impl fmt::Display for RobotPositions {
 #[cfg(test)]
 mod tests {
     use super::Position;
-    use crate::{Board, Direction, Robot, RobotPositions};
+    use crate::{Board, Direction, PositionEncoding, Robot, RobotPositions};
 
     #[test]
     fn check_flags() {
-        let row_flag = 2u16.pow((Position::BIT_COUNT / 2) as u32) - 1;
+        let base: PositionEncoding = 2;
+        let row_flag = base.pow((Position::BIT_COUNT / 2) as u32) - 1;
         assert_eq!(row_flag, Position::ROW_FLAG);
         assert_eq!(!row_flag, Position::COLUMN_FLAG);
     }

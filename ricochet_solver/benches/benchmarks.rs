@@ -5,7 +5,7 @@ use ricochet_board::{template, Game, Robot, RobotPositions, Round, Symbol, Targe
 use ricochet_solver::util::LeastMovesBoard;
 use ricochet_solver::{AStar, BreadthFirst, IdaStar, Solver};
 
-fn bench_bfs(c: &mut Criterion) {
+fn bench_solvers(c: &mut Criterion) {
     let (pos, bench_data) = solver_bench_setup();
 
     let mut group = c.benchmark_group("Ricochet Solver");
@@ -54,7 +54,7 @@ fn bench_22_move_problem(c: &mut Criterion) {
     group.finish();
 }
 
-criterion_group!(benches, bench_bfs, bench_util, bench_22_move_problem);
+criterion_group!(benches, bench_solvers, bench_util, bench_22_move_problem);
 criterion_main!(benches);
 
 fn solver_bench_setup() -> (RobotPositions, Vec<(Round, usize)>) {
