@@ -1,5 +1,6 @@
+os: linux
+dist: xenial
 language: rust
-sudo: true
 rust: stable
 python:
   - "3.6"
@@ -8,17 +9,17 @@ cache:
   cargo: true
   yarn: true
   directories:
-  - elm-stuff
+    - elm-stuff
 
 install:
   - npm install -g elm@0.18.0
 
 script:
- - set -e
- - cargo build --release
- - cargo test --release
- - elm-make editor/Main.elm --yes
- - set +e
+  - set -e
+  - cargo build --release
+  - cargo test --release
+  - elm-make editor/Main.elm --yes
+  - set +e
 
 after_success:
   - sh upload_editor.sh
