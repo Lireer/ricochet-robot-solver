@@ -16,7 +16,7 @@ pub type PositionEncoding = u16;
 /// |x   |y   |
 /// |0000|0000|
 /// ```
-#[derive(Copy, Clone, Default, Hash, PartialEq, Eq)]
+#[derive(Copy, Clone, Default, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Position {
     encoded_position: PositionEncoding,
 }
@@ -131,6 +131,26 @@ impl RobotPositions {
             green: Position::from_tuple(positions[2]),
             yellow: Position::from_tuple(positions[3]),
         }
+    }
+
+    /// Returns the positions of the robots as an array in the order `[red, blue, green, yellow]`.
+    pub fn to_array(&self) -> [Position; 4] {
+        [self.red, self.blue, self.green, self.yellow]
+    }
+
+    /// Returns the positons of the robots as an array with `main_robot` at index `0` and the others
+    /// in sorted order.
+    pub fn to_sorted_array(&self, main_robot: Robot) -> [Position; 4] {
+        let mut sorted = [self.red, self.blue, self.green, self.yellow];
+        let robot_index = match main_robot {
+            Robot::Red => 0,
+            Robot::Blue => 1,
+            Robot::Green => 2,
+            Robot::Yellow => 3,
+        };
+        sorted.swap(0, robot_index);
+        sorted[1..3].sort();
+        sorted
     }
 
     /// Sets the `robot` to `new_position`.

@@ -81,6 +81,7 @@ pub struct Board {
 }
 
 /// The robots identified by their color.
+#[allow(missing_docs)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum Robot {
     Red,
@@ -94,6 +95,7 @@ pub enum Robot {
 /// The spiral can be reached by any robot, the others have to be reached by the robot of the
 /// respective color. Different targets of the same color can be differentiated by looking at the
 /// contained [Symbol].
+#[allow(missing_docs)]
 #[derive(Debug, Clone, Copy, Ord, PartialOrd, Eq, PartialEq)]
 pub enum Target {
     Red(Symbol),
@@ -104,6 +106,7 @@ pub enum Target {
 }
 
 /// Symbols used with colored targets to differentiate between targets of the same color.
+#[allow(missing_docs)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Symbol {
     Circle,
@@ -113,6 +116,7 @@ pub enum Symbol {
 }
 
 /// The directions a robot can be moved in.
+#[allow(missing_docs)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Direction {
     Up,
@@ -150,7 +154,7 @@ impl TryFrom<Target> for Robot {
             Target::Blue(_) => Ok(Robot::Blue),
             Target::Green(_) => Ok(Robot::Green),
             Target::Yellow(_) => Ok(Robot::Yellow),
-            Target::Spiral => Err("Conversion of target spiral to robot color is not possible"),
+            Target::Spiral => Err("Conversion of spiral target to robot color is not possible"),
         }
     }
 }
@@ -267,6 +271,16 @@ impl Board {
 
 /// Board impl containing code to interact with a board.
 impl Board {
+    /// Returns a reference to the walls of the board.
+    pub fn get_walls(&self) -> &Walls {
+        &self.walls
+    }
+
+    /// Returns a mutable reference to the walls of the board.
+    pub fn get_mut_walls(&mut self) -> &mut Walls {
+        &mut self.walls
+    }
+
     /// Checks if a wall is next to `pos` in the given `direction`.
     pub fn is_adjacent_to_wall(&self, pos: Position, direction: Direction) -> bool {
         match direction {
@@ -450,20 +464,13 @@ mod tests {
     use crate::{template, Board, Direction, Game, Position, Robot, RobotPositions};
 
     fn create_board() -> (RobotPositions, Board) {
-        const ORIENTATIONS: [template::Orientation; 4] = [
-            template::Orientation::UpperLeft,
-            template::Orientation::UpperRight,
-            template::Orientation::BottomRight,
-            template::Orientation::BottomLeft,
-        ];
-
         let templates = template::gen_templates()
             .iter()
             .step_by(3)
             .cloned()
             .enumerate()
             .map(|(i, mut temp)| {
-                temp.rotate_to(ORIENTATIONS[i]);
+                temp.rotate_to(template::ORIENTATIONS[i]);
                 temp
             })
             .collect::<Vec<template::BoardTemplate>>();

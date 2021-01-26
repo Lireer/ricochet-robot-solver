@@ -6,10 +6,3 @@ edition = "2018"
 
 [dependencies]
 itertools = "0.10.0"
-
-# [lib]
-# name = "ricochet_board"
-# crate-type = ["rlib", "cdylib"]
-
-# [dependencies]
-# pyo3 = { version = "0.13.0", features = ["extension-module"] }
