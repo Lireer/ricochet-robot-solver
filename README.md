@@ -22,14 +22,26 @@ This project is split into three parts:
 **Rust**: Building from source requires a stable rust compiler which can be installed using [rustup](https://rustup.rs/).
     If no python interop is needed, the rust code can be compiled with `cargo build --release` or run with `cargo run --release`.
 
-**Python**: Using a virtual environment is recommended, e.g. conda. To create python packages from rust code, install [maturin](https://pypi.org/project/maturin/) in the environment.
+**Python**: At least Python 3.6 is required (only tested with 3.8) and a virtual environment has to be used, e.g. conda. To create python packages from rust code, install [maturin](https://pypi.org/project/maturin/) in the environment.
 
 ```bash
 pip install maturin
 ```
 
-Navigate to the rust package that is to be built. Use `maturin develop --release` to build and install it in the environment.
+To build the environment either call `maturin develop --release` in the `ricochet_env` directory or from the project root call
+
+```bash
+$ maturin develop --release --manifest-path ricochet_environment/Cargo.toml 
+🍹 Building a mixed python/rust project
+🔗 Found pyo3 bindings
+🐍 Found CPython 3.8 at python3
+    Finished release [optimized] target(s) in 0.03s
+```
+
+`maturin build` can be used insted to build but not install the package. The built `.whl` file can be found in `target/wheels/` and can be installed using pip.
+
+Navigate to the rust package that is to be build. Use `maturin develop --release` to build and install it in the environment.
 
 ## Board editor
 
-Board editor written in elm hosted [here](https://lireer.github.io/ricochet-robot-solver/), but right now it's not really usable for anything other than moving pieces around.
+Board editor written in elm hosted [here](https://lireer.github.io/ricochet-robot-solver/), but it's not really usable for anything other than moving pieces around.
