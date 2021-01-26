@@ -45,6 +45,16 @@ $ maturin develop --release --manifest-path ricochet_environment/Cargo.toml
 
 Navigate to the rust package that is to be build. Use `maturin develop --release` to build and install it in the environment.
 
+### Builds compatible with `manylinux`
+
+To build the package in a way that makes it compatible with manylinux use:
+
+```bash
+docker run --rm -v $(pwd):/io konstin2/maturin build --release --manifest-path /io/ricochet_environment/Cargo.toml
+```
+
+The built wheels will be located in `/target/wheels/`.
+
 ## Using the reinforcement learning environment
 
 The `ricochet_env` package has to be installed in the virtual environment, see [Building from source](#building-from-source) for installation instructions. The package can be used like this:
