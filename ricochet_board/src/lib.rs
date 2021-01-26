@@ -1,4 +1,27 @@
-#[deny(missing_docs)]
+#![deny(missing_docs)]
+#![deny(missing_debug_implementations)]
+
+//! Basic components to play Ricochet Robots and a reinforcement learning environemnt.
+//!
+//! The board game [Ricochet Robots](https://en.wikipedia.org/wiki/Ricochet_Robot) is played on a
+//! 16x16 board containing some walls, 4 robots and 17 targets. The game is played in multiple
+//! rounds in which a random target is chosen until each target has been chosen once. The goal of
+//! a round is to reach the chosen target with the robot of the same color. The robots can each move
+//! in all four directions but only stop when they hit a wall or another robot. This is counted as
+//! one move and all robots can be moved in arbitrary order. Each player only looks at the board and
+//! tries to think of a way to get the robot to the target with as few moves as possible.
+//!
+//! The main components needed to play the game are the [`Board`](Board), [`Round`](Round), and
+//! [`Game`](Game). A `Board` stores all information regarding the walls. A `Round` contains a board
+//! and the target on that board. This is the main struct to use, if you don't plan on playing a
+//! whole game. A `Game` consits of everything needed to define a complete game. Like a round, it
+//! holds a board but also has a set of targets.
+//!
+//! The physical board is made up of four parts, each of which is assigned a color. There are four
+//! colors and multiple board parts per color. To build a complete board one part of each color is
+//! needed. The crate provides these parts to make board creation easier, see the
+//! [`template`](template) module for more information.
+
 mod positions;
 pub mod template;
 
@@ -12,7 +35,7 @@ use crate::template::{BoardTemplate, Orientation, WallDirection};
 /// The type used to store the walls on a board.
 pub type Walls = Vec<Vec<Field>>;
 
-/// All `Direction`s a robot can move to.
+/// All `Direction`s a robot can move in.
 pub const DIRECTIONS: [Direction; 4] = [
     Direction::Up,
     Direction::Down,
@@ -26,9 +49,11 @@ pub const ROBOTS: [Robot; 4] = [Robot::Red, Robot::Blue, Robot::Green, Robot::Ye
 /// A field on the board.
 ///
 /// Contains information regarding walls to the right and bottom of the field.
-#[derive(Copy, Clone, Default)]
+#[derive(Debug, Copy, Clone, Default)]
 pub struct Field {
+    /// Returns `true` if the wall in the down direction is set.
     pub down: bool,
+    /// Returns `true` if the wall in the right direction is set.
     pub right: bool,
 }
 

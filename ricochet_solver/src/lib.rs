@@ -18,7 +18,7 @@ pub trait Solver {
 /// A path from a starting position to another position.
 ///
 /// Contains the starting positions of the robots, their final positions and a path from the former
-/// to the latter. The path consists of tuples of a robot and the direction it moved to.
+/// to the latter. The path consists of tuples of a robot and the direction it moved in.
 #[derive(Debug, Clone, PartialEq, Eq, Getters)]
 #[getset(get = "pub")]
 pub struct Path {

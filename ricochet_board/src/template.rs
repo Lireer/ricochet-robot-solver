@@ -12,6 +12,14 @@ pub const STANDARD_BOARD_SIZE: PositionEncoding = 16;
 /// The side length of a template.
 const TEMPLATE_SIZE: PositionEncoding = STANDARD_BOARD_SIZE / 2 + 1;
 
+/// All possible orientations of a template.
+pub const ORIENTATIONS: [Orientation; 4] = [
+    Orientation::UpperLeft,
+    Orientation::UpperRight,
+    Orientation::BottomRight,
+    Orientation::BottomLeft,
+];
+
 /// The orientation of a template.
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum Orientation {

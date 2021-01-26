@@ -88,20 +88,13 @@ fn solver_bench_setup() -> (RobotPositions, Vec<(Round, usize)>) {
 }
 
 fn create_board() -> (RobotPositions, Game) {
-    const ORIENTATIONS: [template::Orientation; 4] = [
-        template::Orientation::UpperLeft,
-        template::Orientation::UpperRight,
-        template::Orientation::BottomRight,
-        template::Orientation::BottomLeft,
-    ];
-
     let templates = template::gen_templates()
         .iter()
         .step_by(3)
         .cloned()
         .enumerate()
         .map(|(i, mut temp)| {
-            temp.rotate_to(ORIENTATIONS[i]);
+            temp.rotate_to(template::ORIENTATIONS[i]);
             temp
         })
         .collect::<Vec<template::BoardTemplate>>();
@@ -111,13 +104,6 @@ fn create_board() -> (RobotPositions, Game) {
 }
 
 fn create_22_move_problem() -> (RobotPositions, Round) {
-    const ORIENTATIONS: [template::Orientation; 4] = [
-        template::Orientation::UpperLeft,
-        template::Orientation::UpperRight,
-        template::Orientation::BottomRight,
-        template::Orientation::BottomLeft,
-    ];
-
     let templates = template::gen_templates();
     let templates = [
         templates[11].clone(),
@@ -129,7 +115,7 @@ fn create_22_move_problem() -> (RobotPositions, Round) {
     .cloned()
     .enumerate()
     .map(|(i, mut temp)| {
-        temp.rotate_to(ORIENTATIONS[i]);
+        temp.rotate_to(template::ORIENTATIONS[i]);
         temp
     })
     .collect::<Vec<template::BoardTemplate>>();
