@@ -1,6 +1,8 @@
 language: rust
 sudo: true
 rust: stable
+python:
+  - "3.6"
 
 cache:
   cargo: true
