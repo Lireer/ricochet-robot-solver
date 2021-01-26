@@ -23,6 +23,14 @@ class Action(enum.IntEnum):
     YELLOW_LEFT = 15
 
 
+class Target(enum.IntEnum):
+    RED = 0
+    BLUE = 1
+    GREEN = 2
+    YELLOW = 3
+    ANY = 4
+
+
 class RicochetEnv(gym.Env):
     def __init__(self):
         self.env = RustyEnvironment()
@@ -40,6 +48,7 @@ class RicochetEnv(gym.Env):
                     )
                 ),  # robot positions
                 spaces.MultiDiscrete([16, 16]),  # target position
+                spaces.Discrete(5)
             )
         )
         self.reward_range = (0, 1)

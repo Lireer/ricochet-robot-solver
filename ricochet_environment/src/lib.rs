@@ -9,14 +9,18 @@ pub type Reward = f64;
 
 /// The observation of the state of an environment.
 ///
-/// The tuple contains the walls to the right of field, then the walls at the bottom of fields,
-/// followed by the positions of the robots in the order red, blue, green, yellow and finally the
-/// position of the target.
+/// The tuple consists of
+/// - the board with all fields set to true that have a wall to the right
+/// - the board with all fields set to true that have a wall at the bottom
+/// - the positions of the robots in the order red, blue, green, yellow as (column, row) tuples
+/// - the position of the target
+/// - the color of the target
 pub type Observation<'a> = (
     &'a Vec<Vec<bool>>,
     &'a Vec<Vec<bool>>,
     Vec<(PositionEncoding, PositionEncoding)>,
     (PositionEncoding, PositionEncoding),
+    usize,
 );
 
 /// The base module of the created package.
@@ -49,6 +53,7 @@ pub struct RustyEnvironment {
 #[pymethods]
 impl RustyEnvironment {
     #[new]
+    #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
         let templates = template::gen_templates()
             .iter()
@@ -106,12 +111,20 @@ impl RustyEnvironment {
 
 impl RustyEnvironment {
     fn observation(&self) -> Observation {
-        let t_pos = self.round.target_position();
+        let target_pos = self.round.target_position();
+        let target = match self.round.target() {
+            Target::Red(_) => 0,
+            Target::Blue(_) => 1,
+            Target::Green(_) => 2,
+            Target::Yellow(_) => 3,
+            Target::Spiral => 4,
+        };
         (
             &self.wall_observation.0,
             &self.wall_observation.1,
             robot_positions_as_vec(&self.current_position),
-            (t_pos.column(), t_pos.row()),
+            (target_pos.column(), target_pos.row()),
+            target,
         )
     }
 }
