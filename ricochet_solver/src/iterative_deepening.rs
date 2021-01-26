@@ -117,20 +117,13 @@ mod tests {
     use crate::{IdaStar, Path, Solver};
 
     fn create_board() -> (RobotPositions, Game) {
-        const ORIENTATIONS: [template::Orientation; 4] = [
-            template::Orientation::UpperLeft,
-            template::Orientation::UpperRight,
-            template::Orientation::BottomRight,
-            template::Orientation::BottomLeft,
-        ];
-
         let templates = template::gen_templates()
             .iter()
             .step_by(3)
             .cloned()
             .enumerate()
             .map(|(i, mut temp)| {
-                temp.rotate_to(ORIENTATIONS[i]);
+                temp.rotate_to(template::ORIENTATIONS[i]);
                 temp
             })
             .collect::<Vec<template::BoardTemplate>>();

@@ -148,7 +148,7 @@ pub(crate) struct BasicVisitedNode {
     previous_position: RobotPositions,
     /// The robot that was moved to arrive from the previous positions.
     robot: Robot,
-    /// The direction the robot was moved to.
+    /// The direction the robot was moved in.
     direction: Direction,
 }
 
