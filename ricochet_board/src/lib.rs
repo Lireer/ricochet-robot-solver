@@ -1,7 +1,7 @@
 #![deny(missing_docs)]
 #![deny(missing_debug_implementations)]
 
-//! Basic components to play Ricochet Robots and a reinforcement learning environemnt.
+//! Basic components to play Ricochet Robots and a reinforcement learning environment.
 //!
 //! The board game [Ricochet Robots](https://en.wikipedia.org/wiki/Ricochet_Robot) is played on a
 //! 16x16 board containing some walls, 4 robots and 17 targets. The game is played in multiple
@@ -14,7 +14,7 @@
 //! The main components needed to play the game are the [`Board`](Board), [`Round`](Round), and
 //! [`Game`](Game). A `Board` stores all information regarding the walls. A `Round` contains a board
 //! and the target on that board. This is the main struct to use, if you don't plan on playing a
-//! whole game. A `Game` consits of everything needed to define a complete game. Like a round, it
+//! whole game. A `Game` consist of everything needed to define a complete game. Like a round, it
 //! holds a board but also has a set of targets.
 //!
 //! The physical board is made up of four parts, each of which is assigned a color. There are four

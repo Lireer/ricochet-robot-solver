@@ -33,7 +33,7 @@ fn ricochet_env(_py: Python, m: &PyModule) -> PyResult<()> {
 
 /// An action that can be performed in the environment.
 ///
-/// It consits of a robot and the direction the specified robot should move in.
+/// It consists of a robot and the direction the specified robot should move in.
 #[derive(Debug, Copy, Clone)]
 pub struct Action {
     robot: Robot,
@@ -84,7 +84,6 @@ impl RustyEnvironment {
     }
 
     pub fn step(&mut self, py_gil: Python, action: Action) -> PyObject {
-        dbg!(action);
         self.current_position = self.current_position.clone().move_in_direction(
             self.round.board(),
             action.robot,

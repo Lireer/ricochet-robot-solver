@@ -138,7 +138,7 @@ impl RobotPositions {
         [self.red, self.blue, self.green, self.yellow]
     }
 
-    /// Returns the positons of the robots as an array with `main_robot` at index `0` and the others
+    /// Returns the positions of the robots as an array with `main_robot` at index `0` and the others
     /// in sorted order.
     pub fn to_sorted_array(&self, main_robot: Robot) -> [Position; 4] {
         let mut sorted = [self.red, self.blue, self.green, self.yellow];
