@@ -1,5 +1,6 @@
 [workspace]
-members = ["ricochet_board", "ricochet_solver", "ricochet_environment","ricli"]
+members = ["ricochet_board", "ricochet_solver", "ricochet_environment", "ricli"]
+default-members = ["ricochet_board", "ricochet_solver","ricli"]
 
 [profile.release]
 codegen-units = 1
