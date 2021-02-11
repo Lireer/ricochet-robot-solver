@@ -1,7 +1,7 @@
 [package]
 name = "ricochet_solver"
 version = "0.1.0"
-authors = ["Carl Scherer"]
+authors = ["Carl Scherer <dev@cscher.com"]
 edition = "2018"
 
 [dependencies]
