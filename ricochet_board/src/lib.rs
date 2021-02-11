@@ -22,6 +22,7 @@
 //! needed. The crate provides these parts to make board creation easier, see the
 //! [`template`](template) module for more information.
 
+mod draw;
 mod positions;
 pub mod template;
 
@@ -29,6 +30,7 @@ use std::collections::BTreeMap;
 use std::convert::{TryFrom, TryInto};
 use std::fmt;
 
+pub use crate::draw::draw_board;
 pub use crate::positions::{Position, PositionEncoding, RobotPositions};
 use crate::template::{BoardTemplate, Orientation, WallDirection};
 
@@ -421,42 +423,20 @@ impl Game {
 
 impl fmt::Debug for Board {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        write!(fmt, "{}", board_string(&self.walls))
+        write!(fmt, "{}", draw_board(&self.walls))
     }
 }
 
 impl fmt::Debug for Round {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        write!(fmt, "{}", board_string(&self.board.walls))
+        write!(fmt, "{}", draw_board(&self.board.walls))
     }
 }
 
 impl fmt::Debug for Game {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        write!(fmt, "{}", board_string(&self.board.walls))
+        write!(fmt, "{}", draw_board(&self.board.walls))
     }
-}
-
-/// Creates a string representation of the walls of a board.
-pub fn board_string(walls: &[Vec<Field>]) -> String {
-    let mut print = "".to_owned();
-    for row in 0..walls.len() {
-        #[allow(clippy::needless_range_loop)]
-        for col in 0..walls[row].len() {
-            if walls[col][row].down {
-                print += "__"
-            } else {
-                print += "▆▆"
-            }
-            if walls[col][row].right {
-                print += "|"
-            } else {
-                print += " "
-            }
-        }
-        print += "\n";
-    }
-    print
 }
 
 #[cfg(test)]

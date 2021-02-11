@@ -2,8 +2,10 @@
 //!
 //! These templates are the same as the quarters used to build the actual board game.
 
+use draw_a_box::{find_character, Weight};
 use std::fmt;
 
+use crate::draw::{FIELD_DRAW_HEIGHT, FIELD_DRAW_WIDTH};
 use crate::{Field, PositionEncoding, Symbol::*, Target};
 
 /// The side length of the standard physical board.
@@ -219,7 +221,27 @@ impl fmt::Display for BoardTemplate {
             }
         }
 
-        write!(fmt, "{}", crate::board_string(&print))
+        let (mut canvas, mut weights) = crate::draw::create_board_string_vec(&print);
+        let mut output = String::new();
+
+        // Remove the first column and first row and smoothen the now outer boarder.
+        for row in FIELD_DRAW_HEIGHT..canvas[0].len() {
+            for col in FIELD_DRAW_WIDTH..canvas.len() {
+                if row == FIELD_DRAW_HEIGHT && col % FIELD_DRAW_WIDTH == 0 {
+                    let w = &mut weights[col][row];
+                    w[0] = Weight::Empty;
+                    canvas[col][row] = find_character(Weight::Empty, w[1], w[2], w[3]);
+                }
+                if col == FIELD_DRAW_WIDTH && row % FIELD_DRAW_HEIGHT == 0 {
+                    let w = &weights[col][row];
+                    canvas[col][row] = find_character(w[0], w[1], w[2], Weight::Empty);
+                }
+                output.push_str(canvas[col][row]);
+            }
+            output.push('\n');
+        }
+
+        write!(fmt, "{}", output)
     }
 }
 

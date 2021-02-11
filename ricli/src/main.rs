@@ -187,13 +187,6 @@ fn parse_robot_position(
 fn build_board_from_parts() -> Game {
     let templates = template::gen_templates();
 
-    let orientation = [
-        template::Orientation::UpperLeft,
-        template::Orientation::UpperRight,
-        template::Orientation::BottomRight,
-        template::Orientation::BottomLeft,
-    ];
-
     let mut possible_colors: HashSet<template::TempColor> = [
         template::TempColor::Red,
         template::TempColor::Blue,
@@ -206,7 +199,7 @@ fn build_board_from_parts() -> Game {
 
     let mut board_parts = Vec::new();
 
-    for orient in orientation.iter() {
+    for orient in template::ORIENTATIONS.iter() {
         println!(
             "What color is the {} board part? You can find the color near the center.",
             orient
