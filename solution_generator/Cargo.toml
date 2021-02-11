@@ -1,0 +1,15 @@
+[package]
+name = "solution_generator"
+version = "0.1.0"
+authors = ["Carl Scherer <dev@cscher.com>"]
+edition = "2018"
+
+[dependencies]
+chrono = { version = "0.4.19", features = ["serde"]}
+csv = "1.1.5"
+itertools = "0.10.0"
+rand = "0.8.3"
+rayon = "1.5.0"
+ricochet_board = { path = "../ricochet_board" }
+ricochet_solver = { path = "../ricochet_solver" }
+serde = { version = "1.0.123", features = ["derive"] }
