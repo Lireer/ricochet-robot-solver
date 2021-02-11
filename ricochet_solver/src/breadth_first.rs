@@ -113,7 +113,7 @@ mod tests {
     use chrono::prelude::*;
     use itertools::Itertools;
     use rand::distributions::{Distribution, Uniform};
-    use rand::{Rng, SeedableRng};
+    use rand::SeedableRng;
     use rayon::prelude::*;
     use ricochet_board::*;
     use std::convert::TryInto;
@@ -185,62 +185,6 @@ mod tests {
         );
 
         assert_eq!(BreadthFirst::new().solve(&round, pos), expected);
-    }
-
-    #[test]
-    fn monte_carlo_solve() {
-        let mut rng = rand::rngs::StdRng::seed_from_u64(10);
-
-        let (pos, game) = create_board();
-        let target = Target::Red(Symbol::Triangle);
-        let round = Round::new(
-            game.board().clone(),
-            target,
-            game.get_target_position(&target).unwrap(),
-        );
-
-        let mut tries = 0;
-        let mut total_moves: u64 = 0;
-        let mut path;
-        loop {
-            path = Vec::new();
-            let mut current_pos = pos.clone();
-            tries += 1;
-
-            loop {
-                let robot = ROBOTS[rng.gen_range(0..4)];
-                let direction = DIRECTIONS[rng.gen_range(0..4)];
-                let new_pos =
-                    current_pos
-                        .clone()
-                        .move_in_direction(&round.board(), robot, direction);
-                if new_pos == current_pos {
-                    continue;
-                }
-                current_pos = new_pos;
-                path.push((robot, direction));
-
-                total_moves += 1;
-                if round.target_reached(&current_pos) {
-                    break;
-                }
-            }
-
-            if path.len() <= 3 {
-                break;
-            }
-        }
-
-        assert_eq!(tries, 2781);
-        assert_eq!(total_moves, 596132);
-        assert_eq!(
-            path,
-            vec![
-                (Robot::Red, Direction::Up),
-                (Robot::Red, Direction::Right),
-                (Robot::Red, Direction::Down)
-            ]
-        );
     }
 
     #[test]
