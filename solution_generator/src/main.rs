@@ -7,7 +7,7 @@ use ricochet_solver::{Path, Solver};
 use serde::Serialize;
 use std::collections::HashSet;
 use std::sync::mpsc;
-use std::{fs, thread, usize};
+use std::{fs, path, thread};
 
 const BOARD_TARGET_VARIANTS: usize = 3 * 9 * 6 * 3 * 17;
 const CSV_PATH: &str = "solutions.csv";
@@ -15,15 +15,19 @@ const CSV_PATH: &str = "solutions.csv";
 fn main() {
     let (sender, receiver) = mpsc::channel::<SolutionData>();
 
+    let existing_data = path::Path::new(CSV_PATH).exists();
+
+    let file = fs::OpenOptions::new()
+        .create(!existing_data)
+        .append(true)
+        .open(CSV_PATH)
+        .expect(&format!("failed to open {}", CSV_PATH));
+    let mut writer = csv::WriterBuilder::new()
+        .has_headers(!existing_data)
+        .from_writer(file);
+
     // start writer thread with receiver
     let writer_thread = thread::spawn(move || {
-        let file = fs::OpenOptions::new()
-            .append(true)
-            .open(CSV_PATH)
-            .expect(&format!("failed to open {}", CSV_PATH));
-        let mut writer = csv::WriterBuilder::new()
-            .has_headers(false)
-            .from_writer(file);
         let mut counter = 0;
         while let Ok(data) = receiver.recv() {
             writer.serialize(data).expect("failed to write data to csv");
@@ -96,8 +100,8 @@ impl SolutionData {
         };
 
         let mut div = self.board_seed;
-        for denom in vec![17, 3, 9, 6, 3] {
-            div = div_mod(div, denom);
+        for denom in &[17, 3, 9, 6, 3] {
+            div = div_mod(div, *denom);
         }
 
         let templates = ricochet_board::template::gen_templates();
@@ -146,8 +150,8 @@ impl SolutionData {
         let mut out = [(0, 0); 4];
 
         for (shift, out_idx) in (0..4).rev().enumerate() {
-            out[out_idx].1 = ((pos >> 8 * shift) & 0b1111) as u16;
-            out[out_idx].0 = ((pos >> 8 * shift + 4) & 0b1111) as u16;
+            out[out_idx].1 = ((pos >> (8 * shift)) & 0b1111) as u16;
+            out[out_idx].0 = ((pos >> (8 * shift + 4)) & 0b1111) as u16;
         }
 
         out
