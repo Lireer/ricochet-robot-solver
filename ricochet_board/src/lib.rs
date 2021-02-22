@@ -59,14 +59,14 @@ pub const TARGETS: [Target; 17] = {
         Symbol::Hexagon,
     ];
     let mut target_idx = 1;
-    let mut i = 0;
-    while i < 4 {
-        targets[target_idx] = Target::Red(symbols[i]);
-        targets[target_idx] = Target::Blue(symbols[i]);
-        targets[target_idx] = Target::Green(symbols[i]);
-        targets[target_idx] = Target::Yellow(symbols[i]);
-        target_idx += 1;
-        i += 1;
+    let mut symbol_idx = 0;
+    while symbol_idx < 4 {
+        targets[target_idx] = Target::Red(symbols[symbol_idx]);
+        targets[target_idx + 1] = Target::Blue(symbols[symbol_idx]);
+        targets[target_idx + 2] = Target::Green(symbols[symbol_idx]);
+        targets[target_idx + 3] = Target::Yellow(symbols[symbol_idx]);
+        target_idx += 4;
+        symbol_idx += 1;
     }
     targets
 };
