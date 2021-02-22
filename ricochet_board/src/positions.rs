@@ -13,8 +13,8 @@ pub type PositionEncoding = u16;
 /// A position on the board.
 ///
 /// ```txt
-/// |x   |y   |
-/// |0000|0000|
+/// x    y   
+/// 0000|0000
 /// ```
 #[derive(Copy, Clone, Default, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Position {
@@ -66,11 +66,6 @@ impl Position {
         }
     }
 
-    /// Wrapper for `Position::new()` to construct a position from a tuple.
-    pub fn from_tuple((column, row): (PositionEncoding, PositionEncoding)) -> Self {
-        Position::new(column, row)
-    }
-
     /// Returns the column the robot is in.
     #[inline(always)]
     pub fn column(&self) -> PositionEncoding {
@@ -120,16 +115,22 @@ impl Into<(PositionEncoding, PositionEncoding)> for Position {
     }
 }
 
+impl From<(PositionEncoding, PositionEncoding)> for Position {
+    fn from((col, row): (PositionEncoding, PositionEncoding)) -> Self {
+        Self::new(col, row)
+    }
+}
+
 impl RobotPositions {
     /// Creates a board from a slice of position tuples.
     ///
     /// The values in `positions` are used in the order red, blue, green, yellow.
     pub fn from_tuples(positions: &[(PositionEncoding, PositionEncoding); 4]) -> Self {
         RobotPositions {
-            red: Position::from_tuple(positions[0]),
-            blue: Position::from_tuple(positions[1]),
-            green: Position::from_tuple(positions[2]),
-            yellow: Position::from_tuple(positions[3]),
+            red: Position::from(positions[0]),
+            blue: Position::from(positions[1]),
+            green: Position::from(positions[2]),
+            yellow: Position::from(positions[3]),
         }
     }
 

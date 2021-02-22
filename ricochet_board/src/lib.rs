@@ -23,12 +23,13 @@
 //! [`template`](template) module for more information.
 
 mod draw;
+pub mod generator;
 mod positions;
 pub mod template;
 
 use std::collections::BTreeMap;
 use std::convert::{TryFrom, TryInto};
-use std::fmt;
+use std::{fmt, ops};
 
 pub use crate::draw::draw_board;
 pub use crate::positions::{Position, PositionEncoding, RobotPositions};
@@ -48,10 +49,32 @@ pub const DIRECTIONS: [Direction; 4] = [
 /// All robots defined by their color.
 pub const ROBOTS: [Robot; 4] = [Robot::Red, Robot::Blue, Robot::Green, Robot::Yellow];
 
+/// All targets in the game.
+pub const TARGETS: [Target; 17] = {
+    let mut targets = [Target::Spiral; 17];
+    let symbols = &[
+        Symbol::Circle,
+        Symbol::Triangle,
+        Symbol::Square,
+        Symbol::Hexagon,
+    ];
+    let mut target_idx = 1;
+    let mut i = 0;
+    while i < 4 {
+        targets[target_idx] = Target::Red(symbols[i]);
+        targets[target_idx] = Target::Blue(symbols[i]);
+        targets[target_idx] = Target::Green(symbols[i]);
+        targets[target_idx] = Target::Yellow(symbols[i]);
+        target_idx += 1;
+        i += 1;
+    }
+    targets
+};
+
 /// A field on the board.
 ///
 /// Contains information regarding walls to the right and bottom of the field.
-#[derive(Debug, Copy, Clone, Default)]
+#[derive(Debug, Copy, Clone, Default, PartialEq, Eq)]
 pub struct Field {
     /// Returns `true` if the wall in the down direction is set.
     pub down: bool,
@@ -60,7 +83,7 @@ pub struct Field {
 }
 
 /// A game of ricochet on one board with a set of targets.
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct Game {
     board: Board,
     targets: BTreeMap<Target, Position>,
@@ -69,7 +92,7 @@ pub struct Game {
 /// One round of a ricochet game.
 ///
 /// Represents the problem of finding a path from a starting position on a board to a given target.
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct Round {
     board: Board,
     target: Target,
@@ -77,7 +100,7 @@ pub struct Round {
 }
 
 /// A ricochet robots board containing walls, but no targets.
-#[derive(Clone, Default)]
+#[derive(Clone, Default, PartialEq, Eq)]
 pub struct Board {
     walls: Walls,
 }
@@ -209,10 +232,10 @@ impl Board {
     }
 
     /// Encloses a rectangle defined by the left upper corner and its width and height.
-    /// The field [col, row] is inside the enclosure. Wraps around at the edge of the board.
+    /// The field (col, row) is inside the enclosure. Wraps around at the edge of the board.
     ///
     /// # Panics
-    /// Panics if [col, row] is out of bounds.
+    /// Panics if (col, row) is out of bounds.
     pub fn enclose_lengths(
         self,
         col: PositionEncoding,
@@ -300,6 +323,20 @@ impl Board {
     }
 }
 
+impl ops::Index<Position> for Board {
+    type Output = Field;
+
+    fn index(&self, index: Position) -> &Self::Output {
+        &self.walls[index.column() as usize][index.row() as usize]
+    }
+}
+
+impl ops::IndexMut<Position> for Board {
+    fn index_mut(&mut self, index: Position) -> &mut Self::Output {
+        &mut self.walls[index.column() as usize][index.row() as usize]
+    }
+}
+
 impl Round {
     /// Creates a new ricochet robots round.
     pub fn new(board: Board, target: Target, target_position: Position) -> Self {
@@ -340,10 +377,15 @@ impl Round {
 }
 
 impl Game {
+    /// Creates a new game with the given board and targets.
+    pub fn new(board: Board, targets: BTreeMap<Target, Position>) -> Self {
+        Self { board, targets }
+    }
+
     /// Creates a new game with an empty square board.
     ///
     /// No walls or targets are set.
-    pub fn new(side_length: PositionEncoding) -> Self {
+    pub fn new_empty(side_length: PositionEncoding) -> Self {
         Game {
             board: Board::new_empty(side_length),
             targets: Default::default(),
@@ -468,32 +510,32 @@ mod tests {
     #[test]
     fn move_right() {
         let (mut positions, board) = create_board();
-        assert_eq!(positions[Robot::Green], Position::from_tuple((7, 1)));
+        assert_eq!(positions[Robot::Green], Position::from((7, 1)));
         positions = positions.move_in_direction(&board, Robot::Green, Direction::Right);
-        assert_eq!(positions[Robot::Green], Position::from_tuple((15, 1)));
+        assert_eq!(positions[Robot::Green], Position::from((15, 1)));
     }
 
     #[test]
     fn move_left() {
         let (mut positions, board) = create_board();
-        assert_eq!(positions[Robot::Green], Position::from_tuple((7, 1)));
+        assert_eq!(positions[Robot::Green], Position::from((7, 1)));
         positions = positions.move_in_direction(&board, Robot::Green, Direction::Left);
-        assert_eq!(positions[Robot::Green], Position::from_tuple((5, 1)));
+        assert_eq!(positions[Robot::Green], Position::from((5, 1)));
     }
 
     #[test]
     fn move_up() {
         let (mut positions, board) = create_board();
-        assert_eq!(positions[Robot::Green], Position::from_tuple((7, 1)));
+        assert_eq!(positions[Robot::Green], Position::from((7, 1)));
         positions = positions.move_in_direction(&board, Robot::Green, Direction::Up);
-        assert_eq!(positions[Robot::Green], Position::from_tuple((7, 0)));
+        assert_eq!(positions[Robot::Green], Position::from((7, 0)));
     }
 
     #[test]
     fn move_down() {
         let (mut positions, board) = create_board();
-        assert_eq!(positions[Robot::Green], Position::from_tuple((7, 1)));
+        assert_eq!(positions[Robot::Green], Position::from((7, 1)));
         positions = positions.move_in_direction(&board, Robot::Green, Direction::Down);
-        assert_eq!(positions[Robot::Green], Position::from_tuple((7, 6)));
+        assert_eq!(positions[Robot::Green], Position::from((7, 6)));
     }
 }
