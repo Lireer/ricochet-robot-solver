@@ -127,6 +127,7 @@ impl Generator {
             }
         }
 
+        // Add one more corner wall if there is any space left.
         let open_fields = fields(
             &self.occupied_fields,
             ((1, 1), (self.side_length - 2, self.side_length - 2)),
@@ -195,7 +196,7 @@ impl Generator {
                 let mut end = segment_sum - 1;
                 if n == num_per_wall - 1 {
                     // Exclude the last two fields of the last segment.
-                    end -= 1;
+                    end = generator.side_length as usize - 2;
                 }
 
                 indices.push(generator.rng.gen_range(start..end))
