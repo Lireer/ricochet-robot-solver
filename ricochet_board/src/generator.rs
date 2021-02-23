@@ -7,6 +7,9 @@ use itertools::Itertools;
 use rand::prelude::SliceRandom;
 use rand::{Rng, SeedableRng};
 
+/// Marks the side_length from which on generated boards contain a center wall block.
+pub const CENTER_WALLS_FROM_SIDE_LENGTH: PositionEncoding = 10;
+
 /// A board generator to create boards of different sizes and configurations.
 #[derive(Debug)]
 pub struct Generator {
@@ -70,7 +73,7 @@ impl Generator {
         self.potential_targets = Vec::new();
         self.occupied_fields = BTreeSet::new();
 
-        if self.side_length >= 10 {
+        if self.side_length >= CENTER_WALLS_FROM_SIDE_LENGTH {
             base = base.set_center_walls();
             let f = self.side_length / 2 - 1;
             for (col_add, row_add) in [0, 1].iter().cartesian_product(&[0, 1]) {

@@ -6,7 +6,7 @@ use draw_a_box::{find_character, Weight};
 use std::fmt;
 
 use crate::draw::{FIELD_DRAW_HEIGHT, FIELD_DRAW_WIDTH};
-use crate::{Field, PositionEncoding, Symbol::*, Target};
+use crate::{Field, Game, PositionEncoding, Round, Symbol, Target, TARGETS};
 
 /// The side length of the standard physical board.
 pub const STANDARD_BOARD_SIZE: PositionEncoding = 16;
@@ -21,6 +21,16 @@ pub const ORIENTATIONS: [Orientation; 4] = [
     Orientation::BottomRight,
     Orientation::BottomLeft,
 ];
+
+/// Number of unique boards that can be assembled from the standard board templates.
+///
+/// The board can always be rotated in a way that a red template would be in the upper left. So
+/// there are three possible values, after that choose one of the remaining nine templates and so
+/// forth until we have a complete board.
+pub const DISTINCT_STANDARD_BOARDS: usize = 3 * 9 * 6 * 3;
+
+/// Number of unique rounds that can be assembled from the standard board templates.
+pub const DISTINCT_STANDARD_ROUNDS: usize = DISTINCT_STANDARD_BOARDS * 17;
 
 /// The orientation of a template.
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -245,6 +255,95 @@ impl fmt::Display for BoardTemplate {
     }
 }
 
+/// Creates a `Round` from a `seed` between 0 and [8262](DISTINCT_STANDARD_ROUNDS).
+///
+/// The actual seed used is the given `seed` mod `DISTINCT_STANDARD_ROUNDS` to ensure its in the
+/// correct range. The target is chosen with `num_to_target(seed % TARGETS.len())`, the game with
+/// `game_from_seed(seed / target_count)`.
+pub fn round_from_seed(seed: usize) -> Round {
+    let seed = seed % DISTINCT_STANDARD_ROUNDS;
+    let target_count = TARGETS.len();
+    let game = game_from_seed(seed / target_count);
+    let target = num_to_target(seed % target_count);
+    Round::new(
+        game.board().clone(),
+        target,
+        *game
+            .targets()
+            .get(&target)
+            .expect("could not find a target in a `Game`"),
+    )
+}
+
+/// Creates a `Game` from a seed between 0 and [486](DISTINCT_STANDARD_BOARDS).
+///
+/// The actual seed used is the given `seed` mod `DISTINCT_STANDARD_BOARDS` to ensure its in the
+/// correct range.
+pub fn game_from_seed(seed: usize) -> Game {
+    let seed = seed % DISTINCT_STANDARD_BOARDS;
+    let mut indices = Vec::new();
+    let mut div_mod = |i: usize, div: usize| {
+        indices.push(i % div);
+        i / div
+    };
+
+    let mut div = seed;
+    for denom in &[3, 9, 6, 3] {
+        div = div_mod(div, *denom);
+    }
+
+    let templates = gen_templates();
+    let mut chosen_tpl = Vec::with_capacity(4);
+
+    // Choose a red template for the upper left piece.
+    chosen_tpl.push(templates[indices[0]].clone());
+
+    for &idx in &indices[1..] {
+        let next_tpl = templates
+            .iter()
+            .filter(|&tpl| !chosen_tpl.iter().any(|ct| ct.color() == tpl.color()))
+            .nth(idx)
+            .unwrap()
+            .clone();
+        chosen_tpl.push(next_tpl);
+    }
+
+    chosen_tpl
+        .iter_mut()
+        .zip(ORIENTATIONS.iter())
+        .for_each(|(tpl, orient)| tpl.rotate_to(*orient));
+    Game::from_templates(&chosen_tpl)
+}
+
+/// Create a target from an integer between 0 and 16 inclusive.
+///
+/// There are four targets per color
+/// 0 to 3 are the red targets. 4 to 7 are the blue targets, followed by four green, four yellow and finally one spiral.
+/// The symbols are chosen with [num_to_target_symbol].
+fn num_to_target(n: usize) -> Target {
+    match n {
+        0..=3 => Target::Red(num_to_target_symbol(n % 4)),
+        4..=7 => Target::Blue(num_to_target_symbol(n % 4)),
+        8..=11 => Target::Green(num_to_target_symbol(n % 4)),
+        12..=15 => Target::Yellow(num_to_target_symbol(n % 4)),
+        16 => Target::Spiral,
+        _ => panic!(),
+    }
+}
+
+/// Creates a symbol from an integer between 0 and 3 inclusive.
+///
+/// The ordering is `Circle`, `Triangle`, `Square`, and `Hexagon`.
+fn num_to_target_symbol(n: usize) -> Symbol {
+    match n {
+        0 => Symbol::Circle,
+        1 => Symbol::Triangle,
+        2 => Symbol::Square,
+        3 => Symbol::Hexagon,
+        _ => panic!(),
+    }
+}
+
 /// Creates a vec containing all known templates.
 ///
 /// Each color has three templates and the vec contains them in the order red, blue, green, yellow.
@@ -262,10 +361,10 @@ pub fn gen_templates() -> Vec<BoardTemplate> {
                 WallDirection::Right,
                 vec![(0, 3), (1, 0), (3, 6), (4, 1), (4, 5)],
             )
-            .set_target((1, 3), Target::Red(Triangle))
-            .set_target((3, 6), Target::Blue(Hexagon))
-            .set_target((4, 1), Target::Green(Circle))
-            .set_target((5, 5), Target::Yellow(Square)),
+            .set_target((1, 3), Target::Red(Symbol::Triangle))
+            .set_target((3, 6), Target::Blue(Symbol::Hexagon))
+            .set_target((4, 1), Target::Green(Symbol::Circle))
+            .set_target((5, 5), Target::Yellow(Symbol::Square)),
     );
     temps.push(
         BoardTemplate::default_template(TempColor::Red)
@@ -277,10 +376,10 @@ pub fn gen_templates() -> Vec<BoardTemplate> {
                 WallDirection::Right,
                 vec![(0, 1), (2, 4), (3, 0), (6, 2), (6, 5)],
             )
-            .set_target((1, 1), Target::Red(Triangle))
-            .set_target((2, 4), Target::Blue(Hexagon))
-            .set_target((6, 2), Target::Green(Circle))
-            .set_target((7, 5), Target::Yellow(Square)),
+            .set_target((1, 1), Target::Red(Symbol::Triangle))
+            .set_target((2, 4), Target::Blue(Symbol::Hexagon))
+            .set_target((6, 2), Target::Green(Symbol::Circle))
+            .set_target((7, 5), Target::Yellow(Symbol::Square)),
     );
     temps.push(
         BoardTemplate::default_template(TempColor::Red)
@@ -292,10 +391,10 @@ pub fn gen_templates() -> Vec<BoardTemplate> {
                 WallDirection::Right,
                 vec![(0, 6), (2, 4), (3, 0), (5, 2), (6, 5)],
             )
-            .set_target((1, 6), Target::Yellow(Square))
-            .set_target((2, 4), Target::Green(Circle))
-            .set_target((5, 2), Target::Blue(Hexagon))
-            .set_target((7, 5), Target::Red(Triangle)),
+            .set_target((1, 6), Target::Yellow(Symbol::Square))
+            .set_target((2, 4), Target::Green(Symbol::Circle))
+            .set_target((5, 2), Target::Blue(Symbol::Hexagon))
+            .set_target((7, 5), Target::Red(Symbol::Triangle)),
     );
 
     // Add blue boards
@@ -309,10 +408,10 @@ pub fn gen_templates() -> Vec<BoardTemplate> {
                 WallDirection::Right,
                 vec![(2, 2), (2, 4), (4, 3), (4, 5), (5, 0)],
             )
-            .set_target((2, 4), Target::Red(Square))
-            .set_target((3, 2), Target::Yellow(Circle))
-            .set_target((4, 5), Target::Green(Hexagon))
-            .set_target((5, 3), Target::Blue(Triangle)),
+            .set_target((2, 4), Target::Red(Symbol::Square))
+            .set_target((3, 2), Target::Yellow(Symbol::Circle))
+            .set_target((4, 5), Target::Green(Symbol::Hexagon))
+            .set_target((5, 3), Target::Blue(Symbol::Triangle)),
     );
     temps.push(
         BoardTemplate::default_template(TempColor::Blue)
@@ -324,10 +423,10 @@ pub fn gen_templates() -> Vec<BoardTemplate> {
                 WallDirection::Right,
                 vec![(0, 2), (2, 6), (3, 0), (5, 1), (5, 4)],
             )
-            .set_target((1, 2), Target::Red(Square))
-            .set_target((2, 6), Target::Blue(Triangle))
-            .set_target((5, 1), Target::Green(Hexagon))
-            .set_target((6, 4), Target::Yellow(Circle)),
+            .set_target((1, 2), Target::Red(Symbol::Square))
+            .set_target((2, 6), Target::Blue(Symbol::Triangle))
+            .set_target((5, 1), Target::Green(Symbol::Hexagon))
+            .set_target((6, 4), Target::Yellow(Symbol::Circle)),
     );
     temps.push(
         BoardTemplate::default_template(TempColor::Blue)
@@ -339,10 +438,10 @@ pub fn gen_templates() -> Vec<BoardTemplate> {
                 WallDirection::Right,
                 vec![(1, 1), (1, 6), (4, 0), (4, 5), (5, 3)],
             )
-            .set_target((1, 6), Target::Green(Hexagon))
-            .set_target((2, 1), Target::Yellow(Circle))
-            .set_target((4, 5), Target::Red(Square))
-            .set_target((6, 3), Target::Blue(Triangle)),
+            .set_target((1, 6), Target::Green(Symbol::Hexagon))
+            .set_target((2, 1), Target::Yellow(Symbol::Circle))
+            .set_target((4, 5), Target::Red(Symbol::Square))
+            .set_target((6, 3), Target::Blue(Symbol::Triangle)),
     );
 
     // Add green boards
@@ -356,10 +455,10 @@ pub fn gen_templates() -> Vec<BoardTemplate> {
                 WallDirection::Right,
                 vec![(0, 4), (1, 0), (2, 1), (4, 6), (6, 3)],
             )
-            .set_target((1, 4), Target::Red(Circle))
-            .set_target((3, 1), Target::Green(Triangle))
-            .set_target((4, 6), Target::Blue(Square))
-            .set_target((6, 3), Target::Yellow(Hexagon)),
+            .set_target((1, 4), Target::Red(Symbol::Circle))
+            .set_target((3, 1), Target::Green(Symbol::Triangle))
+            .set_target((4, 6), Target::Blue(Symbol::Square))
+            .set_target((6, 3), Target::Yellow(Symbol::Hexagon)),
     );
     temps.push(
         BoardTemplate::default_template(TempColor::Green)
@@ -371,10 +470,10 @@ pub fn gen_templates() -> Vec<BoardTemplate> {
                 WallDirection::Right,
                 vec![(1, 0), (1, 2), (2, 6), (3, 1), (6, 3)],
             )
-            .set_target((1, 2), Target::Green(Triangle))
-            .set_target((3, 6), Target::Blue(Square))
-            .set_target((4, 1), Target::Red(Circle))
-            .set_target((6, 3), Target::Yellow(Hexagon)),
+            .set_target((1, 2), Target::Green(Symbol::Triangle))
+            .set_target((3, 6), Target::Blue(Symbol::Square))
+            .set_target((4, 1), Target::Red(Symbol::Circle))
+            .set_target((6, 3), Target::Yellow(Symbol::Hexagon)),
     );
     temps.push(
         BoardTemplate::default_template(TempColor::Green)
@@ -386,10 +485,10 @@ pub fn gen_templates() -> Vec<BoardTemplate> {
                 WallDirection::Right,
                 vec![(0, 2), (2, 6), (4, 0), (6, 1), (6, 5)],
             )
-            .set_target((1, 2), Target::Green(Triangle))
-            .set_target((3, 6), Target::Red(Circle))
-            .set_target((6, 1), Target::Yellow(Hexagon))
-            .set_target((6, 5), Target::Blue(Square)),
+            .set_target((1, 2), Target::Green(Symbol::Triangle))
+            .set_target((3, 6), Target::Red(Symbol::Circle))
+            .set_target((6, 1), Target::Yellow(Symbol::Hexagon))
+            .set_target((6, 5), Target::Blue(Symbol::Square)),
     );
 
     // Add yellow boards
@@ -403,10 +502,10 @@ pub fn gen_templates() -> Vec<BoardTemplate> {
                 WallDirection::Right,
                 vec![(1, 6), (2, 0), (3, 4), (4, 1), (5, 5), (7, 2)],
             )
-            .set_target((1, 6), Target::Yellow(Triangle))
-            .set_target((3, 4), Target::Red(Hexagon))
-            .set_target((5, 1), Target::Blue(Circle))
-            .set_target((6, 5), Target::Green(Square))
+            .set_target((1, 6), Target::Yellow(Symbol::Triangle))
+            .set_target((3, 4), Target::Red(Symbol::Hexagon))
+            .set_target((5, 1), Target::Blue(Symbol::Circle))
+            .set_target((6, 5), Target::Green(Symbol::Square))
             .set_target((7, 2), Target::Spiral),
     );
     temps.push(
@@ -419,11 +518,11 @@ pub fn gen_templates() -> Vec<BoardTemplate> {
                 WallDirection::Right,
                 vec![(0, 3), (2, 1), (3, 7), (4, 0), (5, 4), (5, 6)],
             )
-            .set_target((1, 3), Target::Green(Square))
-            .set_target((3, 1), Target::Red(Hexagon))
+            .set_target((1, 3), Target::Green(Symbol::Square))
+            .set_target((3, 1), Target::Red(Symbol::Hexagon))
             .set_target((3, 7), Target::Spiral)
-            .set_target((5, 6), Target::Blue(Circle))
-            .set_target((6, 4), Target::Yellow(Triangle)),
+            .set_target((5, 6), Target::Blue(Symbol::Circle))
+            .set_target((6, 4), Target::Yellow(Symbol::Triangle)),
     );
     temps.push(
         BoardTemplate::default_template(TempColor::Yellow)
@@ -435,10 +534,10 @@ pub fn gen_templates() -> Vec<BoardTemplate> {
                 WallDirection::Right,
                 vec![(1, 3), (2, 5), (3, 0), (4, 4), (5, 1), (7, 5)],
             )
-            .set_target((1, 3), Target::Yellow(Triangle))
-            .set_target((2, 5), Target::Red(Hexagon))
-            .set_target((5, 4), Target::Green(Square))
-            .set_target((6, 1), Target::Blue(Circle))
+            .set_target((1, 3), Target::Yellow(Symbol::Triangle))
+            .set_target((2, 5), Target::Red(Symbol::Hexagon))
+            .set_target((5, 4), Target::Green(Symbol::Square))
+            .set_target((6, 1), Target::Blue(Symbol::Circle))
             .set_target((7, 5), Target::Spiral),
     );
 
