@@ -93,53 +93,7 @@ impl SolutionData {
     }
 
     pub fn round(&self) -> Round {
-        let mut indices = Vec::new();
-        let mut div_mod = |i: usize, div: usize| {
-            indices.push(i % div);
-            i / div
-        };
-
-        let mut div = self.board_seed;
-        for denom in &[17, 3, 9, 6, 3] {
-            div = div_mod(div, *denom);
-        }
-
-        let templates = ricochet_board::template::gen_templates();
-        let mut chosen_tpl = Vec::with_capacity(4);
-
-        // Choose a red template for the upper left piece.
-        chosen_tpl.push(templates[indices[1]].clone());
-
-        for &idx in &indices[2..] {
-            let next_tpl = templates
-                .iter()
-                .filter(|&tpl| !chosen_tpl.iter().any(|ct| ct.color() == tpl.color()))
-                .nth(idx)
-                .unwrap()
-                .clone();
-            chosen_tpl.push(next_tpl);
-        }
-        assert!(chosen_tpl.len() == 4);
-        assert!(
-            chosen_tpl
-                .iter()
-                .map(|tpl| tpl.color())
-                .collect::<HashSet<_>>()
-                .len()
-                == 4
-        );
-
-        let target = num_to_target(indices[0]);
-
-        chosen_tpl
-            .iter_mut()
-            .zip(template::ORIENTATIONS.iter())
-            .for_each(|(tpl, orient)| tpl.rotate_to(*orient));
-        let game = ricochet_board::Game::from_templates(&chosen_tpl);
-        let target_position = game
-            .get_target_position(&target)
-            .expect("Failed to find the position of the target on the board");
-        Round::new(game.board().clone(), target, target_position)
+        ricochet_board::template::round_from_seed(self.board_seed)
     }
 
     pub fn start_positions(&self) -> RobotPositions {
