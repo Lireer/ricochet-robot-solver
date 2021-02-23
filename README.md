@@ -43,8 +43,6 @@ $ maturin develop --release --manifest-path ricochet_environment/Cargo.toml
 
 `maturin build` can be used instead to build but not install the package. The built `.whl` file can be found in `target/wheels/` and can be installed using pip.
 
-Navigate to the rust package that is to be build. Use `maturin develop --release` to build and install it in the environment.
-
 ### Builds compatible with `manylinux`
 
 To build the package in a way that makes it compatible with manylinux use:
