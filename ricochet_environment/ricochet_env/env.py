@@ -56,7 +56,8 @@ class RicochetEnv(gym.Env):
                           boards. The cardinality of the set is 486. (*Default*)
             - int: Same as using `"variants"` but gives control over the
                    cardinality of the set.
-            - "random": The walls are set completely randomly.
+            - "random": A board is randomly chosen from a practically infinite
+                        set.
         targets : str or Tuple(int,int) or List[Tuple(int,int)]
             Decides how the targets will be chosen, possible values are
             - "variants": Chooses the target depending on the board variant.

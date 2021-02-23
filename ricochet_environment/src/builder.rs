@@ -58,13 +58,6 @@ impl EnvironmentBuilder {
         robots: RobotConfig,
         seed: u128,
     ) -> Self {
-        if board_size != 16 {
-            unimplemented!("board sizes other than 16 are not yet implemented");
-        }
-        if targets == TargetConfig::Variants && walls == WallConfig::Random {
-            panic!("variant targets can not be used with random walls");
-        }
-
         Self {
             board_size,
             walls,
