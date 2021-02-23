@@ -269,9 +269,10 @@ impl LeastMovesBoard {
     }
 
     /// Checks whether the `target` is impossible to reach by checking if the lower bound returned
-    /// by [`min_moves`](Self::min_moves) is greater than the number of fields on the board.
+    /// by [`min_moves`](Self::min_moves) is greater than or equal to the number of fields on the
+    /// board.
     pub fn is_unsolvable(&self, robots: &RobotPositions, target: Target) -> bool {
-        self.min_moves(robots, target) > self.board.len().pow(2)
+        self.min_moves(robots, target) >= self.board.len().pow(2)
     }
 }
 
@@ -285,7 +286,7 @@ impl ops::Index<Position> for LeastMovesBoard {
 
 #[cfg(test)]
 mod tests {
-    use ricochet_board::{Board, Position};
+    use ricochet_board::{Board, Position, PositionEncoding, RobotPositions, Target};
 
     use super::LeastMovesBoard;
 
@@ -312,5 +313,32 @@ mod tests {
             LeastMovesBoard::new(&board, target).board,
             vec![vec![0, 3, 3], vec![1, 2, 3], vec![1, 2, 2]]
         );
+    }
+
+    #[test]
+    fn max_moves() {
+        let board = Board::new_empty(2)
+            .wall_enclosure()
+            .set_vertical_line(0, 0, 1);
+        let target = Position::new(1, 0);
+        let move_board = LeastMovesBoard::new(&board, target);
+        let positions: [(PositionEncoding, PositionEncoding); 4] = [(0, 0), (0, 0), (0, 0), (0, 0)];
+        let rob_pos = RobotPositions::from_tuples(&positions);
+        assert_eq!(move_board.min_moves(&rob_pos, Target::Spiral), 3);
+        assert_eq!(move_board.is_unsolvable(&rob_pos, Target::Spiral), false);
+    }
+
+    #[test]
+    fn unsolvable() {
+        let board = Board::new_empty(2)
+            .wall_enclosure()
+            .set_vertical_line(0, 0, 1)
+            .set_horizontal_line(0, 0, 1); // This makes it unsolvable
+        let target = Position::new(1, 0);
+        let move_board = LeastMovesBoard::new(&board, target);
+        let positions: [(PositionEncoding, PositionEncoding); 4] = [(0, 0), (0, 0), (0, 0), (0, 0)];
+        let rob_pos = RobotPositions::from_tuples(&positions);
+        assert_eq!(move_board.min_moves(&rob_pos, Target::Spiral), 4);
+        assert_eq!(move_board.is_unsolvable(&rob_pos, Target::Spiral), true);
     }
 }
