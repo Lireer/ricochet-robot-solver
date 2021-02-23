@@ -9,6 +9,8 @@
 # Generated rust lib for python
 **/*.so
 
+__pycache__
+
 ### Frontend ###
 elm-stuff
 /index.html

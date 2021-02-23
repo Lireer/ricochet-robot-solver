@@ -734,7 +734,10 @@ dependencies = [
 name = "ricochet_env"
 version = "0.1.0"
 dependencies = [
+ "getset",
  "pyo3",
+ "rand",
+ "rand_pcg",
  "ricochet_board",
 ]
 

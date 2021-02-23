@@ -1,11 +1,24 @@
+pub(crate) mod builder;
+
+use crate::builder::{EnvironmentBuilder, RobotConfig, TargetConfig, WallConfig};
 use pyo3::prelude::*;
 use ricochet_board::{
-    template, Board, Direction, Game, PositionEncoding, Robot, RobotPositions, Round, Symbol,
-    Target,
+    Board, Direction, PositionEncoding, Robot, RobotPositions, Round, Symbol, Target,
 };
+
+/// The base module of the created package.
+#[pymodule]
+fn ricochet_env(_py: Python, m: &PyModule) -> PyResult<()> {
+    m.add_class::<RustyEnvironment>()?;
+
+    Ok(())
+}
 
 /// The type of a reward which can be obtained by stepping through the environment.
 pub type Reward = f64;
+
+/// The type of a coordinate on the board.
+pub type Coordinate = (PositionEncoding, PositionEncoding);
 
 /// The observation of the state of an environment.
 ///
@@ -18,31 +31,34 @@ pub type Reward = f64;
 pub type Observation<'a> = (
     &'a Vec<Vec<bool>>,
     &'a Vec<Vec<bool>>,
-    Vec<(PositionEncoding, PositionEncoding)>,
-    (PositionEncoding, PositionEncoding),
+    Vec<Coordinate>,
+    Coordinate,
     usize,
 );
-
-/// The base module of the created package.
-#[pymodule]
-fn ricochet_env(_py: Python, m: &PyModule) -> PyResult<()> {
-    m.add_class::<RustyEnvironment>()?;
-
-    Ok(())
-}
 
 /// An action that can be performed in the environment.
 ///
 /// It consists of a robot and the direction the specified robot should move in.
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct Action {
     robot: Robot,
     direction: Direction,
 }
 
+/// A target to reach as part of a round.
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum TargetColor {
+    Red,
+    Blue,
+    Green,
+    Yellow,
+    Any,
+}
+
 #[pyclass]
 #[derive(Debug, Clone)]
 pub struct RustyEnvironment {
+    config: EnvironmentBuilder,
     round: Round,
     wall_observation: (Vec<Vec<bool>>, Vec<Vec<bool>>),
     starting_position: RobotPositions,
@@ -53,33 +69,34 @@ pub struct RustyEnvironment {
 #[pymethods]
 impl RustyEnvironment {
     #[new]
-    #[allow(clippy::new_without_default)]
-    pub fn new() -> Self {
-        let templates = template::gen_templates()
-            .iter()
-            .step_by(3)
-            .cloned()
-            .enumerate()
-            .map(|(i, mut temp)| {
-                temp.rotate_to(template::ORIENTATIONS[i]);
-                temp
-            })
-            .collect::<Vec<template::BoardTemplate>>();
+    pub fn new(
+        board_size: PositionEncoding,
+        walls: WallConfig,
+        targets: TargetConfig,
+        robots: RobotConfig,
+    ) -> Self {
+        Self::new_seeded(board_size, walls, targets, robots, rand::random())
+    }
 
-        let game = Game::from_templates(&templates);
-        let target = Target::Red(Symbol::Triangle);
-        let starting_position = RobotPositions::from_tuples(&[(0, 1), (5, 4), (7, 1), (7, 15)]);
+    #[staticmethod]
+    pub fn new_seeded(
+        board_size: PositionEncoding,
+        walls: WallConfig,
+        targets: TargetConfig,
+        robots: RobotConfig,
+        seed: u128,
+    ) -> Self {
+        let mut config = EnvironmentBuilder::new_seeded(board_size, walls, targets, robots, seed);
+        let round = config.new_round();
+        let starting_position = config.new_positions();
 
         Self {
-            round: Round::new(
-                game.board().clone(),
-                target,
-                game.get_target_position(&target).unwrap(),
-            ),
-            wall_observation: create_wall_bitboards(game.board()),
+            wall_observation: create_wall_bitboards(round.board()),
+            round,
             current_position: starting_position.clone(),
             starting_position,
             steps_taken: 0,
+            config,
         }
     }
 
@@ -102,8 +119,22 @@ impl RustyEnvironment {
     }
 
     pub fn reset(&mut self, py_gil: Python) -> PyObject {
+        self.round = self.config.new_round();
+        if *self.config.walls() != WallConfig::Fix {
+            self.wall_observation = create_wall_bitboards(self.round.board());
+        }
+        self.starting_position = self.config.new_positions();
         self.current_position = self.starting_position.clone();
         self.steps_taken = 0;
+
+        self.get_state(py_gil)
+    }
+
+    pub fn render(&self) -> String {
+        ricochet_board::draw_board(self.round.board().get_walls())
+    }
+
+    pub fn get_state(&self, py_gil: Python) -> PyObject {
         self.observation().to_object(py_gil)
     }
 }
@@ -151,7 +182,7 @@ impl<'source> FromPyObject<'source> for Action {
             2 => Robot::Green,
             3 => Robot::Yellow,
             _ => panic!(
-                "failed to convert value {} to an action. Only values in [0:16] are valid.",
+                "failed to convert value {} into an action. Only values in [0:16] are valid.",
                 action
             ),
         };
@@ -166,14 +197,55 @@ impl<'source> FromPyObject<'source> for Action {
     }
 }
 
-fn robot_positions_as_vec(pos: &RobotPositions) -> Vec<(PositionEncoding, PositionEncoding)> {
+impl<'source> FromPyObject<'source> for TargetColor {
+    fn extract(raw_target: &'source PyAny) -> PyResult<Self> {
+        let target = match raw_target.extract()? {
+            0 => TargetColor::Red,
+            1 => TargetColor::Blue,
+            2 => TargetColor::Green,
+            3 => TargetColor::Yellow,
+            4 => TargetColor::Any,
+            i => panic!(
+                "could not convert value {} into a target. Only values in [0:4] are valid.",
+                i
+            ),
+        };
+        Ok(target)
+    }
+}
+
+impl From<TargetColor> for Target {
+    fn from(tc: TargetColor) -> Self {
+        match tc {
+            TargetColor::Red => Target::Red(Symbol::Circle),
+            TargetColor::Blue => Target::Blue(Symbol::Circle),
+            TargetColor::Green => Target::Green(Symbol::Circle),
+            TargetColor::Yellow => Target::Yellow(Symbol::Circle),
+            TargetColor::Any => Target::Spiral,
+        }
+    }
+}
+
+impl From<Target> for TargetColor {
+    fn from(target: Target) -> Self {
+        match target {
+            Target::Red(_) => TargetColor::Red,
+            Target::Blue(_) => TargetColor::Blue,
+            Target::Green(_) => TargetColor::Green,
+            Target::Yellow(_) => TargetColor::Yellow,
+            Target::Spiral => TargetColor::Any,
+        }
+    }
+}
+
+fn robot_positions_as_vec(pos: &RobotPositions) -> Vec<Coordinate> {
     pos.to_array()
         .iter()
         .map(|p| (p.column(), p.row()))
         .collect()
 }
 
-/// Creates two bitboards with the same format as `self`.
+/// Creates two bitboards with the same dimensions as `self`.
 ///
 /// The first board in the returned tuple contains all walls, which are to the right of a field.
 /// The second board contains all walls, which are in the down direction of a field.

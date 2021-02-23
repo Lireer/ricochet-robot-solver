@@ -1,5 +1,6 @@
 import enum
 import gym
+import numpy as np
 from gym import spaces
 from .ricochet_env import RustyEnvironment
 
@@ -32,23 +33,70 @@ class Target(enum.IntEnum):
 
 
 class RicochetEnv(gym.Env):
-    def __init__(self):
-        self.env = RustyEnvironment()
+    """An OpenAI Gym compatible environment for the board game Ricochet Robots."""
+
+    def __init__(
+        self,
+        board_size=16,
+        walls="variants",
+        targets="variants",
+        robots="random",
+        seed=None,
+    ):
+        """Create an environment for the ricochet robots game.
+
+        Parameters
+        ----------
+        board_size : int
+            The side length of the square board. (*Default* `16`)
+        walls : str or int
+            Decides how the walls should be set, possible values are
+            - "fixed": One board that will always be the same.
+            - "variants": A board is randomly chosen from a finite set of
+                          boards. The cardinality of the set is 486. (*Default*)
+            - int: Same as using `"variants"` but gives control over the
+                   cardinality of the set.
+            - "random": The walls are set completely randomly.
+        targets : str or Tuple(int,int) or List[Tuple(int,int)]
+            Decides how the targets will be chosen, possible values are
+            - "variants": Chooses the target depending on the board variant.
+                          Not usable with walls set to "random". (*Default*)
+            - [(Target, (int,int))]: The target will be chosen randomly from the
+                                     given list.
+        robots: str or List[Tuple(int, int)]
+            Decides where the robots are located before making the first move.
+            - [(int,int)]: There have to be four elements in the list, each of
+                           which decides the positions of the robots in the
+                           order red, blue, green, yellow.
+            - "random": The starting positions are chosen randomly. (*Default*)
+        seed: int
+            Can be set to make the environment reproducible. (*Default* `None`)
+        """
+
+        if seed is None:
+            print("seed is None")
+            self.env = RustyEnvironment(board_size, walls, targets, robots)
+        else:
+            print("seed is", seed)
+            self.env = RustyEnvironment.new_seeded(
+                board_size, walls, targets, robots, seed
+            )
+
         self.action_space = spaces.Discrete(16)
         self.observation_space = spaces.Tuple(
             (
-                spaces.MultiBinary([16, 16]),  # right walls
-                spaces.MultiBinary([16, 16]),  # down walls
+                spaces.MultiBinary([board_size, board_size]),  # right walls
+                spaces.MultiBinary([board_size, board_size]),  # down walls
                 spaces.Tuple(
                     (
-                        spaces.MultiDiscrete([16, 16]),  # red robot
-                        spaces.MultiDiscrete([16, 16]),  # blue robot
-                        spaces.MultiDiscrete([16, 16]),  # green robot
-                        spaces.MultiDiscrete([16, 16]),  # yellow robot
+                        spaces.MultiDiscrete([board_size, board_size]),  # red robot
+                        spaces.MultiDiscrete([board_size, board_size]),  # blue robot
+                        spaces.MultiDiscrete([board_size, board_size]),  # green robot
+                        spaces.MultiDiscrete([board_size, board_size]),  # yellow robot
                     )
-                ),  # robot positions
-                spaces.MultiDiscrete([16, 16]),  # target position
-                spaces.Discrete(5)
+                ),
+                spaces.MultiDiscrete([board_size, board_size]),  # target position
+                spaces.Discrete(5),
             )
         )
         self.reward_range = (0, 1)
@@ -58,3 +106,9 @@ class RicochetEnv(gym.Env):
 
     def reset(self):
         return self.env.reset()
+
+    def render(self):
+        return self.env.render().replace("\\n", "\n")
+
+    def get_state(self):
+        return self.env.get_state()

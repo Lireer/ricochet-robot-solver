@@ -21,6 +21,7 @@ in
 
       # basic python dependencies
       python38
+      python38Packages.black
       python38Packages.numpy
       python38Packages.gym
       # python38Packages.pandas
