@@ -88,7 +88,12 @@ impl RustyEnvironment {
     ) -> Self {
         let mut config = EnvironmentBuilder::new_seeded(board_size, walls, targets, robots, seed);
         let round = config.new_round();
-        let starting_position = config.new_positions();
+        let starting_position = loop {
+            let pos = config.new_positions();
+            if !round.target_reached(&pos) {
+                break pos;
+            }
+        };
 
         Self {
             wall_observation: create_wall_bitboards(round.board()),
@@ -123,7 +128,12 @@ impl RustyEnvironment {
         if *self.config.walls() != WallConfig::Fix {
             self.wall_observation = create_wall_bitboards(self.round.board());
         }
-        self.starting_position = self.config.new_positions();
+        self.starting_position = loop {
+            let pos = self.config.new_positions();
+            if !self.round.target_reached(&pos) {
+                break pos;
+            }
+        };
         self.current_position = self.starting_position.clone();
         self.steps_taken = 0;
 

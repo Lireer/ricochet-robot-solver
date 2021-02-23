@@ -74,10 +74,8 @@ class RicochetEnv(gym.Env):
         """
 
         if seed is None:
-            print("seed is None")
             self.env = RustyEnvironment(board_size, walls, targets, robots)
         else:
-            print("seed is", seed)
             self.env = RustyEnvironment.new_seeded(
                 board_size, walls, targets, robots, seed
             )
