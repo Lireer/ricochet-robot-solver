@@ -1,5 +1,5 @@
 use crate::{Coordinate, TargetColor};
-use getset::Getters;
+use getset::{Getters, CopyGetters};
 use pyo3::{FromPyObject, PyAny, PyResult};
 use rand::seq::SliceRandom;
 use rand::{Rng, SeedableRng};
@@ -39,14 +39,16 @@ pub enum RobotConfig {
     Random,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Getters)]
-#[getset(get = "pub")]
+#[derive(Debug, Clone, PartialEq, Eq, Getters, CopyGetters)]
 pub struct EnvironmentBuilder {
+    #[get_copy = "pub"]
     board_size: PositionEncoding,
+    #[get = "pub"]
     walls: WallConfig,
+    #[get = "pub"]
     targets: TargetConfig,
+    #[get = "pub"]
     robots: RobotConfig,
-    #[getset()]
     rng: rand_pcg::Pcg64Mcg,
 }
 

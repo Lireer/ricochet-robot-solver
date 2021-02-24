@@ -111,3 +111,6 @@ class RicochetEnv(gym.Env):
 
     def get_state(self):
         return self.env.get_state()
+
+    def board_size(self):
+        return self.env.board_size

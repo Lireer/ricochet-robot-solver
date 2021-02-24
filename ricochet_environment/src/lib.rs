@@ -105,6 +105,11 @@ impl RustyEnvironment {
         }
     }
 
+    #[getter]
+    pub fn board_size(&self) -> PositionEncoding {
+        self.config.board_size()
+    }
+
     pub fn step(&mut self, py_gil: Python, action: Action) -> PyObject {
         self.current_position = self.current_position.clone().move_in_direction(
             self.round.board(),
