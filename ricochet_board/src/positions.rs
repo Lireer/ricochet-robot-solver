@@ -109,9 +109,9 @@ impl fmt::Debug for Position {
     }
 }
 
-impl Into<(PositionEncoding, PositionEncoding)> for Position {
-    fn into(self) -> (PositionEncoding, PositionEncoding) {
-        (self.column(), self.row())
+impl From<Position> for (PositionEncoding, PositionEncoding) {
+    fn from(pos: Position) -> Self {
+        (pos.column(), pos.row())
     }
 }
 
