@@ -2,10 +2,9 @@ use chrono::Local;
 use itertools::Itertools;
 use rand::Rng;
 use rayon::iter::{ParallelBridge, ParallelIterator};
-use ricochet_board::{template, RobotPositions, Round, Symbol, Target};
+use ricochet_board::{RobotPositions, Round};
 use ricochet_solver::{Path, Solver};
 use serde::Serialize;
-use std::collections::HashSet;
 use std::sync::mpsc;
 use std::{fs, path, thread};
 
@@ -115,26 +114,5 @@ impl SolutionData {
         !Self::positions_as_tuples(pos)
             .iter()
             .any(|(col, row)| (7..=8).contains(col) && (7..=8).contains(row))
-    }
-}
-
-fn num_to_target(n: usize) -> Target {
-    match n {
-        0..=3 => Target::Red(num_to_target_symbol(n % 4)),
-        4..=7 => Target::Blue(num_to_target_symbol(n % 4)),
-        8..=11 => Target::Green(num_to_target_symbol(n % 4)),
-        12..=15 => Target::Yellow(num_to_target_symbol(n % 4)),
-        16 => Target::Spiral,
-        _ => panic!(),
-    }
-}
-
-fn num_to_target_symbol(n: usize) -> Symbol {
-    match n {
-        0 => Symbol::Circle,
-        1 => Symbol::Triangle,
-        2 => Symbol::Square,
-        3 => Symbol::Hexagon,
-        _ => panic!(),
     }
 }

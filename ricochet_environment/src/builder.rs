@@ -1,5 +1,5 @@
 use crate::{Coordinate, TargetColor};
-use getset::{Getters, CopyGetters};
+use getset::{CopyGetters, Getters};
 use pyo3::{FromPyObject, PyAny, PyResult};
 use rand::seq::SliceRandom;
 use rand::{Rng, SeedableRng};
