@@ -9,6 +9,8 @@ crate-type = ["rlib", "cdylib"]
 
 [dependencies]
 getset = "0.1.1"
+ndarray = "0.14.0"
+numpy = "0.13.0"
 pyo3 = { version = "0.13.1", features = ["extension-module"] }
 rand = "0.8.3"
 rand_pcg = "0.3.0"
