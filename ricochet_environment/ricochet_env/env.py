@@ -42,6 +42,7 @@ class RicochetEnv(gym.Env):
         targets="variants",
         robots="random",
         seed=None,
+        observation="tensor",
     ):
         """Create an environment for the ricochet robots game.
 
@@ -72,6 +73,21 @@ class RicochetEnv(gym.Env):
             - "random": The starting positions are chosen randomly. (*Default*)
         seed: int
             Can be set to make the environment reproducible. (*Default* `None`)
+        observation: str
+            Decides how an observation is shaped.
+            - "vector": The observation is an array. The first
+                        `board_size**2` values mark fields with walls on their
+                        right side. The next `board_size**2` values mark fields
+                        with walls below them. Followed by the robot positions
+                        in order red, blue, green, yellow as `(column, row)`
+                        tuples. The next two values are the position of the
+                        target and the final five values are the one hot encoded
+                        target type/color.
+            - "tensor": The observation is a tensor of the shape (board_size,
+                        board_size, 11). These layers are right walls, down
+                        walls, red robot, blue robot, green robot, yellow robot,
+                        red target, blue target, green target, and yellow
+                        target. (*Default*)
         """
 
         if seed is None:
@@ -82,26 +98,37 @@ class RicochetEnv(gym.Env):
             )
 
         self.action_space = spaces.Discrete(16)
-        self.observation_space = spaces.Tuple(
-            (
-                spaces.MultiBinary([board_size, board_size]),  # right walls
-                spaces.MultiBinary([board_size, board_size]),  # down walls
-                spaces.Tuple(
-                    (
-                        spaces.MultiDiscrete([board_size, board_size]),  # red robot
-                        spaces.MultiDiscrete([board_size, board_size]),  # blue robot
-                        spaces.MultiDiscrete([board_size, board_size]),  # green robot
-                        spaces.MultiDiscrete([board_size, board_size]),  # yellow robot
-                    )
-                ),
-                spaces.MultiDiscrete([board_size, board_size]),  # target position
-                spaces.Discrete(5),
+        if observation == "vector":
+            # right walls, down walls, 4 robot positions, 1 target position,
+            # and 5 one hot encoded target types
+            values = 2 * (board_size ** 2) + 8 + 2 + 5
+            low_bounds = np.zeros(values)
+            high_bounds = np.concatenate(
+                [
+                    np.ones(2 * (board_size ** 2)),
+                    np.full(8 + 2, board_size - 1),
+                    np.ones(5),
+                ]
             )
-        )
+            self.observation_space = spaces.Box(
+                low=low_bounds, high=high_bounds, shape=(values,), dtype=np.int16
+            )
+        elif observation == "tensor":
+            self.observation_space = spaces.MultiBinary(
+                [board_size, board_size, 11], dtype="int8"
+            )
+        else:
+            raise ValueError(
+                'observation style {} is not supported, use "vector" or "tensor"'.format(
+                    self.observation
+                )
+            )
         self.reward_range = (0, 1)
+        self.observation = observation
 
     def step(self, action: Action):
-        return self.env.step(action) + (None,)
+        obs, reward, done = self.env.step(action)
+        return (self._fit_observation(obs), reward, done, None)
 
     def reset(self):
         return self.env.reset()
@@ -110,7 +137,40 @@ class RicochetEnv(gym.Env):
         return self.env.render().replace("\\n", "\n")
 
     def get_state(self):
-        return self.env.get_state()
+        return self._fit_observation(self.env.get_state())
 
     def board_size(self):
         return self.env.board_size
+
+    def _fit_observation(self, rust_obs):
+        right_walls, down_walls, robots, target_pos, target = rust_obs
+        right_walls = np.array(right_walls, dtype=int)
+        down_walls = np.array(down_walls, dtype=int)
+        if self.observation == "vector":
+            # One hot encode the target type
+            target_one_hot = np.zeros(5)
+            target_one_hot[target] = 1
+            return np.concatenate(
+                [
+                    right_walls.flatten(),
+                    down_walls.flatten(),
+                    np.array(robots).flatten(),
+                    target_pos,
+                    target_one_hot,
+                ]
+            )
+        elif self.observation == "tensor":
+            robot_boards = np.zeros((4, *right_walls.shape))
+            for (i, (col, row)) in enumerate(robots):
+                robot_boards[i, row, col] = 1
+
+            target_boards = np.zeros((5, *right_walls.shape))
+            target_boards[target, target_pos[1], target_pos[0]] = 1
+
+            return np.dstack([right_walls, down_walls, *robot_boards, *target_boards])
+        else:
+            raise ValueError(
+                'observation style {} is not supported, use "vector" or "tensor"'.format(
+                    self.observation
+                )
+            )
