@@ -128,7 +128,7 @@ class RicochetEnv(gym.Env):
 
     def step(self, action: Action):
         obs, reward, done = self.env.step(action)
-        return (self._fit_observation(obs), reward, done, None)
+        return (self._fit_observation(obs), reward, done, {})
 
     def reset(self):
         return self._fit_observation(self.env.reset())
