@@ -131,7 +131,7 @@ class RicochetEnv(gym.Env):
         return (self._fit_observation(obs), reward, done, None)
 
     def reset(self):
-        return self.env.reset()
+        return self._fit_observation(self.env.reset())
 
     def render(self):
         return self.env.render().replace("\\n", "\n")
