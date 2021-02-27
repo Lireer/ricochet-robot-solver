@@ -111,11 +111,11 @@ class RicochetEnv(gym.Env):
                 ]
             )
             self.observation_space = spaces.Box(
-                low=low_bounds, high=high_bounds, shape=(values,), dtype=np.int16
+                low_bounds, high_bounds, (values,), np.int16
             )
         elif observation == "tensor":
-            self.observation_space = spaces.MultiBinary(
-                [board_size, board_size, 11], dtype="int8"
+            self.observation_space = spaces.Box(
+                0, 1, (board_size, board_size, 11), np.int16
             )
         else:
             raise ValueError(
