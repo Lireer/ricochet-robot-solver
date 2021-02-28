@@ -1,7 +1,7 @@
 #![deny(missing_docs)]
 #![deny(missing_debug_implementations)]
 
-//! Basic components to play Ricochet Robots and a reinforcement learning environment.
+//! Basic components to play Ricochet Robots.
 //!
 //! The board game [Ricochet Robots](https://en.wikipedia.org/wiki/Ricochet_Robot) is played on a
 //! 16x16 board containing some walls, 4 robots and 17 targets. The game is played in multiple
@@ -20,12 +20,12 @@
 //! The physical board is made up of four parts, each of which is assigned a color. There are four
 //! colors and multiple board parts per color. To build a complete board one part of each color is
 //! needed. The crate provides these parts to make board creation easier, see the
-//! [`template`](template) module for more information.
+//! [`quadrant`](quadrant) module for more information.
 
 mod draw;
 pub mod generator;
 mod positions;
-pub mod template;
+pub mod quadrant;
 
 use std::collections::BTreeMap;
 use std::convert::{TryFrom, TryInto};
@@ -33,7 +33,7 @@ use std::{fmt, ops};
 
 pub use crate::draw::draw_board;
 pub use crate::positions::{Position, PositionEncoding, RobotPositions};
-use crate::template::{BoardTemplate, Orientation, WallDirection};
+use crate::quadrant::{BoardQuadrant, Orientation, WallDirection};
 
 /// The type used to store the walls on a board.
 pub type Walls = Vec<Vec<Field>>;
@@ -421,21 +421,21 @@ impl Game {
 }
 
 impl Game {
-    /// Creates a 16x16 game board from a list of templates for board quarters.
-    pub fn from_templates(temps: &[BoardTemplate]) -> Self {
-        let mut game = Game::new_enclosed(template::STANDARD_BOARD_SIZE);
-        for temp in temps {
-            game.add_template(temp);
+    /// Creates a 16x16 game board from a list of quadrants.
+    pub fn from_quadrants(quads: &[BoardQuadrant]) -> Self {
+        let mut game = Game::new_enclosed(quadrant::STANDARD_BOARD_SIZE);
+        for quad in quads {
+            game.add_quadrant(quad);
         }
         game
     }
 
-    /// Adds a template for a board quarter to the board.
+    /// Adds a quadrant to the board.
     ///
     /// Panics if `self.side_length() != 16`.
-    fn add_template(&mut self, temp: &BoardTemplate) {
+    fn add_quadrant(&mut self, quad: &BoardQuadrant) {
         // get the needed offset
-        let (col_add, row_add) = match temp.orientation() {
+        let (col_add, row_add) = match quad.orientation() {
             Orientation::UpperLeft => (0, 0),
             Orientation::UpperRight => (8, 0),
             Orientation::BottomRight => (8, 8),
@@ -444,7 +444,7 @@ impl Game {
 
         // set the walls
         let walls: &mut Walls = &mut self.board.walls;
-        for ((c, r), dir) in temp.walls() {
+        for ((c, r), dir) in quad.walls() {
             let c = (c + col_add) as usize;
             let r = (r + row_add) as usize;
 
@@ -455,7 +455,7 @@ impl Game {
         }
 
         // set the targets
-        for ((c, r), target) in temp.targets() {
+        for ((c, r), target) in quad.targets() {
             let c = (c + col_add) as PositionEncoding;
             let r = (r + row_add) as PositionEncoding;
             self.targets.insert(*target, Position::new(c, r));
@@ -483,22 +483,22 @@ impl fmt::Debug for Game {
 
 #[cfg(test)]
 mod tests {
-    use crate::{template, Board, Direction, Game, Position, Robot, RobotPositions};
+    use crate::{quadrant, Board, Direction, Game, Position, Robot, RobotPositions};
 
     fn create_board() -> (RobotPositions, Board) {
-        let templates = template::gen_templates()
+        let quadrants = quadrant::gen_quadrants()
             .iter()
             .step_by(3)
             .cloned()
             .enumerate()
-            .map(|(i, mut temp)| {
-                temp.rotate_to(template::ORIENTATIONS[i]);
-                temp
+            .map(|(i, mut quad)| {
+                quad.rotate_to(quadrant::ORIENTATIONS[i]);
+                quad
             })
-            .collect::<Vec<template::BoardTemplate>>();
+            .collect::<Vec<quadrant::BoardQuadrant>>();
 
         let pos = RobotPositions::from_tuples(&[(0, 1), (5, 4), (7, 1), (7, 15)]);
-        let board = Game::from_templates(&templates).board;
+        let board = Game::from_quadrants(&quadrants).board;
         (pos, board)
     }
 

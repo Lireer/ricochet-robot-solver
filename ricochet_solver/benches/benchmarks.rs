@@ -1,7 +1,7 @@
 use std::vec;
 
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
-use ricochet_board::{template, Game, Robot, RobotPositions, Round, Symbol, Target};
+use ricochet_board::{quadrant, Game, Robot, RobotPositions, Round, Symbol, Target};
 use ricochet_solver::util::LeastMovesBoard;
 use ricochet_solver::{AStar, BreadthFirst, IdaStar, Solver};
 
@@ -88,41 +88,41 @@ fn solver_bench_setup() -> (RobotPositions, Vec<(Round, usize)>) {
 }
 
 fn create_board() -> (RobotPositions, Game) {
-    let templates = template::gen_templates()
+    let quadrants = quadrant::gen_quadrants()
         .iter()
         .step_by(3)
         .cloned()
         .enumerate()
-        .map(|(i, mut temp)| {
-            temp.rotate_to(template::ORIENTATIONS[i]);
-            temp
+        .map(|(i, mut quad)| {
+            quad.rotate_to(quadrant::ORIENTATIONS[i]);
+            quad
         })
-        .collect::<Vec<template::BoardTemplate>>();
+        .collect::<Vec<quadrant::BoardQuadrant>>();
 
     let pos = RobotPositions::from_tuples(&[(15, 15), (15, 0), (0, 15), (0, 0)]);
-    (pos, Game::from_templates(&templates))
+    (pos, Game::from_quadrants(&quadrants))
 }
 
 fn create_22_move_problem() -> (RobotPositions, Round) {
-    let templates = template::gen_templates();
-    let templates = [
-        templates[11].clone(),
-        templates[1].clone(),
-        templates[5].clone(),
-        templates[7].clone(),
+    let quadrants = quadrant::gen_quadrants();
+    let quadrants = [
+        quadrants[11].clone(),
+        quadrants[1].clone(),
+        quadrants[5].clone(),
+        quadrants[7].clone(),
     ]
     .iter()
     .cloned()
     .enumerate()
-    .map(|(i, mut temp)| {
-        temp.rotate_to(template::ORIENTATIONS[i]);
-        temp
+    .map(|(i, mut quad)| {
+        quad.rotate_to(quadrant::ORIENTATIONS[i]);
+        quad
     })
-    .collect::<Vec<template::BoardTemplate>>();
+    .collect::<Vec<quadrant::BoardQuadrant>>();
 
     let pos = RobotPositions::from_tuples(&[(15, 6), (14, 0), (13, 0), (0, 14)]);
     let target = Target::Blue(Symbol::Triangle);
-    let game = Game::from_templates(&templates);
+    let game = Game::from_quadrants(&quadrants);
     let round = Round::new(
         game.board().clone(),
         target,

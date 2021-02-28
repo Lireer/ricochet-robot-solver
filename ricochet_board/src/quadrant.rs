@@ -1,6 +1,6 @@
-//! Create a [`Game`](super::Game) from templates.
+//! Create a [`Game`](super::Game) from quadrants.
 //!
-//! These templates are the same as the quarters used to build the actual board game.
+//! These quadrants are the same as the ones used to build the physical board.
 
 use draw_a_box::{find_character, Weight};
 use std::fmt;
@@ -11,10 +11,10 @@ use crate::{Field, Game, PositionEncoding, Round, Symbol, Target, TARGETS};
 /// The side length of the standard physical board.
 pub const STANDARD_BOARD_SIZE: PositionEncoding = 16;
 
-/// The side length of a template.
-const TEMPLATE_SIZE: PositionEncoding = STANDARD_BOARD_SIZE / 2 + 1;
+/// The side length of a quadrant.
+const QUADRANT_SIZE: PositionEncoding = STANDARD_BOARD_SIZE / 2 + 1;
 
-/// All possible orientations of a template.
+/// All possible orientations of a quadrant.
 pub const ORIENTATIONS: [Orientation; 4] = [
     Orientation::UpperLeft,
     Orientation::UpperRight,
@@ -22,31 +22,31 @@ pub const ORIENTATIONS: [Orientation; 4] = [
     Orientation::BottomLeft,
 ];
 
-/// Number of unique boards that can be assembled from the standard board templates.
+/// Number of unique boards that can be assembled from the standard board quadrants.
 ///
-/// The board can always be rotated in a way that a red template would be in the upper left. So
-/// there are three possible values, after that choose one of the remaining nine templates and so
+/// The board can always be rotated in a way that a red quadrant would be in the upper left. So
+/// there are three possible values, after that choose one of the remaining nine quadrants and so
 /// forth until we have a complete board.
 pub const DISTINCT_STANDARD_BOARDS: usize = 3 * 9 * 6 * 3;
 
-/// Number of unique rounds that can be assembled from the standard board templates.
+/// Number of unique rounds that can be assembled from the standard board quadrants.
 pub const DISTINCT_STANDARD_ROUNDS: usize = DISTINCT_STANDARD_BOARDS * 17;
 
-/// The orientation of a template.
+/// The orientation of a quadrant.
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum Orientation {
-    /// Indicates a template rotated so it fits in the upper left.
+    /// Indicates a quadrant rotated so it fits in the upper left.
     UpperLeft,
-    /// Indicates a template rotated so it fits in the upper right.
+    /// Indicates a quadrant rotated so it fits in the upper right.
     UpperRight,
-    /// Indicates a template rotated so it fits in the bottom right.
+    /// Indicates a quadrant rotated so it fits in the bottom right.
     BottomRight,
-    /// Indicates a template rotated so it fits in the bottom left.
+    /// Indicates a quadrant rotated so it fits in the bottom left.
     BottomLeft,
 }
 
 impl Orientation {
-    /// Returns the number of clockwise rotations needed to rotate a template to `orient`.
+    /// Returns the number of clockwise rotations needed to rotate a quadrant to `orient`.
     pub fn right_rotations_to(self, orient: Orientation) -> usize {
         let all = [
             Orientation::UpperLeft,
@@ -75,29 +75,29 @@ impl fmt::Display for Orientation {
     }
 }
 
-/// The color of a template which is given by the physical counterpart.
+/// The color of a quadrant which is given by the physical counterpart.
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
-pub enum TempColor {
-    /// Indicates a green template.
+pub enum QuadColor {
+    /// Indicates a green quadrant.
     Green,
-    /// Indicates a red template.
+    /// Indicates a red quadrant.
     Red,
-    /// Indicates a blue template.
+    /// Indicates a blue quadrant.
     Blue,
-    /// Indicates a yellow template.
+    /// Indicates a yellow quadrant.
     Yellow,
 }
 
-impl fmt::Display for TempColor {
+impl fmt::Display for QuadColor {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         write!(
             fmt,
             "{}",
             match self {
-                TempColor::Green => r#""green"(g)"#,
-                TempColor::Red => r#""red"(r)"#,
-                TempColor::Blue => r#""blue"(b)"#,
-                TempColor::Yellow => r#""yellow"(y)"#,
+                QuadColor::Green => r#""green"(g)"#,
+                QuadColor::Red => r#""red"(r)"#,
+                QuadColor::Blue => r#""blue"(b)"#,
+                QuadColor::Yellow => r#""yellow"(y)"#,
             }
         )
     }
@@ -113,7 +113,7 @@ pub enum WallDirection {
 }
 
 impl WallDirection {
-    /// Changes the direction of a wall when rotating a template.
+    /// Changes the direction of a wall when rotating a quadrant.
     fn rotate(self) -> Self {
         match self {
             WallDirection::Down => WallDirection::Right,
@@ -122,40 +122,40 @@ impl WallDirection {
     }
 }
 
-/// A template representing a quarter of the ricochet board.
+/// A quadrant representing a quarter of the ricochet board.
 ///
 /// The physical board is built from four 8x8 pieces. Each of these pieces is assigned a color and
 /// can be rotated in four different ways.
 #[derive(Clone, Debug, PartialEq)]
-pub struct BoardTemplate {
+pub struct BoardQuadrant {
     orientation: Orientation,
-    color: TempColor,
+    color: QuadColor,
     walls: Vec<((isize, isize), WallDirection)>,
     targets: Vec<((isize, isize), Target)>,
 }
 
-impl BoardTemplate {
-    /// Returns the color of the template.
-    pub fn color(&self) -> TempColor {
+impl BoardQuadrant {
+    /// Returns the color of the quadrant.
+    pub fn color(&self) -> QuadColor {
         self.color
     }
 
-    /// Returns the orientation of the template.
+    /// Returns the orientation of the quadrant.
     pub fn orientation(&self) -> Orientation {
         self.orientation
     }
 
-    /// Returns the walls on the template.
+    /// Returns the walls on the quadrant.
     pub fn walls(&self) -> &Vec<((isize, isize), WallDirection)> {
         &self.walls
     }
 
-    /// Returns the targets on the template.
+    /// Returns the targets on the quadrant.
     pub fn targets(&self) -> &Vec<((isize, isize), Target)> {
         &self.targets
     }
 
-    /// Rotates the template clockwise.
+    /// Rotates the quadrant clockwise.
     pub fn rotate_right(&mut self) {
         self.orientation = match self.orientation {
             Orientation::UpperLeft => Orientation::UpperRight,
@@ -186,16 +186,16 @@ impl BoardTemplate {
             .collect();
     }
 
-    /// Rotates the template to the given orientation.
+    /// Rotates the quadrant to the given orientation.
     pub fn rotate_to(&mut self, orient: Orientation) {
         for _ in 0..self.orientation.right_rotations_to(orient) {
             self.rotate_right();
         }
     }
 
-    /// Creates a default template with `color` in the upper left with no walls or targets.
-    fn default_template(color: TempColor) -> Self {
-        BoardTemplate {
+    /// Creates a default quadrant of `color` in the upper left with no walls or targets.
+    fn default_quadrant(color: QuadColor) -> Self {
+        BoardQuadrant {
             orientation: Orientation::UpperLeft,
             color,
             walls: Vec::new(),
@@ -211,16 +211,16 @@ impl BoardTemplate {
         self
     }
 
-    /// Adds `target` at `pos` to the template.
+    /// Adds `target` at `pos` to the quadrant.
     fn set_target(mut self, pos: (isize, isize), target: Target) -> Self {
         self.targets.push((pos, target));
         self
     }
 }
 
-impl fmt::Display for BoardTemplate {
+impl fmt::Display for BoardQuadrant {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        let size = TEMPLATE_SIZE as usize;
+        let size = QUADRANT_SIZE as usize;
         let mut print = vec![vec![Field::default(); size]; size];
 
         for ((c, r), d) in &self.walls {
@@ -292,27 +292,27 @@ pub fn game_from_seed(seed: usize) -> Game {
         div = div_mod(div, *denom);
     }
 
-    let templates = gen_templates();
-    let mut chosen_tpl = Vec::with_capacity(4);
+    let quadrants = gen_quadrants();
+    let mut chosen_quads = Vec::with_capacity(4);
 
-    // Choose a red template for the upper left piece.
-    chosen_tpl.push(templates[indices[0]].clone());
+    // Choose a red quadrant for the upper left piece.
+    chosen_quads.push(quadrants[indices[0]].clone());
 
     for &idx in &indices[1..] {
-        let next_tpl = templates
+        let next_quad = quadrants
             .iter()
-            .filter(|&tpl| !chosen_tpl.iter().any(|ct| ct.color() == tpl.color()))
+            .filter(|&quad| !chosen_quads.iter().any(|ct| ct.color() == quad.color()))
             .nth(idx)
             .unwrap()
             .clone();
-        chosen_tpl.push(next_tpl);
+        chosen_quads.push(next_quad);
     }
 
-    chosen_tpl
+    chosen_quads
         .iter_mut()
         .zip(ORIENTATIONS.iter())
-        .for_each(|(tpl, orient)| tpl.rotate_to(*orient));
-    Game::from_templates(&chosen_tpl)
+        .for_each(|(quad, orient)| quad.rotate_to(*orient));
+    Game::from_quadrants(&chosen_quads)
 }
 
 /// Create a target from an integer between 0 and 16 inclusive.
@@ -344,13 +344,13 @@ fn num_to_target_symbol(n: usize) -> Symbol {
     }
 }
 
-/// Creates a vec containing all known templates.
+/// Creates a vec containing all known quadrants.
 ///
-/// Each color has three templates and the vec contains them in the order red, blue, green, yellow.
-pub fn gen_templates() -> Vec<BoardTemplate> {
+/// There are three quadrants for each color and the vec contains them in the order red, blue, green, yellow.
+pub fn gen_quadrants() -> Vec<BoardQuadrant> {
     vec![
         // Add red boards
-        BoardTemplate::default_template(TempColor::Red)
+        BoardQuadrant::default_quadrant(QuadColor::Red)
             .set_walls(
                 WallDirection::Down,
                 vec![(0, 5), (1, 3), (3, 6), (4, 0), (5, 4)],
@@ -363,7 +363,7 @@ pub fn gen_templates() -> Vec<BoardTemplate> {
             .set_target((3, 6), Target::Blue(Symbol::Hexagon))
             .set_target((4, 1), Target::Green(Symbol::Circle))
             .set_target((5, 5), Target::Yellow(Symbol::Square)),
-        BoardTemplate::default_template(TempColor::Red)
+        BoardQuadrant::default_quadrant(QuadColor::Red)
             .set_walls(
                 WallDirection::Down,
                 vec![(0, 5), (1, 1), (2, 4), (6, 1), (7, 4)],
@@ -376,7 +376,7 @@ pub fn gen_templates() -> Vec<BoardTemplate> {
             .set_target((2, 4), Target::Blue(Symbol::Hexagon))
             .set_target((6, 2), Target::Green(Symbol::Circle))
             .set_target((7, 5), Target::Yellow(Symbol::Square)),
-        BoardTemplate::default_template(TempColor::Red)
+        BoardQuadrant::default_quadrant(QuadColor::Red)
             .set_walls(
                 WallDirection::Down,
                 vec![(0, 4), (1, 5), (2, 3), (5, 2), (7, 5)],
@@ -390,7 +390,7 @@ pub fn gen_templates() -> Vec<BoardTemplate> {
             .set_target((5, 2), Target::Blue(Symbol::Hexagon))
             .set_target((7, 5), Target::Red(Symbol::Triangle)),
         // Add blue boards
-        BoardTemplate::default_template(TempColor::Blue)
+        BoardQuadrant::default_quadrant(QuadColor::Blue)
             .set_walls(
                 WallDirection::Down,
                 vec![(0, 3), (2, 3), (3, 1), (4, 5), (5, 3)],
@@ -403,7 +403,7 @@ pub fn gen_templates() -> Vec<BoardTemplate> {
             .set_target((3, 2), Target::Yellow(Symbol::Circle))
             .set_target((4, 5), Target::Green(Symbol::Hexagon))
             .set_target((5, 3), Target::Blue(Symbol::Triangle)),
-        BoardTemplate::default_template(TempColor::Blue)
+        BoardQuadrant::default_quadrant(QuadColor::Blue)
             .set_walls(
                 WallDirection::Down,
                 vec![(0, 3), (1, 2), (2, 5), (5, 1), (6, 3)],
@@ -416,7 +416,7 @@ pub fn gen_templates() -> Vec<BoardTemplate> {
             .set_target((2, 6), Target::Blue(Symbol::Triangle))
             .set_target((5, 1), Target::Green(Symbol::Hexagon))
             .set_target((6, 4), Target::Yellow(Symbol::Circle)),
-        BoardTemplate::default_template(TempColor::Blue)
+        BoardQuadrant::default_quadrant(QuadColor::Blue)
             .set_walls(
                 WallDirection::Down,
                 vec![(0, 4), (1, 6), (2, 0), (4, 4), (6, 3)],
@@ -430,7 +430,7 @@ pub fn gen_templates() -> Vec<BoardTemplate> {
             .set_target((4, 5), Target::Red(Symbol::Square))
             .set_target((6, 3), Target::Blue(Symbol::Triangle)),
         // Add green boards
-        BoardTemplate::default_template(TempColor::Green)
+        BoardQuadrant::default_quadrant(QuadColor::Green)
             .set_walls(
                 WallDirection::Down,
                 vec![(0, 6), (1, 4), (3, 0), (4, 5), (6, 3)],
@@ -443,7 +443,7 @@ pub fn gen_templates() -> Vec<BoardTemplate> {
             .set_target((3, 1), Target::Green(Symbol::Triangle))
             .set_target((4, 6), Target::Blue(Symbol::Square))
             .set_target((6, 3), Target::Yellow(Symbol::Hexagon)),
-        BoardTemplate::default_template(TempColor::Green)
+        BoardQuadrant::default_quadrant(QuadColor::Green)
             .set_walls(
                 WallDirection::Down,
                 vec![(0, 5), (1, 1), (3, 6), (4, 0), (6, 3)],
@@ -456,7 +456,7 @@ pub fn gen_templates() -> Vec<BoardTemplate> {
             .set_target((3, 6), Target::Blue(Symbol::Square))
             .set_target((4, 1), Target::Red(Symbol::Circle))
             .set_target((6, 3), Target::Yellow(Symbol::Hexagon)),
-        BoardTemplate::default_template(TempColor::Green)
+        BoardQuadrant::default_quadrant(QuadColor::Green)
             .set_walls(
                 WallDirection::Down,
                 vec![(0, 5), (1, 1), (3, 6), (6, 1), (6, 4)],
@@ -470,7 +470,7 @@ pub fn gen_templates() -> Vec<BoardTemplate> {
             .set_target((6, 1), Target::Yellow(Symbol::Hexagon))
             .set_target((6, 5), Target::Blue(Symbol::Square)),
         // Add yellow boards
-        BoardTemplate::default_template(TempColor::Yellow)
+        BoardQuadrant::default_quadrant(QuadColor::Yellow)
             .set_walls(
                 WallDirection::Down,
                 vec![(0, 3), (1, 5), (3, 4), (5, 1), (6, 4), (7, 2)],
@@ -484,7 +484,7 @@ pub fn gen_templates() -> Vec<BoardTemplate> {
             .set_target((5, 1), Target::Blue(Symbol::Circle))
             .set_target((6, 5), Target::Green(Symbol::Square))
             .set_target((7, 2), Target::Spiral),
-        BoardTemplate::default_template(TempColor::Yellow)
+        BoardQuadrant::default_quadrant(QuadColor::Yellow)
             .set_walls(
                 WallDirection::Down,
                 vec![(0, 4), (1, 3), (2, 1), (3, 7), (5, 5), (6, 3)],
@@ -498,7 +498,7 @@ pub fn gen_templates() -> Vec<BoardTemplate> {
             .set_target((3, 7), Target::Spiral)
             .set_target((5, 6), Target::Blue(Symbol::Circle))
             .set_target((6, 4), Target::Yellow(Symbol::Triangle)),
-        BoardTemplate::default_template(TempColor::Yellow)
+        BoardQuadrant::default_quadrant(QuadColor::Yellow)
             .set_walls(
                 WallDirection::Down,
                 vec![(0, 6), (1, 2), (2, 5), (5, 3), (6, 1), (7, 5)],

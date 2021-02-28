@@ -146,24 +146,24 @@ impl MoveCounter {
 #[cfg(test)]
 mod tests {
     use priority_queue::PriorityQueue;
-    use ricochet_board::{template, Direction, Game, Robot, RobotPositions, Round, Symbol, Target};
+    use ricochet_board::{quadrant, Direction, Game, Robot, RobotPositions, Round, Symbol, Target};
 
     use super::{AStar, MoveCounter, Path, Solver};
 
     fn create_board() -> (RobotPositions, Game) {
-        let templates = template::gen_templates()
+        let quadrants = quadrant::gen_quadrants()
             .iter()
             .step_by(3)
             .cloned()
             .enumerate()
-            .map(|(i, mut temp)| {
-                temp.rotate_to(template::ORIENTATIONS[i]);
-                temp
+            .map(|(i, mut quad)| {
+                quad.rotate_to(quadrant::ORIENTATIONS[i]);
+                quad
             })
-            .collect::<Vec<template::BoardTemplate>>();
+            .collect::<Vec<quadrant::BoardQuadrant>>();
 
         let pos = RobotPositions::from_tuples(&[(0, 1), (5, 4), (7, 1), (7, 15)]);
-        (pos, Game::from_templates(&templates))
+        (pos, Game::from_quadrants(&quadrants))
     }
 
     #[test]

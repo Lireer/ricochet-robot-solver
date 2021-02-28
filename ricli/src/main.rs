@@ -2,11 +2,11 @@ use std::collections::HashSet;
 use text_io::{read, try_scan};
 
 use ricochet_board::{
-    template, Game, PositionEncoding, Robot, RobotPositions, Round, Symbol, Target,
+    quadrant, Game, PositionEncoding, Robot, RobotPositions, Round, Symbol, Target,
 };
 use ricochet_solver::{IdaStar, Solver};
 
-const BOARD_SIZE: PositionEncoding = template::STANDARD_BOARD_SIZE;
+const BOARD_SIZE: PositionEncoding = quadrant::STANDARD_BOARD_SIZE;
 
 fn main() {
     // Create the board
@@ -185,13 +185,13 @@ fn parse_robot_position(
 }
 
 fn build_board_from_parts() -> Game {
-    let templates = template::gen_templates();
+    let quadrants = quadrant::gen_quadrants();
 
-    let mut possible_colors: HashSet<template::TempColor> = [
-        template::TempColor::Red,
-        template::TempColor::Blue,
-        template::TempColor::Green,
-        template::TempColor::Yellow,
+    let mut possible_colors: HashSet<quadrant::QuadColor> = [
+        quadrant::QuadColor::Red,
+        quadrant::QuadColor::Blue,
+        quadrant::QuadColor::Green,
+        quadrant::QuadColor::Yellow,
     ]
     .iter()
     .cloned()
@@ -199,7 +199,7 @@ fn build_board_from_parts() -> Game {
 
     let mut board_parts = Vec::new();
 
-    for orient in template::ORIENTATIONS.iter() {
+    for orient in quadrant::ORIENTATIONS.iter() {
         println!(
             "What color is the {} board part? You can find the color near the center.",
             orient
@@ -213,20 +213,20 @@ fn build_board_from_parts() -> Game {
         loop {
             let col: String = read!("{}\n");
             match col.to_lowercase().trim() {
-                "red" | "r" if possible_colors.get(&template::TempColor::Red) != None => {
-                    color = template::TempColor::Red;
+                "red" | "r" if possible_colors.get(&quadrant::QuadColor::Red) != None => {
+                    color = quadrant::QuadColor::Red;
                     break;
                 }
-                "blue" | "b" if possible_colors.get(&template::TempColor::Blue) != None => {
-                    color = template::TempColor::Blue;
+                "blue" | "b" if possible_colors.get(&quadrant::QuadColor::Blue) != None => {
+                    color = quadrant::QuadColor::Blue;
                     break;
                 }
-                "green" | "g" if possible_colors.get(&template::TempColor::Green) != None => {
-                    color = template::TempColor::Green;
+                "green" | "g" if possible_colors.get(&quadrant::QuadColor::Green) != None => {
+                    color = quadrant::QuadColor::Green;
                     break;
                 }
-                "yellow" | "y" if possible_colors.get(&template::TempColor::Yellow) != None => {
-                    color = template::TempColor::Yellow;
+                "yellow" | "y" if possible_colors.get(&quadrant::QuadColor::Yellow) != None => {
+                    color = quadrant::QuadColor::Yellow;
                     break;
                 }
                 _ => println!("Input invalid! {}", col),
@@ -234,24 +234,24 @@ fn build_board_from_parts() -> Game {
         }
 
         println!("Which of these parts is it? (1, 2, 3)");
-        let mut temps: Vec<template::BoardTemplate> = templates
+        let mut quads: Vec<quadrant::BoardQuadrant> = quadrants
             .iter()
             .filter(|t| t.color() == color)
             .cloned()
             .collect();
 
-        temps.iter_mut().for_each(|temp| temp.rotate_to(*orient));
+        quads.iter_mut().for_each(|quad| quad.rotate_to(*orient));
 
-        for (i, temp) in temps.iter().enumerate() {
-            println!("{}.\n{}", i + 1, temp);
+        for (i, quad) in quads.iter().enumerate() {
+            println!("{}.\n{}", i + 1, quad);
         }
 
         loop {
             let input: String = read!("{}\n");
             match input.trim().to_lowercase().parse::<usize>() {
-                // TODO: make the limit of 3 dependant on the actual length of temps
+                // TODO: make the limit of 3 dependant on the actual length of quads
                 Ok(i) if (1..=3).contains(&i) => {
-                    board_parts.push(temps.get(i - 1).unwrap().clone())
+                    board_parts.push(quads.get(i - 1).unwrap().clone())
                 }
                 _ => {
                     println!("Input invalid!");
@@ -265,5 +265,5 @@ fn build_board_from_parts() -> Game {
     }
 
     // Create a board from the parts
-    Game::from_templates(&board_parts)
+    Game::from_quadrants(&board_parts)
 }

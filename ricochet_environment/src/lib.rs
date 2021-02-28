@@ -1,8 +1,8 @@
 pub(crate) mod builder;
 
 use crate::builder::{EnvironmentBuilder, RobotConfig, TargetConfig, WallConfig};
-use numpy::{PyArray2, ToPyArray};
 use ndarray::Array2;
+use numpy::{PyArray2, ToPyArray};
 use pyo3::prelude::*;
 use ricochet_board::{
     Board, Direction, PositionEncoding, Robot, RobotPositions, Round, Symbol, Target,

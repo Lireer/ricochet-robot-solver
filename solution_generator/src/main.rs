@@ -92,7 +92,7 @@ impl SolutionData {
     }
 
     pub fn round(&self) -> Round {
-        ricochet_board::template::round_from_seed(self.board_seed)
+        ricochet_board::quadrant::round_from_seed(self.board_seed)
     }
 
     pub fn start_positions(&self) -> RobotPositions {

@@ -4,8 +4,8 @@ use pyo3::{FromPyObject, PyAny, PyResult};
 use rand::seq::SliceRandom;
 use rand::{Rng, SeedableRng};
 use ricochet_board::generator::{Generator as BoardGenerator, CENTER_WALLS_FROM_SIDE_LENGTH};
-use ricochet_board::template::DISTINCT_STANDARD_BOARDS;
-use ricochet_board::{template, PositionEncoding, RobotPositions, Round};
+use ricochet_board::quadrant::DISTINCT_STANDARD_BOARDS;
+use ricochet_board::{quadrant, PositionEncoding, RobotPositions, Round};
 
 /// Seed used to generate boards.
 ///
@@ -21,7 +21,7 @@ pub enum WallConfig {
     ///
     /// The number of possible boards is given by the `usize`. If the number equals
     /// [`DISTINCT_STANDARD_BOARDS`](DISTINCT_STANDARD_BOARDS) and `board_size == 16`, a board made
-    /// from standard templates will be generated.
+    /// from standard quadrants will be generated.
     Variants(usize),
     /// A randomly generated board from a practically infinte set.
     Random,
@@ -76,7 +76,7 @@ impl EnvironmentBuilder {
                 BoardGenerator::from_seed(WALLS_SEED, self.board_size).generate_game()
             }
             WallConfig::Variants(DISTINCT_STANDARD_BOARDS) if self.board_size == 16 => {
-                template::game_from_seed(self.rng.gen_range(0..DISTINCT_STANDARD_BOARDS))
+                quadrant::game_from_seed(self.rng.gen_range(0..DISTINCT_STANDARD_BOARDS))
             }
             WallConfig::Variants(n) => BoardGenerator::from_seed(
                 WALLS_SEED * self.rng.gen_range(0..n) as u128,
