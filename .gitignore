@@ -10,6 +10,7 @@
 **/*.so
 
 __pycache__
+.ipynb_checkpoints
 
 ### Frontend ###
 elm-stuff

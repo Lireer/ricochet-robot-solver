@@ -24,13 +24,13 @@ in
       python38Packages.black
       python38Packages.numpy
       python38Packages.gym
-      # python38Packages.pandas
+      python38Packages.pandas
+      python38Packages.matplotlib
+      python38Packages.seaborn
       # python38Packages.scikitlearn
       # python38Packages.scipy
-      # python38Packages.matplotlib
 
       # # a couple of deep learning libraries
-      # python38Packages.tensorflow
       # python38Packages.tensorflowWithCuda # note if you get rid of WithCuda then you will not be using Cuda
       # python38Packages.Keras
       # python38Packages.pytorch # used for speedy examples
