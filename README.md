@@ -148,7 +148,7 @@ A simple performance evaluation of the optimal algotihms breadth-first search (B
 
 The Monte Carlo tree search is not optimal and often even far from optimal and high in variance, so the performance could not be meanigfully evaluated.
 
-The training performance of the rainbow agent is documented in the images of the training in the `experiments` directory.
+The training performance of the rainbow agent is documented in the images of the training in the `experiments` directory and with some description in [evaluation.md](evaluation.md).
 
 ## Documentation
 
@@ -172,6 +172,7 @@ The documentation is besides the code and can be easily viewed by running `cargo
 ## Contributing
 
 Any code to be included in the project has to be formatted with **rustfmt** and checked with **clippy**.
+Make sure no tests are failing and run the benchmarks with and without your changes if the solvers were changed to see possible performance regressions.
 
 ## Board editor
 

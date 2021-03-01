@@ -7,6 +7,11 @@ use std::usize;
 use crate::util::{BasicVisitedNode, LeastMovesBoard, VisitedNodes};
 use crate::{Path, Solver};
 
+/// A solver using the [A*](https://en.wikipedia.org/wiki/A*_search_algorithm) search algorithm to
+/// find a path to the target.
+///
+/// It uses a [`LeastMovesBoard`](LeastMovesBoard) as an admissable heuristic to prioritize the
+/// visited nodes.
 #[derive(Debug)]
 pub struct AStar {
     visited_nodes: VisitedNodes<BasicVisitedNode>,
@@ -14,6 +19,7 @@ pub struct AStar {
 }
 
 impl AStar {
+    /// Creates a new `AStar` solver.
     pub fn new() -> Self {
         Self {
             visited_nodes: VisitedNodes::with_capacity(65536),

@@ -3,6 +3,7 @@ pub(crate) mod builder;
 use crate::builder::{EnvironmentBuilder, RobotConfig, TargetConfig, WallConfig};
 use ndarray::Array2;
 use numpy::{PyArray2, ToPyArray};
+use getset::CopyGetters;
 use pyo3::prelude::*;
 use ricochet_board::{
     Board, Direction, PositionEncoding, Robot, RobotPositions, Round, Symbol, Target,
@@ -41,7 +42,8 @@ pub type Observation<'a> = (
 /// An action that can be performed in the environment.
 ///
 /// It consists of a robot and the direction the specified robot should move in.
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, CopyGetters)]
+#[get_copy("pub")]
 pub struct Action {
     robot: Robot,
     direction: Direction,
@@ -57,6 +59,7 @@ pub enum TargetColor {
     Any,
 }
 
+/// The rust side of the environment.
 #[pyclass]
 #[derive(Debug, Clone)]
 pub struct RustyEnvironment {
@@ -70,6 +73,9 @@ pub struct RustyEnvironment {
 
 #[pymethods]
 impl RustyEnvironment {
+    /// Creates a new environment with the given configuration.
+    ///
+    /// For more information on possible configurations see the config enums docs.
     #[new]
     pub fn new(
         board_size: PositionEncoding,
@@ -80,6 +86,7 @@ impl RustyEnvironment {
         Self::new_seeded(board_size, walls, targets, robots, rand::random())
     }
 
+    /// Creates a new environment with the given configuration and seed to make it reproducible.
     #[staticmethod]
     pub fn new_seeded(
         board_size: PositionEncoding,
@@ -107,11 +114,13 @@ impl RustyEnvironment {
         }
     }
 
+    /// Returns the side length of the board.
     #[getter]
     pub fn board_size(&self) -> PositionEncoding {
         self.config.board_size()
     }
 
+    /// Performs an action to change the environment and returns a tuple (observation, reward, done).
     pub fn step(&mut self, py_gil: Python, action: Action) -> PyObject {
         self.current_position = self.current_position.clone().move_in_direction(
             self.round.board(),
@@ -130,6 +139,7 @@ impl RustyEnvironment {
         output.to_object(py_gil)
     }
 
+    /// Resets the environment which means a new state is created according to the configuration.
     pub fn reset(&mut self, py_gil: Python) -> PyObject {
         self.round = self.config.new_round();
         if *self.config.walls() != WallConfig::Fix {
@@ -147,16 +157,19 @@ impl RustyEnvironment {
         self.get_state(py_gil)
     }
 
+    /// Returns a simple drawing of the walls with unicode box drawing characters.
     pub fn render(&self) -> String {
         ricochet_board::draw_board(self.round.board().get_walls())
     }
 
+    /// Get the current state of the environment.
     pub fn get_state(&self, py_gil: Python) -> PyObject {
         self.observation(py_gil).to_object(py_gil)
     }
 }
 
 impl RustyEnvironment {
+    /// Creates an observation from the current state of the environment.
     fn observation<'a>(&self, py_gil: Python<'a>) -> Observation<'a> {
         let target_pos = self.round.target_position();
         let target = match self.round.target() {
@@ -177,16 +190,9 @@ impl RustyEnvironment {
 }
 
 impl Action {
+    /// Creates a new action.
     pub fn new(robot: Robot, direction: Direction) -> Self {
         Self { robot, direction }
-    }
-
-    pub fn robot(&self) -> Robot {
-        self.robot
-    }
-
-    pub fn direction(&self) -> Direction {
-        self.direction
     }
 }
 
@@ -255,6 +261,7 @@ impl From<Target> for TargetColor {
     }
 }
 
+/// Creates a Vec of tuples containing the robot positions.
 fn robot_positions_as_vec(pos: &RobotPositions) -> Vec<Coordinate> {
     pos.to_array()
         .iter()

@@ -11,6 +11,7 @@ use crate::{Path, Solver};
 
 type NodeMap = HashMap<RobotPositions, NodeData, FxBuildHasher>;
 
+/// Information about a visited node used in [MCTS](Mcts)
 #[derive(Debug, Clone, Getters, PartialEq, Eq)]
 #[getset(get = "pub")]
 struct NodeData {
@@ -28,6 +29,7 @@ impl NodeData {
         }
     }
 
+    /// Returns all positions reachable from this node or an empty vec if the target has been reached.
     pub fn children(&self, round: &Round) -> Vec<(RobotPositions, (Robot, Direction))> {
         if round.target_reached(&self.position) {
             Vec::new()
@@ -36,14 +38,12 @@ impl NodeData {
         }
     }
 
-    pub fn is_terminal(&self, round: &Round) -> bool {
-        round.target_reached(&self.position)
-    }
-
+    /// Returns the current mean score.
     pub fn mean_score(&self) -> f64 {
         self.score_sum as f64 / self.visits as f64
     }
 
+    /// Update the node with a new score, which also adds a visit.
     pub fn update_score(&mut self, score: u64) {
         self.visits += 1;
         self.score_sum += score;
@@ -61,10 +61,12 @@ pub struct Mcts {
 }
 
 impl Mcts {
+    /// Creates a new, randomly seeded `Mcts` instance.
     pub fn new(time_per_move: chrono::Duration) -> Self {
         Self::new_seeded(time_per_move, rand::random())
     }
 
+    /// Creates a new `Mcts` instance with the given seed.
     pub fn new_seeded(time_per_move: chrono::Duration, seed: u64) -> Self {
         Self {
             time_per_move,
@@ -75,6 +77,7 @@ impl Mcts {
         }
     }
 
+    /// Chooses the best child to proceed with by looking at their scores.
     fn choose_best_child(
         &self,
         of_node: &RobotPositions,
@@ -107,7 +110,7 @@ impl Mcts {
             // Check if node is unexplored or target has been reached.
             let node_data = match self.nodes.get(&current_node) {
                 None => break,
-                Some(data) if data.is_terminal(round) => break,
+                Some(data) if round.target_reached(&data.position) => break,
                 Some(data) => data,
             };
 
@@ -138,12 +141,14 @@ impl Mcts {
         path.iter().cloned().collect()
     }
 
+    /// Performs the expansion step by inserting a new node into `self.nodes`.
     fn expansion(&mut self, pos: &RobotPositions) {
         if !self.nodes.contains_key(pos) {
             self.nodes.insert(pos.clone(), NodeData::new(pos.clone()));
         }
     }
 
+    /// Performs the simulation step to reach the target with a random policy.
     fn simulation(&self, from: &RobotPositions, round: &Round, rng: &mut impl rand::Rng) -> u64 {
         let mut moves = 0;
         let mut current_pos = from.clone();
@@ -158,6 +163,7 @@ impl Mcts {
         moves
     }
 
+    /// Updates scores in the backpropagation step.
     fn backpropagation(&mut self, path: Vec<RobotPositions>, length: u64) {
         for (i, pos) in path.iter().enumerate() {
             let data = self.nodes.get_mut(&pos).unwrap();
@@ -186,6 +192,7 @@ impl Mcts {
         };
         (node_data.mean_score() * -1.0)
             + self.exploration_weight
+                * node_data.mean_score()
                 * f64::sqrt(f64::ln(parent_visits as f64) / node_data.visits as f64)
     }
 }

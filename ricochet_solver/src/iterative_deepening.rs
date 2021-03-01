@@ -3,6 +3,11 @@ use ricochet_board::{RobotPositions, Round};
 use crate::util::{BasicVisitedNode, LeastMovesBoard, VisitedNodes};
 use crate::{Path, Solver};
 
+/// A solver using the iterative deepening (IDA* ) algorithm to find the shortest path to the
+/// target.
+///
+/// Even though one of the advantages of IDA* is the small amount of memory needed, using it without
+/// storing visited nodes makes it unusably slow.
 // Why it's good: https://cseweb.ucsd.edu/~elkan/130/itdeep.html
 // Optimizations: https://speakerdeck.com/fogleman/ricochet-robots-solver-algorithms
 #[derive(Debug)]

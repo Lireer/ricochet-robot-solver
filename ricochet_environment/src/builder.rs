@@ -13,6 +13,7 @@ use ricochet_board::{quadrant, PositionEncoding, RobotPositions, Round};
 /// seed.
 const WALLS_SEED: u128 = 0xcafef00dd15ea5e5;
 
+/// Configuration to control the board generation.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum WallConfig {
     /// A fixed board is generated.
@@ -27,18 +28,25 @@ pub enum WallConfig {
     Random,
 }
 
+/// Configuration to control the selection of the target.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum TargetConfig {
+    /// A target is chosen randomly from the given vec.
     FromList(Vec<(TargetColor, Coordinate)>),
+    /// The target is chosen from the targets generated together with the board.
     Variants,
 }
 
+/// Configuration to control the placement of the robots on the board.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum RobotConfig {
+    /// The start positions are fix and never change.
     Fix(RobotPositions),
+    /// The robots are placed on the board randomly.
     Random,
 }
 
+/// Builder to create new rounds and positions from the environment configuration.
 #[derive(Debug, Clone, PartialEq, Eq, Getters, CopyGetters)]
 pub struct EnvironmentBuilder {
     #[get_copy = "pub"]
@@ -53,6 +61,7 @@ pub struct EnvironmentBuilder {
 }
 
 impl EnvironmentBuilder {
+    /// Creates a new `EnvironmentBuilder` with the config and seed.
     pub fn new_seeded(
         board_size: PositionEncoding,
         walls: WallConfig,
