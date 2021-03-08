@@ -101,7 +101,7 @@ The found solutions are written out as a csv file. To use the generator you have
 
 ### Ongoing experiments
 
-The directory `experiments` contains ongoing work to implement an reinforcement learning agent based on the [Rainbow Agent](https://arxiv.org/abs/1710.02298) by DeepMind. The agent can currently learn to find the path in simple environments but fails to anything if the target's type and position are variable.
+The directory `experiments` contains ongoing work to implement an reinforcement learning agent based on the [Rainbow Agent](https://arxiv.org/abs/1710.02298) by DeepMind. The agent can currently learn to find the path in simple environments but fails to learn anything if the target's type and position are variable.
 
 ## Building from source
 
