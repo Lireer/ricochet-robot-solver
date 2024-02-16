@@ -77,7 +77,7 @@ impl BreadthFirst {
                 .visited_nodes
                 .add_node(
                     new_pos.clone(),
-                    &initial_pos,
+                    initial_pos,
                     moves + 1,
                     (robot, dir),
                     &BasicVisitedNode::new,

@@ -325,7 +325,7 @@ mod tests {
         let positions: [(PositionEncoding, PositionEncoding); 4] = [(0, 0), (0, 0), (0, 0), (0, 0)];
         let rob_pos = RobotPositions::from_tuples(&positions);
         assert_eq!(move_board.min_moves(&rob_pos, Target::Spiral), 3);
-        assert_eq!(move_board.is_unsolvable(&rob_pos, Target::Spiral), false);
+        assert!(!move_board.is_unsolvable(&rob_pos, Target::Spiral));
     }
 
     #[test]
@@ -339,6 +339,6 @@ mod tests {
         let positions: [(PositionEncoding, PositionEncoding); 4] = [(0, 0), (0, 0), (0, 0), (0, 0)];
         let rob_pos = RobotPositions::from_tuples(&positions);
         assert_eq!(move_board.min_moves(&rob_pos, Target::Spiral), 4);
-        assert_eq!(move_board.is_unsolvable(&rob_pos, Target::Spiral), true);
+        assert!(move_board.is_unsolvable(&rob_pos, Target::Spiral));
     }
 }

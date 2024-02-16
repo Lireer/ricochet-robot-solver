@@ -1,4 +1,4 @@
-use std::vec;
+
 
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 use ricochet_board::{quadrant, Game, Robot, RobotPositions, Round, Symbol, Target};
@@ -60,8 +60,7 @@ criterion_main!(benches);
 fn solver_bench_setup() -> (RobotPositions, Vec<(Round, usize)>) {
     let (pos, game) = create_board();
 
-    let data = vec![
-        (Target::Blue(Symbol::Triangle), 2),
+    let data = [(Target::Blue(Symbol::Triangle), 2),
         (Target::Yellow(Symbol::Circle), 3),
         (Target::Red(Symbol::Triangle), 4),
         (Target::Red(Symbol::Hexagon), 5),
@@ -71,14 +70,13 @@ fn solver_bench_setup() -> (RobotPositions, Vec<(Round, usize)>) {
         (Target::Green(Symbol::Hexagon), 9),
         (Target::Yellow(Symbol::Hexagon), 11),
         (Target::Yellow(Symbol::Triangle), 12),
-        (Target::Yellow(Symbol::Square), 13),
-    ]
+        (Target::Yellow(Symbol::Square), 13)]
     .iter_mut()
     .map(|(target, moves)| {
         let round = Round::new(
             game.board().clone(),
             *target,
-            game.get_target_position(&target).unwrap(),
+            game.get_target_position(target).unwrap(),
         );
         (round, *moves)
     })

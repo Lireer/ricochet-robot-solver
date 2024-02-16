@@ -129,9 +129,9 @@ impl Mcts {
             current_node = node_data
                 .children(round)
                 .iter()
-                .filter_map(|(pos, _)| self.nodes.get(&pos))
+                .filter_map(|(pos, _)| self.nodes.get(pos))
                 .filter(|&data| !path.contains(&data.position))
-                .max_by_key(|&data| FloatOrd(self.uct_score(&data, node_data.visits)))
+                .max_by_key(|&data| FloatOrd(self.uct_score(data, node_data.visits)))
                 .map(|data| data.position.clone())
                 .expect("Ran into a dead end during selection");
 
@@ -166,7 +166,7 @@ impl Mcts {
     /// Updates scores in the backpropagation step.
     fn backpropagation(&mut self, path: Vec<RobotPositions>, length: u64) {
         for (i, pos) in path.iter().enumerate() {
-            let data = self.nodes.get_mut(&pos).unwrap();
+            let data = self.nodes.get_mut(pos).unwrap();
             // path from leaf + number of moves from `pos` to leaf
             data.update_score(length + path.len() as u64 - 1 - i as u64)
         }
@@ -316,7 +316,7 @@ mod tests {
                 let new_pos =
                     current_pos
                         .clone()
-                        .move_in_direction(&round.board(), robot, direction);
+                        .move_in_direction(round.board(), robot, direction);
                 if new_pos == current_pos {
                     continue;
                 }
