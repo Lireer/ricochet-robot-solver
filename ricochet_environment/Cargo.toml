@@ -8,11 +8,11 @@ edition = "2018"
 crate-type = ["rlib", "cdylib"]
 
 [dependencies]
-getset = "0.1.2"
+getset = "0.1.7"
 ndarray = "0.15.6"
-numpy = "0.20.0"
-pyo3 = { version = "0.20.2", features = ["extension-module"] }
-rand = "0.8.5"
+numpy = "0.29.0"
+pyo3 = { version = "0.29.0", features = ["extension-module"] }
+rand = "0.8.6"
 rand_pcg = "0.3.1"
 ricochet_board = { path = "../ricochet_board" }
 

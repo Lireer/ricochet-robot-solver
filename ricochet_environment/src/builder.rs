@@ -1,6 +1,6 @@
 use crate::{Coordinate, TargetColor};
 use getset::{CopyGetters, Getters};
-use pyo3::{FromPyObject, PyAny, PyResult};
+use pyo3::{Borrowed, FromPyObject, PyAny, PyErr, PyResult};
 use rand::seq::SliceRandom;
 use rand::{Rng, SeedableRng};
 use ricochet_board::generator::{Generator as BoardGenerator, CENTER_WALLS_FROM_SIDE_LENGTH};
@@ -160,12 +160,14 @@ impl Default for EnvironmentBuilder {
 
 // Following code provides implementations to extract configs from `PyObject`s
 
-impl<'source> FromPyObject<'source> for WallConfig {
-    fn extract(raw_conf: &'source PyAny) -> PyResult<Self> {
+impl<'a, 'py> FromPyObject<'a, 'py> for WallConfig {
+    type Error = PyErr;
+
+    fn extract(raw_conf: Borrowed<'a, 'py, PyAny>) -> PyResult<Self> {
         if let Ok(variant_count) = raw_conf.extract::<usize>() {
             return Ok(WallConfig::Variants(variant_count));
         }
-        match raw_conf.extract::<&str>()?.to_lowercase().as_ref() {
+        match raw_conf.extract::<String>()?.to_lowercase().as_ref() {
             "fixed" => Ok(WallConfig::Fix),
             "variants" => Ok(WallConfig::Variants(DISTINCT_STANDARD_BOARDS)),
             "random" => Ok(WallConfig::Random),
@@ -174,8 +176,10 @@ impl<'source> FromPyObject<'source> for WallConfig {
     }
 }
 
-impl<'source> FromPyObject<'source> for TargetConfig {
-    fn extract(raw_conf: &'source PyAny) -> PyResult<Self> {
+impl<'a, 'py> FromPyObject<'a, 'py> for TargetConfig {
+    type Error = PyErr;
+
+    fn extract(raw_conf: Borrowed<'a, 'py, PyAny>) -> PyResult<Self> {
         if let Ok(conf) = raw_conf.extract::<String>() {
             if conf.to_lowercase() != "variants" {
                 panic!("unknown target configuration \"{}\"", conf);
@@ -189,14 +193,16 @@ impl<'source> FromPyObject<'source> for TargetConfig {
             Ok(list) => Ok(TargetConfig::FromList(list)),
             Err(_) => panic!(
                 "could not convert value {} to a target configuration",
-                raw_conf
+                &*raw_conf
             ),
         }
     }
 }
 
-impl<'source> FromPyObject<'source> for RobotConfig {
-    fn extract(raw_conf: &'source PyAny) -> PyResult<Self> {
+impl<'a, 'py> FromPyObject<'a, 'py> for RobotConfig {
+    type Error = PyErr;
+
+    fn extract(raw_conf: Borrowed<'a, 'py, PyAny>) -> PyResult<Self> {
         if let Ok(conf) = raw_conf.extract::<String>() {
             if conf.to_lowercase() != "random" {
                 panic!("unknown robot configuration \"{}\"", conf);
@@ -213,7 +219,7 @@ impl<'source> FromPyObject<'source> for RobotConfig {
             }
             _ => panic!(
                 "could not convert value {} into a robot configuration",
-                raw_conf
+                &*raw_conf
             ),
         }
     }

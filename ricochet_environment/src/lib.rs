@@ -1,17 +1,18 @@
 pub(crate) mod builder;
 
 use crate::builder::{EnvironmentBuilder, RobotConfig, TargetConfig, WallConfig};
+use getset::CopyGetters;
 use ndarray::Array2;
 use numpy::{PyArray2, ToPyArray};
-use getset::CopyGetters;
 use pyo3::prelude::*;
+use pyo3::{Borrowed, PyErr};
 use ricochet_board::{
     Board, Direction, PositionEncoding, Robot, RobotPositions, Round, Symbol, Target,
 };
 
 /// The base module of the created package.
 #[pymodule]
-fn ricochet_env(_py: Python, m: &PyModule) -> PyResult<()> {
+fn ricochet_env(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<RustyEnvironment>()?;
 
     Ok(())
@@ -31,9 +32,9 @@ pub type Coordinate = (PositionEncoding, PositionEncoding);
 /// - the positions of the robots in the order red, blue, green, yellow as (column, row) tuples
 /// - the position of the target
 /// - the color of the target
-pub type Observation<'a> = (
-    &'a PyArray2<bool>,
-    &'a PyArray2<bool>,
+pub type Observation<'py> = (
+    Bound<'py, PyArray2<bool>>,
+    Bound<'py, PyArray2<bool>>,
     Vec<Coordinate>,
     Coordinate,
     usize,
@@ -60,7 +61,7 @@ pub enum TargetColor {
 }
 
 /// The rust side of the environment.
-#[pyclass]
+#[pyclass(skip_from_py_object)]
 #[derive(Debug, Clone)]
 pub struct RustyEnvironment {
     config: EnvironmentBuilder,
@@ -121,7 +122,11 @@ impl RustyEnvironment {
     }
 
     /// Performs an action to change the environment and returns a tuple (observation, reward, done).
-    pub fn step(&mut self, py_gil: Python, action: Action) -> PyObject {
+    pub fn step<'py>(
+        &mut self,
+        py: Python<'py>,
+        action: Action,
+    ) -> (Observation<'py>, Reward, bool) {
         self.current_position = self.current_position.clone().move_in_direction(
             self.round.board(),
             action.robot,
@@ -135,12 +140,11 @@ impl RustyEnvironment {
             done = true;
         }
 
-        let output = (self.observation(py_gil), reward, done);
-        output.to_object(py_gil)
+        (self.observation(py), reward, done)
     }
 
     /// Resets the environment which means a new state is created according to the configuration.
-    pub fn reset(&mut self, py_gil: Python) -> PyObject {
+    pub fn reset<'py>(&mut self, py: Python<'py>) -> Observation<'py> {
         self.round = self.config.new_round();
         if *self.config.walls() != WallConfig::Fix {
             self.wall_observation = create_wall_bitboards(self.round.board());
@@ -154,7 +158,7 @@ impl RustyEnvironment {
         self.current_position = self.starting_position.clone();
         self.steps_taken = 0;
 
-        self.get_state(py_gil)
+        self.get_state(py)
     }
 
     /// Returns a simple drawing of the walls with unicode box drawing characters.
@@ -163,14 +167,14 @@ impl RustyEnvironment {
     }
 
     /// Get the current state of the environment.
-    pub fn get_state(&self, py_gil: Python) -> PyObject {
-        self.observation(py_gil).to_object(py_gil)
+    pub fn get_state<'py>(&self, py: Python<'py>) -> Observation<'py> {
+        self.observation(py)
     }
 }
 
 impl RustyEnvironment {
     /// Creates an observation from the current state of the environment.
-    fn observation<'a>(&self, py_gil: Python<'a>) -> Observation<'a> {
+    fn observation<'py>(&self, py: Python<'py>) -> Observation<'py> {
         let target_pos = self.round.target_position();
         let target = match self.round.target() {
             Target::Red(_) => 0,
@@ -180,8 +184,8 @@ impl RustyEnvironment {
             Target::Spiral => 4,
         };
         (
-            self.wall_observation.0.view().to_pyarray(py_gil),
-            self.wall_observation.1.view().to_pyarray(py_gil),
+            self.wall_observation.0.view().to_pyarray(py),
+            self.wall_observation.1.view().to_pyarray(py),
             robot_positions_as_vec(&self.current_position),
             (target_pos.column(), target_pos.row()),
             target,
@@ -196,8 +200,10 @@ impl Action {
     }
 }
 
-impl<'source> FromPyObject<'source> for Action {
-    fn extract(raw_action: &'source PyAny) -> PyResult<Self> {
+impl<'a, 'py> FromPyObject<'a, 'py> for Action {
+    type Error = PyErr;
+
+    fn extract(raw_action: Borrowed<'a, 'py, PyAny>) -> PyResult<Self> {
         let action = raw_action.extract::<usize>()?;
         let robot = match action / 4 {
             0 => Robot::Red,
@@ -220,9 +226,11 @@ impl<'source> FromPyObject<'source> for Action {
     }
 }
 
-impl<'source> FromPyObject<'source> for TargetColor {
-    fn extract(raw_target: &'source PyAny) -> PyResult<Self> {
-        let target = match raw_target.extract()? {
+impl<'a, 'py> FromPyObject<'a, 'py> for TargetColor {
+    type Error = PyErr;
+
+    fn extract(raw_target: Borrowed<'a, 'py, PyAny>) -> PyResult<Self> {
+        let target = match raw_target.extract::<i32>()? {
             0 => TargetColor::Red,
             1 => TargetColor::Blue,
             2 => TargetColor::Green,
