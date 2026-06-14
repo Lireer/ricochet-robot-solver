@@ -8,10 +8,10 @@ edition = "2018"
 chrono = "0.4.34"
 fxhash = "0.2.1"
 float-ord = "0.3.2"
-getset = "0.1.2"
+getset = "0.1.7"
 indexmap = "2.2.3"
 priority-queue = "1.4.0"
-rand = "0.8.5"
+rand = "0.8.6"
 ricochet_board = { path = "../ricochet_board" }
 
 [dev-dependencies]

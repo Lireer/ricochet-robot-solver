@@ -8,4 +8,4 @@ edition = "2018"
 itertools = "0.12.1"
 draw_a_box = { git = "https://github.com/Lireer/draw-a-box", branch = "main" }
 rand_pcg = "0.3.1"
-rand = "0.8.5"
+rand = "0.8.6"
